@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require('../Utils/validateInput');
+const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
 const StatusChalets = require('../Models/StatusChalets');
 const path = require('path');
 

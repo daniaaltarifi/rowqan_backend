@@ -3,8 +3,9 @@ const router = express.Router();
 const userController = require('../Controllers/UsersController');
 // const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter');
+const { login, register } = require('../MiddleWares/verifyjwt');
 
-router.post('/createUser', rateLimiter, userController.createUser);
+router.post('/createUser', rateLimiter, register);
 
 router.get('/getAllUsers/:lang',rateLimiter, userController.getAllUsers);
 
@@ -14,7 +15,7 @@ router.put('/UpdateUser/:id', rateLimiter, userController.updateUser);
 
 router.delete('/DeleteUser/:id/:lang',  rateLimiter, userController.deleteUser);
 
-router.post('/login', rateLimiter, userController.login);
+router.post('/login', rateLimiter,login);
 
 router.post('/logout', rateLimiter, userController.logout);
 
