@@ -330,6 +330,12 @@ exports.login = async (req, res) => {
       maxAge: 3600000, // 1 hour expiration
       secure: false, // Set to true in production, false in development
     });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   sameSite: "Strict",
+    // });         
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
