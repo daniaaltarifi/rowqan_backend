@@ -1,5 +1,5 @@
 const Footer = require('../Models/FooterModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 exports.createFooter = async (req, res) => {

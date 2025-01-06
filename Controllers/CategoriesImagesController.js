@@ -1,6 +1,6 @@
 const CategoriesImageLands = require('../Models/Categories_image_Lands');
 const CategoriesLandsModel = require('../Models/CategoriesLandsModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 

@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const Services = require('../Models/ServicesModel');
 const path = require('path');
 const {client} = require('../Utils/redisClient')

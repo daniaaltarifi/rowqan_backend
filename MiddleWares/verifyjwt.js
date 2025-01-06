@@ -7,7 +7,11 @@ const dotenv = require("dotenv");
 const asyncHandler = require("../MiddleWares/asyncHandler.js");
 const { client } = require("../Utils/redisClient");
 const { Sequelize } = require("sequelize");
+
 const { ErrorResponse, validateInput } = require("../Utils/validateInput.js");
+
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
+
 const speakeasy = require("speakeasy");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -325,7 +329,11 @@ exports.login = async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-
+    res.cookie('token', token, {
+      httpOnly: true, // Cookie can't be accessed from JavaScript
+      maxAge: 3600000, // 1 hour expiration
+      secure: false, // Set to true in production, false in development
+    });
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
@@ -429,7 +437,9 @@ exports.requestPasswordReset = async (req, res) => {
       });
     }
 
+
     console.log(`The user ID is: ${user.id}`); 
+
 
     const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h"
@@ -437,7 +447,11 @@ exports.requestPasswordReset = async (req, res) => {
 
     await saveResetToken(user.id, resetToken);
 
+
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
+    // const baseUrl = process.env.BASE_URL || ${req.protocol}://${req.get('host')};
+
     const resetUrl = `http://localhost:5173/en/resetpassword/${resetToken}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -475,7 +489,9 @@ exports.resetPassword = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
+
     console.log(`The User ID is: ${userId}`);
+
 
    
     const user = await User.findOne({ where: { id: userId } });
@@ -500,3 +516,4 @@ exports.resetPassword = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+

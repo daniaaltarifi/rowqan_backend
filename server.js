@@ -1,3 +1,4 @@
+
 const express = require('express');
 const sequelize = require('./Config/dbConnect');
 const helmet = require('helmet');
@@ -6,9 +7,20 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+
+const express = require("express");
+const sequelize = require("./Config/dbConnect");
+const helmet = require("helmet");
+const http = require("http");
+const socketIo = require("socket.io");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
+
 const app = express();
-const compression = require('compression');
+const compression = require("compression");
 app.use(compression());
+
 
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -17,6 +29,22 @@ app.use(helmet({
 
 const server = http.createServer(app);
 const io = socketIo(server);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// const server = http.createServer(app);
+// const io = socketIo(server);
+
+
+app.use((req, res, next) => {
+  req.socketIoInstance = io;
+  next();
+});
 
 
 app.use((req, res, next) => {
@@ -29,25 +57,54 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+
 app.use(express.json());
 
+// const corsOptions = {
+//   origin: "http://localhost:5173",  // Replace with your frontend URL
+//   methods: ["GET", "POST"],
+//   allowedHeaders: ["Content-Type"],
+// };
 
+// // Apply CORS middleware to the express app
+// app.use(cors(corsOptions));
+
+// Create HTTP server and attach Socket.IO
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      "https://rowqan.com",
+      "https://rowqanbackend.rowqan.com",
+    ], // Allow frontend to connect
+    methods: ["GET", "POST"],
+  },
+});
+
+// Example Socket.IO connection event
 io.on("connection", (socket) => {
-  console.log("A user connected");
+  console.log("a user connected");
 
-  socket.on("send_message", (message) => {
-    console.log("Message received: ", message);
-    io.emit("receive_message", message);
-  });
-  
-  socket.on('receive_message', (data) => {
+  // Handle message events
+  socket.on("send_message", (data) => {
     console.log("Message received:", data);
+    // Broadcast to other users
+    io.emit("receive_message", data);
   });
 
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
+    console.log("user disconnected");
   });
 });
+
 
 
 
@@ -100,6 +157,67 @@ const allowedOrigins = [
   'http://localhost:3001',
   'https://rowqan.com',
   'https://rowqanbackend.rowqan.com',
+
+// io.on("connection", (socket) => {
+//   console.log("A user connected");
+
+//   socket.on("send_message", (message) => {
+//     console.log("Message received: ", message);
+//     io.emit("receive_message", message);
+//   });
+
+//   socket.on('receive_message', (data) => {
+//     console.log("Message received:", data);
+//   });
+
+//   socket.on("disconnect", () => {
+//     console.log("A user disconnected");
+//   });
+// });
+
+const UsersRoutes = require("./Routes/UsersRoutes");
+const LogoRoutes = require("./Routes/LogoRoutes");
+const HeaderRoutes = require("./Routes/HeaderRoutes");
+const HeroesRoutes = require("./Routes/HeroRoutes");
+const ServicesRoutes = require("./Routes/ServicesRoutes");
+const FooterRoutes = require("./Routes/FooterRoutes");
+const FooterIconRoutes = require("./Routes/FooterIconsRoutes");
+const HeroChaletsRoutes = require("./Routes/ChaletsHeroRoutes");
+const ChaletsRoutes = require("./Routes/ChaletsRoutes");
+const statusChaletRoutes = require("./Routes/StatusChaletsRoutes");
+const ChaletImagesRoutes = require("./Routes/ChaletsImagesRoutes");
+const BreifDetailsChaletsRoutes = require("./Routes/BreifDetailsChaletsRoutes");
+const ReservatioDatesRoutes = require("./Routes/ReservationsDateRoutes");
+const ContactUsRoutes = require("./Routes/ContactUsRoutes");
+const RightTimeRoutes = require("./Routes/RightTimeRoutes");
+const StatusRoutes = require("./Routes/StatusRoutes");
+const ChaletsDetailsRoutes = require("./Routes/ChaletsDetailsRoutes");
+const HeroEventsRoutes = require("./Routes/EventsHeroRoutes");
+const EventsTypesRoutes = require("./Routes/TypesEventsRoutes");
+const SubEventsRoutes = require("./Routes/SubEventsRoutes");
+const AvailableEventsRoutes = require("./Routes/AvailableEventsRoutes");
+const AvailableImages = require("./Routes/AvailableImagesRoutes");
+const PlansRoutes = require("./Routes/PlansRoutes");
+const ReservatioEventsRoutes = require("./Routes/ReservationsEventsRoutes");
+const CategoryLandsRoutes = require("./Routes/CategoriesLandsRoutes");
+const PrpertyLandsRoutes = require("./Routes/PropertiesLandsRoutes");
+const ImagesLandsRoutes = require("./Routes/CategoriesImagesRoutes");
+const BreifLandsRoutes = require("./Routes/BriefLandsRoutes");
+const ReservationeLandsRoutes = require("./Routes/ReservationsLandsRoutes");
+const ReservationsRoutes = require("./Routes/ReservationsRoutes");
+const UsersTypesRoutes = require("./Routes/UsersTypesRoutes");
+const ReservationsChaletsRoutes = require("./Routes/ReservationsChaletsRoutes");
+const WalletRoutes = require("./Routes/WalletRoutes");
+const PropsChaletsRoutes = require("./Routes/ChaletsPropsRoutes");
+const FeedBackRoutes = require("./Routes/FeedBacksRoutes");
+const MessagesRoutes = require("./Routes/MessagesRoutes");
+const HeroLands = require("./Routes/HeroLandsRoutes");
+const PaymentsRoutes = require("./Routes/PaymentsRoutes");
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://rowqan.com",
+  "https://rowqanbackend.rowqan.com",
 ];
 
 const corsOptions = {
@@ -107,7 +225,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
@@ -116,6 +234,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+
 
 app.use('/users', UsersRoutes);
 app.use('/logos', LogoRoutes);
@@ -165,6 +284,49 @@ app.use('/Blogs',BlogRoutes)
 
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
 
+app.use("/users", UsersRoutes);
+app.use("/logos", LogoRoutes);
+app.use("/header", HeaderRoutes);
+app.use("/heroes", HeroesRoutes);
+app.use("/services", ServicesRoutes);
+app.use("/footer", FooterRoutes);
+app.use("/footericons", FooterIconRoutes);
+app.use("/heroChalets", HeroChaletsRoutes);
+app.use("/chalets", ChaletsRoutes);
+app.use("/statuschalets", statusChaletRoutes);
+app.use("/chaletsimages", ChaletImagesRoutes);
+app.use("/BreifDetailsChalets", BreifDetailsChaletsRoutes);
+app.use("/ReservationDates", ReservatioDatesRoutes);
+app.use("/ContactUs", ContactUsRoutes);
+app.use("/RightTimes", RightTimeRoutes);
+app.use("/status", StatusRoutes);
+app.use("/chaletsdetails", ChaletsDetailsRoutes);
+app.use("/heroevents", HeroEventsRoutes);
+app.use("/events", EventsTypesRoutes);
+app.use("/subevents", SubEventsRoutes);
+app.use("/availablevents", AvailableEventsRoutes);
+app.use("/availableimages", AvailableImages);
+app.use("/plans", PlansRoutes);
+app.use("/reservationsEvents", ReservatioEventsRoutes);
+app.use("/categorieslands", CategoryLandsRoutes);
+app.use("/propertyLands", PrpertyLandsRoutes);
+app.use("/imageslands", ImagesLandsRoutes);
+app.use("/BreifLands", BreifLandsRoutes);
+app.use("/reservationLands", ReservationeLandsRoutes);
+app.use("/reservations", ReservationsRoutes);
+app.use("/userstypes", UsersTypesRoutes);
+app.use("/ReservationsChalets", ReservationsChaletsRoutes);
+app.use("/Wallet", WalletRoutes);
+app.use("/propschalets", PropsChaletsRoutes);
+app.use("/FeedBacks", FeedBackRoutes);
+app.use("/messages", MessagesRoutes);
+app.use("/heroLands", HeroLands);
+app.use("/payments", PaymentsRoutes);
+
+const IP_LOOKUP_API =
+  "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
+
 async function checkVPN(userIP) {
   try {
     const response = await axios.get(`${IP_LOOKUP_API}?ip=${userIP}`);
@@ -175,17 +337,17 @@ async function checkVPN(userIP) {
       return false;
     }
 
-    if (fraud_score > 50) {  
+    if (fraud_score > 50) {
       console.log("Fraud score is too high.");
       return false;
     }
 
-    if (isp && isp.toLowerCase().includes("vpn") || city === "unknown") {
+    if ((isp && isp.toLowerCase().includes("vpn")) || city === "unknown") {
       console.log("Suspicious ISP or City.");
       return false;
     }
 
-    if (asn && (asn === "12345" || asn === "67890")) {  
+    if (asn && (asn === "12345" || asn === "67890")) {
       console.log("Suspicious ASN detected.");
       return false;
     }
@@ -196,43 +358,44 @@ async function checkVPN(userIP) {
       return false;
     }
 
-    return true; 
-
+    return true;
   } catch (error) {
     console.error("Error checking VPN:", error);
-    return false; 
+    return false;
   }
 }
 
 function checkAuth(req, res, next) {
-  const token = req.cookies.authToken || req.headers['authorization'];
+  const token = req.cookies.authToken || req.headers["authorization"];
   if (!token) {
-    return res.status(401).json({ message: 'Authentication required' });
+    return res.status(401).json({ message: "Authentication required" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: "Forbidden" });
     }
     req.user = decoded;
     next(); 
   });
 }
 
-app.use('/dashboard', async (req, res, next) => {
-  const userIP = req.query.ip || requestIp.getClientIp(req);  
+app.use("/dashboard", async (req, res, next) => {
+  const userIP = req.query.ip || requestIp.getClientIp(req);
 
-  const isAllowed = await checkVPN(userIP); 
+  const isAllowed = await checkVPN(userIP);
 
   if (!isAllowed) {
-    return res.status(403).json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
+    return res
+      .status(403)
+      .json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
   }
 
   res.status(200).json({ message: "Access granted to the dashboard" });
 });
 
 sequelize.sync({ force: false }).then(() => {
-  console.log('Database connected and synced!');
+  console.log("Database connected and synced!");
 });
 
 app.get("/", (req, res) => {
