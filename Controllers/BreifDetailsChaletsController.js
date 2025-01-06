@@ -1,6 +1,6 @@
 const BreifDetailsChalets = require('../Models/BreifDetailsChalets');
 const Chalet = require('../Models/ChaletsModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 

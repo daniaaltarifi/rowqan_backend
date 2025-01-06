@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../Controllers/UsersController');
+const rateLimit = require('express-rate-limit');
 // const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter');
-const { login, register } = require('../MiddleWares/verifyjwt');
-
+const { login, register, resetPassword, requestPasswordReset } = require('../MiddleWares/verifyjwt');
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  message: 'Too many password reset requests from this IP, please try again after 15 minutes.',
+  standardHeaders: true, 
+  legacyHeaders: false,
+});
 router.post('/createUser', rateLimiter, register);
 
 router.get('/getAllUsers/:lang',rateLimiter, userController.getAllUsers);
@@ -24,4 +31,6 @@ router.get('/verifytoken',userController.verifyToken, (req, res) => {
     const userId = req.user.id; // The user ID from the JWT token's payload
     res.status(200).json({ userId });
   });
+  router.post('/reset-password/:token',resetPassword);
+  router.post('/forgot-password', passwordResetLimiter,requestPasswordReset);
 module.exports = router;

@@ -1,6 +1,6 @@
 const Chalet = require('../Models/ChaletsModel');
 const ChaletsImages = require('../Models/ChaletsImagesModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 exports.createChaletImages = async (req, res) => {

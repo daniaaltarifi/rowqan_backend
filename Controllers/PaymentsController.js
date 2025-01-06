@@ -2,7 +2,7 @@ const  Payments  = require('../Models/PaymentsModels');
 const  Users  = require('../Models/UsersModel');
 const  ReservationChalets  = require('../Models/Reservations_Chalets');
 const { client } = require('../Utils/redisClient');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qNoqUPr65tG7t1OhQ4KVqbj0G7hT2NdJwmtzXlEj9zY2DCVXSNIKE00NeWBobTi');
 
 exports.createPayment = async (req, res) => {

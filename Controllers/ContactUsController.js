@@ -1,5 +1,5 @@
 const ContactUs = require('../Models/ContactUsModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 exports.createContactUs = async (req, res) => {

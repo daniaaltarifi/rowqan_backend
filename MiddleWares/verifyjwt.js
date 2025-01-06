@@ -7,7 +7,7 @@ const dotenv = require("dotenv");
 const asyncHandler = require("../MiddleWares/asyncHandler.js");
 const { client } = require("../Utils/redisClient");
 const { Sequelize } = require("sequelize");
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const speakeasy = require("speakeasy");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -325,7 +325,11 @@ exports.login = async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-
+    res.cookie('token', token, {
+      httpOnly: true, // Cookie can't be accessed from JavaScript
+      maxAge: 3600000, // 1 hour expiration
+      secure: false, // Set to true in production, false in development
+    });
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
@@ -382,7 +386,7 @@ exports.logout = async (req, res) => {
 const saveResetToken = async (userId, resetToken) => {
   try {
     if (!userId || !resetToken) {
-      return Promise.reject(new Error("Invalid parameters"));
+      return Promise.reject( Error("Invalid parameters"));
     }
 
     const result = await User.update(
@@ -417,16 +421,18 @@ exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json(new ErrorResponse("Email is required"));
+    return res.status(400).json(ErrorResponse("Email is required"));
   }
 
   try {
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ where: { email: email } });
+
     if (!user) {
       return res.status(200).json({
         message: "The email does not exist. Please enter the correct email."
       });
     }
+
 
     const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h"
@@ -434,19 +440,17 @@ exports.requestPasswordReset = async (req, res) => {
 
     await saveResetToken(user.id, resetToken);
 
-    // const baseUrl = `${process.env.BASE_URL} || ${req.protocol}://${req.get("host")}`;
-    // const resetUrl = `${baseUrl}/resetPassword/${resetToken}`;
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-    const resetUrl = `https://ba9maonline.com/resetPassword/${resetToken}`;
+    // const baseUrl = process.env.BASE_URL || ${req.protocol}://${req.get('host')};
+    const resetUrl = `http://localhost:5173/en/resetpassword/${resetToken}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Password Reset",
       html: `
-          <p>You requested a password reset. If you did not make this request, please ignore this email.</p>
-          <p>Click the link below to reset your password. This link is valid for 1 hour:</p>
-          <p><a href="${resetUrl}">Reset Password</a></p>
-        `
+        <p>You requested a password reset. If you did not make this request, please ignore this email.</p>
+        <p>Click the link below to reset your password. This link is valid for 1 hour:</p>
+        <p><a href="${resetUrl}">Reset Password</a></p>
+      `
     };
 
     await transporter.sendMail(mailOptions);
@@ -454,32 +458,38 @@ exports.requestPasswordReset = async (req, res) => {
     res.status(200).json({ message: "Password reset link sent to email" });
   } catch (err) {
     console.error("Request password reset error:", err);
-
-    res.status(500).json(new ErrorResponse("Server error", err.message));
+    res.status(500).json(ErrorResponse("Server error", err.message));
   }
 };
+
+
+
 
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password, confirmPassword } = req.body;
+
   if (password !== confirmPassword) {
     return res.status(400).send("Passwords do not match");
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
 
    
-    await User.update({ password: hashedPassword }, { where: { id: userId } });
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
 
-   
-    await User.update(
-      { reset_token: null, reset_token_expiration: null },
-      { where: { id: userId } }
-    );
+    
+    const hashedPassword = await argon2.hash(password);
+
+
+    await user.update({ password: hashedPassword });
 
     res.status(200).json({ message: "Password reset successful" });
   } catch (err) {
@@ -492,3 +502,4 @@ exports.resetPassword = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+

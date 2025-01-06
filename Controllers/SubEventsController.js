@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const Sub_Events = require('../Models/SubEventsModel');
 const Types_Events = require('../Models/TypesEventsModel');
 

@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const Types_Events = require('../Models/TypesEventsModel');
 
 exports.createEventType = async (req, res) => {
