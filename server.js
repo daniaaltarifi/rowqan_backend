@@ -12,19 +12,12 @@ const app = express();
 const compression = require('compression');
 app.use(compression());
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
-
-const server = http.createServer(app);
-const io = socketIo(server);
 
 
-app.use((req, res, next) => {
-  req.socketIoInstance = io;  
-  next();
-});
+
+
+
+
 
 app.use(helmet({
   contentSecurityPolicy: false,
