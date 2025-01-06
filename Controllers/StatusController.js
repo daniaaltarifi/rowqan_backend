@@ -1,6 +1,6 @@
 const Status = require('../Models/StatusModel'); 
-const { validateInput } = require('../Utils/validateInput');
-const { ErrorResponse } = require('../Utils/validateInput');
+const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+
 const {client} = require('../Utils/redisClient')
 
 
