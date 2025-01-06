@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require("../Utils/validateInput");
+const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 const Chalet = require('../Models/ChaletsModel');
 const User = require('../Models/UsersModel');
