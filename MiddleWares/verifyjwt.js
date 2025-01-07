@@ -318,9 +318,13 @@ exports.login = async (req, res) => {
       { id: user.id, user_type_id: user.user_type_id, name: user.name },
       SECRET_KEY,
       { expiresIn: "1h" }
+
     );
    
          
+
+    );        
+
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
