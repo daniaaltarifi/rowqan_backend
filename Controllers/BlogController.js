@@ -1,4 +1,4 @@
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const { client } = require("../Utils/redisClient");
 
 const Blog = require('../Models/BlogModel')

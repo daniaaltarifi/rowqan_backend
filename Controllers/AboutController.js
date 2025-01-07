@@ -1,59 +1,59 @@
 const About = require('../Models/AboutModel')
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const { client } = require("../Utils/redisClient");
 
 
 exports.createAbout = async (req, res) => {
-    try {
-      const { title, description,lang } = req.body || {};
-      const image = req.file?.filename || null;
-      if (!title || !description || !lang || !image) {
-        return res
-          .status(400)
-          .json(
-            ErrorResponse("Validation failed", [
-              "All Fields are required",
-            ])
-          );
-      }
-  
-  
-      const validationErrors = validateInput({ title, description,lang });
-      if (validationErrors.length > 0) {
-        return res
-          .status(400)
-          .json(ErrorResponse("Validation failed", validationErrors));
-      }
-  
-      const newAboutPromise = About.create({ title, description,lang,image });
-  
-      const cacheDeletePromises = [client.del(`about:page:1:limit:20`)];
-  
-      const [newAbout] = await Promise.all([
-        newAboutPromise,
-        ...cacheDeletePromises,
-      ]);
-  
-      await client.set(`about:${newAbout.id}`, JSON.stringify(newAbout), {
-        EX: 3600,
-      });
-  
-      res.status(201).json({
-        message: "About Us created successfully",
-        about: newAbout,
-      });
-    } catch (error) {
-      console.error("Error in createAbout:", error.message);
-      res
-        .status(500)
+  try {
+    const { title, description,lang } = req.body || {};
+    const image = req.file?.filename || null;
+    if (!title || !description || !lang || !image) {
+      return res
+        .status(400)
         .json(
-          ErrorResponse("Failed to create Hero", [
-            "An internal server error occurred.",
+          ErrorResponse("Validation failed", [
+            "All Fields are required",
           ])
         );
     }
-  };
-  
+
+
+    const validationErrors = validateInput({ title, description,lang });
+    if (validationErrors.length > 0) {
+      return res
+        .status(400)
+        .json(ErrorResponse("Validation failed", validationErrors));
+    }
+
+    const newAboutPromise = About.create({ title, description,lang,image });
+
+    const cacheDeletePromises = [client.del(`about:page:1:limit:20`)];
+
+    const [newAbout] = await Promise.all([
+      newAboutPromise,
+      ...cacheDeletePromises,
+    ]);
+
+    await client.set(`about:${newAbout.id}`, JSON.stringify(newAbout), {
+      EX: 3600,
+    });
+
+    res.status(201).json({
+      message: "About Us created successfully",
+      about: newAbout,
+    });
+  } catch (error) {
+    console.error("Error in createAbout:", error.message);
+    res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to create Hero", [
+          "An internal server error occurred.",
+        ])
+      );
+  }
+};
+
 
 
   exports.getAbout = async (req, res) => {

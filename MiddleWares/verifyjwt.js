@@ -203,12 +203,6 @@ exports.login = async (req, res) => {
       .send("Your IP is blocked due to too many failed login attempts.");
   }
 
-  const geo = geoip.lookup(clientIp);
-
-  if (!geo || geo.country !== "JO") {
-    return res.status(403).send("Access is restricted to Jordan IPs only.");
-  }
-
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -243,6 +237,11 @@ exports.login = async (req, res) => {
         return res.status(400).send("Email is not authorized for login process");
       }
 
+      const geo = geoip.lookup(clientIp);
+
+      if (!geo || geo.country !== "JO") {
+        return res.status(403).send("Access is restricted to Jordan IPs only.");
+      }
 
       if (!mfaCode) {
         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
@@ -254,7 +253,6 @@ exports.login = async (req, res) => {
           "MFA code has been sent to your email. Please enter the code to complete login."
         );
       }
-
 
       if (Date.now() > mfaCodeExpiration) {
         return res.status(400).send("MFA code has expired");
@@ -296,28 +294,6 @@ exports.login = async (req, res) => {
           });
           return res.status(400).send("Invalid MFA code");
         }
-      if (!storedDeviceInfo) {
-        await User.updateDeviceInfo(user.id, deviceDetails);
-        return res.status(200).json({
-          message: "Your device information has been saved. You will only be able to log in from this device.",
-          token: jwt.sign(
-            { id: user.id, user_type_id: user.user_type_id, name: user.name },
-            SECRET_KEY,
-            { expiresIn: "1h" }
-          ),
-          name: user.name,
-          user_type_id: user.user_type_id,
-          id: user.id,
-          deviceInfo: deviceDetails,
-        });
-      } else if (
-        parsedStoredDeviceInfo &&
-        JSON.stringify(parsedStoredDeviceInfo) !== JSON.stringify(deviceDetails)
-      ) {
-        return res.status(403).json({
-          message: "Login not allowed from this device",
-        });
-      }
     }
 
     const token = jwt.sign(
