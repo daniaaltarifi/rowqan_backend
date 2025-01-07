@@ -9,7 +9,6 @@ const { client } = require("../Utils/redisClient");
 const { Sequelize } = require("sequelize");
 
 const { ErrorResponse, validateInput } = require("../Utils/validateInput.js");
-
 const speakeasy = require("speakeasy");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -170,6 +169,8 @@ const sendVerificationCode = async (email, mfaCode) => {
 
 const blockedIps = new Set();
 const failedAttempts = {};
+
+
 exports.login = async (req, res) => {
   const { email, password, mfaCode, ip } = req.body;
   const clientIp =
@@ -178,8 +179,7 @@ exports.login = async (req, res) => {
     req.headers["x-forwarded-for"] ||
     req.connection.remoteAddress;
 
-
-
+ 
   if (blockedIps.has(clientIp)) {
     return res
       .status(403)
@@ -219,12 +219,14 @@ exports.login = async (req, res) => {
       if (!email.endsWith("@kasselsoft.com")) {
         return res.status(400).send("Email is not authorized for login process");
       }
-
+     
       const geo = geoip.lookup(clientIp);
 
       if (!geo || geo.country !== "JO") {
         return res.status(403).send("Access is restricted to Jordan IPs only.");
       }
+   
+
 
       if (!mfaCode) {
         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
@@ -236,6 +238,7 @@ exports.login = async (req, res) => {
           "MFA code has been sent to your email. Please enter the code to complete login."
         );
       }
+
 
       if (Date.now() > mfaCodeExpiration) {
         return res.status(400).send("MFA code has expired");
@@ -249,23 +252,59 @@ exports.login = async (req, res) => {
         return res.status(400).send("Invalid MFA code");
       }
     } else if (user.user_type_id === 2) {
+      const storedDeviceInfo = await User.getDeviceInfo(user.id);
+      const parsedStoredDeviceInfo = storedDeviceInfo
+        ? JSON.parse(storedDeviceInfo)
+        : null;
 
         if (!mfaCode) {
           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
           mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
-  
+ 
           await sendVerificationCode(email, mfaCodeMemory);
-  
+ 
           return res.status(200).send(
             "MFA code has been sent to your email. Please enter the code to complete login."
           );
         }
-  
-  
+ 
+ 
         if (Date.now() > mfaCodeExpiration) {
           return res.status(400).send("MFA code has expired");
         }
-  
+ 
+        if (String(mfaCode) !== String(mfaCodeMemory)) {
+          await AuditLog.create({
+            action: "Failed MFA Verification",
+            details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+          });
+          return res.status(400).send("Invalid MFA code");
+        }
+    }
+
+
+    else if (user.user_type_id === 4) {
+      const storedDeviceInfo = await User.getDeviceInfo(user.id);
+      const parsedStoredDeviceInfo = storedDeviceInfo
+        ? JSON.parse(storedDeviceInfo)
+        : null;
+
+        if (!mfaCode) {
+          mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+          mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+ 
+          await sendVerificationCode(email, mfaCodeMemory);
+ 
+          return res.status(200).send(
+            "MFA code has been sent to your email. Please enter the code to complete login."
+          );
+        }
+ 
+ 
+        if (Date.now() > mfaCodeExpiration) {
+          return res.status(400).send("MFA code has expired");
+        }
+ 
         if (String(mfaCode) !== String(mfaCodeMemory)) {
           await AuditLog.create({
             action: "Failed MFA Verification",
@@ -280,24 +319,26 @@ exports.login = async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-    res.cookie('token', token, {
-      httpOnly: true, 
-      maxAge: 3600000, 
-      secure: false,
-    });
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-    //   sameSite: "Strict",
-    // });         
+   
+         
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
     });
 
     delete failedAttempts[clientIp];
-
+    res.cookie('token', token, {
+      httpOnly: true, // Cookie can't be accessed from JavaScript
+      maxAge: 3600000, // 1 hour expiration
+      secure: false, // Set to true in production, false in development
+    });
+    // PRODUCTION
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   sameSite: "Strict",
+    // });  
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -473,4 +514,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-

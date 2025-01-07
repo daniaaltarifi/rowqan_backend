@@ -159,52 +159,54 @@ exports.getChaletDetailsByChaletId = async (req, res) => {
 
 
 
+
 exports.getChaletDetailsById = async (req, res) => {
   try {
     const { id, lang } = req.params;
 
-   
-    const chalet = await Chalet.findByPk(id);
-    if (!chalet) {
-      return res.status(404).json(ErrorResponse('Chalet not found'));
-    }
-
-    
     const cacheKey = `chaletdetails:${id}:${lang}`;
 
-  
+    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for chalet details by id:", id);
-      return res.status(200).json( JSON.parse(cachedData),
-      );
+      return res.status(200).json(JSON.parse(cachedData));
     }
-    console.log("Cache miss for chalet details by id:", id);
 
     
-    const chaletDetails = await ChaletsDetails.findAll({
-      where: {
-        id,
-        lang,
-      },
+    const chaletDetails = await ChaletsDetails.findOne({
+      attributes: ["id", "lang", "name", "description", "price", "image"], 
+      where: { id, lang },
     });
 
     
-    if (chaletDetails.length === 0) {
-      return res.status(404).json(ErrorResponse('No details found for this chalet'));
+    if (!chaletDetails) {
+      return res
+        .status(404)
+        .json(
+          ErrorResponse("Chalet details not found", [
+            "No chalet details found with the given ID and language.",
+          ])
+        );
     }
 
     
     await client.setEx(cacheKey, 3600, JSON.stringify(chaletDetails));
 
-    res.status(200).json(
-      chaletDetails,
-  );
+   
+    return res.status(200).json(chaletDetails);
   } catch (error) {
     console.error("Error in getChaletDetailsById:", error);
-    res.status(500).json(ErrorResponse('Failed to fetch chalet details'));
+
+    return res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to fetch chalet details", [
+          "An internal server error occurred. Please try again later.",
+        ])
+      );
   }
 };
+
 
 
 

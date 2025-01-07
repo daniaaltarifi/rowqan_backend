@@ -82,20 +82,20 @@ const io = socketIo(server, {
 });
 
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
+// io.on("connection", (socket) => {
+//   console.log("a user connected");
 
 
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
+//   socket.on("send_message", (data) => {
+//     console.log("Message received:", data);
    
-    io.emit("receive_message", data);
-  });
+//     io.emit("receive_message", data);
+//   });
 
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
-});
+//   socket.on("disconnect", () => {
+//     console.log("user disconnected");
+//   });
+// });
 
 
 
@@ -146,31 +146,33 @@ const BlogRoutes = require('./Routes/BlogRoutes')
 
 
 
-// io.on("connection", (socket) => {
-//   console.log("A user connected");
+io.on("connection", (socket) => {
+  console.log("A user connected");
 
-//   socket.on("send_message", (message) => {
-//     console.log("Message received: ", message);
-//     io.emit("receive_message", message);
-//   });
+  socket.on("send_message", (message) => {
+    console.log("Message received: ", message);
+    io.emit("receive_message", message);
+  });
 
-//   socket.on('receive_message', (data) => {
-//     console.log("Message received:", data);
-//   });
+  socket.on('receive_message', (data) => {
+    console.log("Message received:", data);
+  });
 
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected");
-//   });
-// });
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
 
 
 
 
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://rowqan.com",
-  "https://rowqanbackend.rowqan.com",
+  'http://localhost:5173',
+  'http://localhost:3001',
+  'https://rowqan.com',
+  'https://rowqanbackend.rowqan.com',
 ];
+
 
 const corsOptions = {
   origin: (origin, callback) => {
