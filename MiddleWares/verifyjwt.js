@@ -10,8 +10,6 @@ const { Sequelize } = require("sequelize");
 
 const { ErrorResponse, validateInput } = require("../Utils/validateInput.js");
 
-
-
 const speakeasy = require("speakeasy");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -287,6 +285,12 @@ exports.login = async (req, res) => {
       maxAge: 3600000, 
       secure: false,
     });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   sameSite: "Strict",
+    // });         
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,

@@ -1,4 +1,5 @@
 
+
 const express = require('express');
 const sequelize = require('./Config/dbConnect');
 const helmet = require('helmet');
@@ -11,15 +12,20 @@ require('dotenv').config();
 
 
 
+
+
+
 const app = express();
 const compression = require("compression");
 app.use(compression());
+
 
 
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
+
 
 
 
@@ -33,12 +39,19 @@ app.use(
 // const server = http.createServer(app);
 // const io = socketIo(server);
 
-
 app.use((req, res, next) => {
   req.socketIoInstance = io;
   next();
 });
 
+
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 
 app.use(express.json());
@@ -83,6 +96,7 @@ io.on("connection", (socket) => {
     console.log("user disconnected");
   });
 });
+
 
 
 
@@ -174,6 +188,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 
+
 app.use('/users', UsersRoutes);
 app.use('/logos', LogoRoutes);
 app.use('/header', HeaderRoutes);
@@ -222,6 +237,7 @@ app.use('/Blogs',BlogRoutes)
 
 
 
+
 app.use("/users", UsersRoutes);
 app.use("/logos", LogoRoutes);
 app.use("/header", HeaderRoutes);
@@ -260,10 +276,10 @@ app.use("/FeedBacks", FeedBackRoutes);
 app.use("/messages", MessagesRoutes);
 app.use("/heroLands", HeroLands);
 app.use("/payments", PaymentsRoutes);
-
+app.use('/aboutUs',AboutRoutes)
+app.use('/Blogs',BlogRoutes)
 const IP_LOOKUP_API =
   "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
-
 
 async function checkVPN(userIP) {
   try {
@@ -314,7 +330,7 @@ function checkAuth(req, res, next) {
       return res.status(403).json({ message: "Forbidden" });
     }
     req.user = decoded;
-    next(); 
+    next();
   });
 }
 

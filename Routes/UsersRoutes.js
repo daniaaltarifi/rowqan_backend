@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
+
 const userTypesController = require('../Controllers/UsersTypesController');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter');
 const { register, login, logout, resetPassword ,requestPasswordReset } = require('../MiddleWares/verifyJWT.js');
 const rateLimit = require('express-rate-limit');
-
-
-
 
 const userController = require('../Controllers/UsersController');
 
