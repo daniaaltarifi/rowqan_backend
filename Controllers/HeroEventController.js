@@ -1,5 +1,5 @@
 const Events_Hero = require('../Models/EventsHeroModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client}  =  require('../Utils/redisClient')
 
 

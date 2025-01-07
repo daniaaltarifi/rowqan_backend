@@ -4,7 +4,7 @@ const Chalet = require('../Models/ChaletsModel');
 const Types_Events = require('../Models/TypesEventsModel');
 const User = require('../Models/UsersModel');
 const CashBack = require('../Models/CashBackModel');
-const { validateInput, ErrorResponse } = require('../Utils/ValidateInput');
+const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 
 exports.createReservation = async (req, res) => {
   try {
