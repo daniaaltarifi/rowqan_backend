@@ -1,4 +1,4 @@
-const  Payments  = require('../Models/PaymentsModels');
+const  Payments  = require('../Models/PaymentModel');
 const  Users  = require('../Models/UsersModel');
 const  ReservationChalets  = require('../Models/Reservations_Chalets');
 const { client } = require('../Utils/redisClient');
