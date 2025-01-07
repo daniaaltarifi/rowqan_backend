@@ -202,27 +202,26 @@ exports.getAllChaletsByProps = async (req, res) => {
 
 
 
+
 exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
+    const cacheKey = `chalet:${id}:lang:${lang || "all"}`;
 
-    const cacheKey = `chalet:${id}:lang:${lang || 'all'}`;
 
-   
+    client.del(cacheKey);
+
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit for chalet:", id);
-      return res.status(200).json(
-        JSON.parse(cachedData),
-      );
+      return res.status(200).json(JSON.parse(cachedData));
     }
     console.log("Cache miss for chalet:", id);
 
-   
     const whereClause = { id };
     if (lang) {
-      if (!['ar', 'en'].includes(lang)) {
+      if (!["ar", "en"].includes(lang)) {
         return res.status(400).json({
           error: 'Invalid language. Supported languages are "ar" and "en".',
         });
@@ -230,16 +229,15 @@ exports.getChaletById = async (req, res) => {
       whereClause.lang = lang;
     }
 
-   
     const chalet = await Chalet.findOne({
       where: whereClause,
       include: [
-        { model: Status, attributes: ['status'] },
-        { model: chaletsImages, attributes: ['image'] },
-        { model: BreifDetailsChalets, attributes: ['type'] },
-        { model: RightTimeModel, attributes: ['time'] },
-        { model: ChaletsDetails, attributes: ['detail_type'] },
-        { model: ReservationsModel, attributes: ['Chalet_id'] }
+        { model: Status, attributes: ["status"] },
+        { model: chaletsImages, attributes: ["image"] },
+        { model: BreifDetailsChalets, attributes: ["type"] },
+        { model: RightTimeModel, attributes: ["time"] },
+        { model: ChaletsDetails, attributes: ["detail_type"] },
+        { model: ReservationsModel, attributes: ["Chalet_id"] },
       ],
     });
 
@@ -249,15 +247,30 @@ exports.getChaletById = async (req, res) => {
       });
     }
 
-   
-    await client.setEx(cacheKey, 3600, JSON.stringify(chalet));
+    
+    const updatedChaletData = {
+      id: chalet.id,
+      title: chalet.title,
+      image: chalet.image,
+      reserve_price: chalet.reserve_price,
+      lang: chalet.lang,
+      status: [chalet.Status.status], 
+      ChaletsImages: chalet.ChaletsImages.map(img => img.image),  
+      BreifDetailsChalets: chalet.BreifDetailsChalets.map(detail => detail.type),  
+      RightTimeModels: chalet.RightTimeModels.map(time => time.time), 
+      ChaletsDetails: chalet.ChaletsDetails.map(detail => detail.detail_type),  
+      Reservations: chalet.Reservations.map(reservation => reservation.Chalet_id),  
+    };
 
-    res.status(200).json({ chalet });
+    await client.setEx(cacheKey, 3600, JSON.stringify(updatedChaletData));
+
+    res.status(200).json(updatedChaletData);
   } catch (error) {
     console.error("Error in getChaletById:", error);
-    res.status(500).json({ error: 'Failed to fetch chalet' });
+    res.status(500).json({ error: "Failed to fetch chalet" });
   }
 };
+
 
 
 exports.updateChalet = async (req, res) => {

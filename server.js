@@ -61,15 +61,73 @@ const io = socketIo(server, {
 });
 
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
+// io.on("connection", (socket) => {
+//   console.log("a user connected");
 
 
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
+//   socket.on("send_message", (data) => {
+//     console.log("Message received:", data);
    
-    io.emit("receive_message", data);
-  });
+//     io.emit("receive_message", data);
+//   });
+
+
+//   socket.on("disconnect", () => {
+//     console.log("user disconnected");
+//   });
+// });
+
+
+
+
+
+const UsersRoutes = require('./Routes/UsersRoutes');
+const LogoRoutes = require('./Routes/LogoRoutes');
+const HeaderRoutes = require('./Routes/HeaderRoutes');
+const HeroesRoutes = require('./Routes/HeroRoutes');
+const ServicesRoutes = require('./Routes/ServicesRoutes');
+const FooterRoutes = require('./Routes/FooterRoutes');
+const FooterIconRoutes = require('./Routes/FooterIconsRoutes');
+const HeroChaletsRoutes = require('./Routes/ChaletsHeroRoutes');
+const ChaletsRoutes = require('./Routes/ChaletsRoutes');
+const statusChaletRoutes = require('./Routes/StatusChaletsRoutes');
+const ChaletImagesRoutes = require('./Routes/ChaletsImagesRoutes');
+const BreifDetailsChaletsRoutes = require('./Routes/BreifDetailsChaletsRoutes');
+const ReservatioDatesRoutes = require('./Routes/ReservationsDateRoutes');
+const ContactUsRoutes = require('./Routes/ContactUsRoutes');
+const RightTimeRoutes = require('./Routes/RightTimeRoutes');
+const StatusRoutes = require('./Routes/StatusRoutes');
+const ChaletsDetailsRoutes = require('./Routes/ChaletsDetailsRoutes');
+const HeroEventsRoutes = require('./Routes/EventsHeroRoutes');
+const EventsTypesRoutes = require('./Routes/TypesEventsRoutes');
+const SubEventsRoutes = require('./Routes/SubEventsRoutes');
+const AvailableEventsRoutes = require('./Routes/AvailableEventsRoutes');
+const AvailableImages = require('./Routes/AvailableImagesRoutes');
+const PlansRoutes = require('./Routes/PlansRoutes');
+const ReservatioEventsRoutes = require('./Routes/ReservationsEventsRoutes');
+const CategoryLandsRoutes = require('./Routes/CategoriesLandsRoutes');
+const PrpertyLandsRoutes = require('./Routes/PropertiesLandsRoutes');
+const ImagesLandsRoutes = require('./Routes/CategoriesImagesRoutes');
+const BreifLandsRoutes = require('./Routes/BriefLandsRoutes');
+const ReservationeLandsRoutes = require('./Routes/ReservationsLandsRoutes');
+const ReservationsRoutes = require('./Routes/ReservationsRoutes');
+const UsersTypesRoutes = require('./Routes/UsersTypesRoutes');
+const ReservationsChaletsRoutes = require('./Routes/ReservationsChaletsRoutes');
+const WalletRoutes = require('./Routes/WalletRoutes');
+const PropsChaletsRoutes = require('./Routes/ChaletsPropsRoutes');
+const FeedBackRoutes = require('./Routes/FeedBacksRoutes');
+const MessagesRoutes = require('./Routes/MessagesRoutes');
+const HeroLands = require('./Routes/HeroLandsRoutes');
+const PaymentsRoutes = require('./Routes/PaymentsRoutes')
+const AboutRoutes = require('./Routes/AboutUsRoutes')
+const BlogRoutes = require('./Routes/BlogRoutes')
+
+
+
+
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -78,19 +136,20 @@ io.on("connection", (socket) => {
 // io.on("connection", (socket) => {
 //   console.log("A user connected");
 
-//   socket.on("send_message", (message) => {
-//     console.log("Message received: ", message);
-//     io.emit("receive_message", message);
-//   });
 
-//   socket.on('receive_message', (data) => {
-//     console.log("Message received:", data);
-//   });
+  socket.on("send_message", (message) => {
+    console.log("Message received: ", message);
+    io.emit("receive_message", message);
+  });
 
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected");
-//   });
-// });
+  socket.on('receive_message', (data) => {
+    console.log("Message received:", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
 
 const UsersRoutes = require("./Routes/UsersRoutes");
 const LogoRoutes = require("./Routes/LogoRoutes");
@@ -135,10 +194,12 @@ const BlogRoutes = require('./Routes/BlogRoutes')
 
 
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://rowqan.com",
-  "https://rowqanbackend.rowqan.com",
+  'http://localhost:5173',
+  'http://localhost:3001',
+  'https://rowqan.com',
+  'https://rowqanbackend.rowqan.com',
 ];
+
 
 const corsOptions = {
   origin: (origin, callback) => {
