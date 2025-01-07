@@ -279,25 +279,25 @@ exports.login = async (req, res) => {
       { id: user.id, user_type_id: user.user_type_id, name: user.name },
       SECRET_KEY,
       { expiresIn: "1h" }
-    );
-    res.cookie('token', token, {
-      httpOnly: true, 
-      maxAge: 3600000, 
-      secure: false,
-    });
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-    //   sameSite: "Strict",
-    // });         
+    );        
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
     });
 
     delete failedAttempts[clientIp];
-
+    res.cookie('token', token, {
+      httpOnly: true, 
+      maxAge: 3600000, 
+      secure: false,
+    });
+    // PRODUCTION
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   sameSite: "Strict",
+    // });  
     return res.status(200).json({
       message: "Login successful",
       token,
