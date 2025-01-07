@@ -53,6 +53,9 @@ app.use(express.json());
 // app.use(cors(corsOptions));
 
 // Create HTTP server and attach Socket.IO
+
+
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -60,19 +63,19 @@ const io = socketIo(server, {
       "http://localhost:5173",
       "https://rowqan.com",
       "https://rowqanbackend.rowqan.com",
-    ], // Allow frontend to connect
+    ], 
     methods: ["GET", "POST"],
   },
 });
 
-// Example Socket.IO connection event
+
 io.on("connection", (socket) => {
   console.log("a user connected");
 
-  // Handle message events
+
   socket.on("send_message", (data) => {
     console.log("Message received:", data);
-    // Broadcast to other users
+   
     io.emit("receive_message", data);
   });
 
