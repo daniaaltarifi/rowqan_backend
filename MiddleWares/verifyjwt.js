@@ -178,26 +178,7 @@ exports.login = async (req, res) => {
     req.headers["x-forwarded-for"] ||
     req.connection.remoteAddress;
 
-  const userAgent = req.headers["user-agent"];
-  const parser = new UAParser();
-  const deviceInfo = parser.setUA(userAgent).getResult();
 
-  const deviceDetails = {
-    ip: clientIp,
-    os: `${deviceInfo.os.name || "Unknown"} ${deviceInfo.os.version || "Unknown"}`,
-    browser: `${deviceInfo.browser.name || "Unknown"} ${deviceInfo.browser.version || "Unknown"}`,
-    platform: deviceInfo.device.type || deviceInfo.os.name || "Unknown",
-  };
-
-  if (deviceDetails.platform === "Unknown") {
-    if (deviceDetails.os.includes("Windows") || deviceDetails.os.includes("Mac")) {
-      deviceDetails.platform = "Desktop";
-    } else if (deviceDetails.os.includes("Android") || deviceDetails.os.includes("iOS")) {
-      deviceDetails.platform = "Mobile";
-    } else {
-      deviceDetails.platform = "Unknown";
-    }
-  }
 
   if (blockedIps.has(clientIp)) {
     return res
@@ -268,10 +249,6 @@ exports.login = async (req, res) => {
         return res.status(400).send("Invalid MFA code");
       }
     } else if (user.user_type_id === 2) {
-      const storedDeviceInfo = await User.getDeviceInfo(user.id);
-      const parsedStoredDeviceInfo = storedDeviceInfo
-        ? JSON.parse(storedDeviceInfo)
-        : null;
 
         if (!mfaCode) {
           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
@@ -304,9 +281,9 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
     res.cookie('token', token, {
-      httpOnly: true, // Cookie can't be accessed from JavaScript
-      maxAge: 3600000, // 1 hour expiration
-      secure: false, // Set to true in production, false in development
+      httpOnly: true, 
+      maxAge: 3600000, 
+      secure: false,
     });
     // res.cookie("token", token, {
     //   httpOnly: true,
