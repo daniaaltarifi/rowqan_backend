@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const userController = require('../Controllers/UsersController');
 const rateLimit = require('express-rate-limit');
 // const authMiddleware = require('../MiddleWares/authMiddleware');
@@ -33,4 +34,5 @@ router.get('/verifytoken',userController.verifyToken, (req, res) => {
   });
   router.post('/reset-password/:token',resetPassword);
   router.post('/forgot-password', passwordResetLimiter,requestPasswordReset);
+
 module.exports = router;
