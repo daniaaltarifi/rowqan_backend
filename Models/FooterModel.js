@@ -20,6 +20,6 @@ const Footer = sequelize.define('Footer', {
 });
 
 
-Footer.hasMany(FooterIcons, { foreignKey: 'footer_id', onDelete: 'CASCADE' });
-FooterIcons.belongsTo(Footer, { foreignKey: 'footer_id' });
+// Footer.hasMany(FooterIcons, { foreignKey: 'footer_id', onDelete: 'CASCADE' });
+// FooterIcons.belongsTo(Footer, { foreignKey: 'footer_id' });
 module.exports = Footer;
