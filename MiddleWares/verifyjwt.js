@@ -282,7 +282,6 @@ exports.login = async (req, res) => {
         }
     }
 
-
     else if (user.user_type_id === 4) {
       const storedDeviceInfo = await User.getDeviceInfo(user.id);
       const parsedStoredDeviceInfo = storedDeviceInfo
@@ -345,16 +344,12 @@ exports.login = async (req, res) => {
           return res.status(400).send("Invalid MFA code");
         }
     }
-
     const token = jwt.sign(
       { id: user.id, user_type_id: user.user_type_id, name: user.name },
       SECRET_KEY,
       { expiresIn: "1h" }
     );
    
-         
-      
-
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,

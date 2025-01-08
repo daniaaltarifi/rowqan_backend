@@ -1,11 +1,13 @@
-const express = require("express");
-const sequelize = require("./Config/dbConnect");
-const helmet = require("helmet");
-const http = require("http");
-const socketIo = require("socket.io");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-require("dotenv").config();
+
+const express = require('express');
+const sequelize = require('./Config/dbConnect');
+const helmet = require('helmet');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
+
 const app = express();
 const compression = require("compression");
 app.use(compression());
