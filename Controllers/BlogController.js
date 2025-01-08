@@ -70,7 +70,7 @@ exports.createBlog = async (req, res) => {
           .json(new ErrorResponse("Invalid language", ["Language parameter is required and must be a string"]));
       }
   
-      
+      client.del(`blogs:lang:${lang}:page:${page}:limit:${limit}`)
       const cacheKey = `blogs:lang:${lang}:page:${page}:limit:${limit}`;
   
       
