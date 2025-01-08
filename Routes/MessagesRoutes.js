@@ -1,7 +1,18 @@
 const express = require('express');
+const app = express();
 const router = express.Router();
 const MessagesController = require('../Controllers/MessagesController');
+const http = require('http');
+const socketIo = require('socket.io');
 
+const server = http.createServer(app);
+const io = socketIo(server);
+
+
+app.use((req, res, next) => {
+  req.socketIoInstance = io; 
+  next();
+});
 
 router.post('/SendMessage', (req, res, next) => {
   req.socketIoInstance = req.app.get('socketIoInstance'); 

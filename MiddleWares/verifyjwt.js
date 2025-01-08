@@ -169,6 +169,8 @@ const sendVerificationCode = async (email, mfaCode) => {
 
 const blockedIps = new Set();
 const failedAttempts = {};
+
+
 exports.login = async (req, res) => {
   const { email, password, mfaCode, ip } = req.body;
   const clientIp =
@@ -294,9 +296,9 @@ exports.login = async (req, res) => {
 
     delete failedAttempts[clientIp];
     res.cookie('token', token, {
-      httpOnly: true, 
-      maxAge: 3600000, 
-      secure: false,
+      httpOnly: true, // Cookie can't be accessed from JavaScript
+      maxAge: 3600000, // 1 hour expiration
+      secure: false, // Set to true in production, false in development
     });
     // PRODUCTION
     // res.cookie("token", token, {
@@ -455,4 +457,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-

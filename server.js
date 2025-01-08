@@ -1,12 +1,11 @@
-const express = require('express');
-const sequelize = require('./Config/dbConnect');
-const helmet = require('helmet');
-const http = require('http');
-const socketIo = require('socket.io');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-require('dotenv').config();
-
+const express = require("express");
+const sequelize = require("./Config/dbConnect");
+const helmet = require("helmet");
+const http = require("http");
+const socketIo = require("socket.io");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 const app = express();
 const compression = require("compression");
 app.use(compression());
@@ -17,10 +16,6 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
-
-// const server = http.createServer(app);
-// const io = socketIo(server);
-
 app.use((req, res, next) => {
   req.socketIoInstance = io;
   next();
@@ -35,19 +30,8 @@ app.use(
 
 app.use(express.json());
 
-// const corsOptions = {
-//   origin: "http://localhost:5173",  // Replace with your frontend URL
-//   methods: ["GET", "POST"],
-//   allowedHeaders: ["Content-Type"],
-// };
-
-// // Apply CORS middleware to the express app
-// app.use(cors(corsOptions));
 
 // Create HTTP server and attach Socket.IO
-
-
-
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -55,19 +39,19 @@ const io = socketIo(server, {
       "http://localhost:5173",
       "https://rowqan.com",
       "https://rowqanbackend.rowqan.com",
-    ], 
+    ], // Allow frontend to connect
     methods: ["GET", "POST"],
   },
 });
 
-
+// Example Socket.IO connection event
 io.on("connection", (socket) => {
   console.log("a user connected");
 
-
+  // Handle message events
   socket.on("send_message", (data) => {
     console.log("Message received:", data);
-   
+    // Broadcast to other users
     io.emit("receive_message", data);
   });
 
@@ -75,22 +59,6 @@ io.on("connection", (socket) => {
     console.log("user disconnected");
   });
 });
-// io.on("connection", (socket) => {
-//   console.log("A user connected");
-
-//   socket.on("send_message", (message) => {
-//     console.log("Message received: ", message);
-//     io.emit("receive_message", message);
-//   });
-
-//   socket.on('receive_message', (data) => {
-//     console.log("Message received:", data);
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected");
-//   });
-// });
 
 const UsersRoutes = require("./Routes/UsersRoutes");
 const LogoRoutes = require("./Routes/LogoRoutes");
@@ -132,8 +100,6 @@ const HeroLands = require("./Routes/HeroLandsRoutes");
 const PaymentsRoutes = require("./Routes/PaymentsRoutes");
 const AboutRoutes = require('./Routes/AboutusRoutes')
 const BlogRoutes = require('./Routes/BlogRoutes')
-
-
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
