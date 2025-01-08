@@ -294,9 +294,9 @@ exports.login = async (req, res) => {
 
     delete failedAttempts[clientIp];
     res.cookie('token', token, {
-      httpOnly: true, // Cookie can't be accessed from JavaScript
-      maxAge: 3600000, // 1 hour expiration
-      secure: false, // Set to true in production, false in development
+      httpOnly: true, 
+      maxAge: 3600000, 
+      secure: false,
     });
     // PRODUCTION
     // res.cookie("token", token, {
