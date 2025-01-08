@@ -319,11 +319,7 @@ exports.login = async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
 
-    );
-   
-         
-
-    );        
+    );       
 
     await AuditLog.create({
       action: "Successful Login",
