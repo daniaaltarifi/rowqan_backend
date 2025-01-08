@@ -15,7 +15,7 @@ router.get('/getPropChaletById/:id/:lang', ChaletsPropsController.getChaletPropB
 router.get('/getAllChaletPropsByChaletId/:Chalet_Id/:lang',rateLimiter,ChaletsPropsController.getAllChaletPropsByChaletId)
 
 
-router.put('/UpdatePropChalet/:id', rateLimiter, ChaletsPropsController.updateProperty);
+router.put('/UpdatePropChalet/:id', rateLimiter,multer.single("image"), ChaletsPropsController.updateProperty);
 router.delete('/DeletePropChalet/:id/:lang',rateLimiter, ChaletsPropsController.deleteChaletProp);
 
 module.exports = router;
