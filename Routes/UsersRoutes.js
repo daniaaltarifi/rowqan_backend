@@ -5,7 +5,7 @@ const router = express.Router();
 const userTypesController = require('../Controllers/UsersTypesController');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter');
-const { register, login, logout, resetPassword ,requestPasswordReset } = require('../MiddleWares/verifyJWT.js');
+const { register, login, logout, resetPassword ,requestPasswordReset } = require('../MiddleWares/verifyjwt');
 const rateLimit = require('express-rate-limit');
 
 const userController = require('../Controllers/UsersController');
@@ -47,7 +47,7 @@ router.delete('/DeleteUser/:id/:lang',  rateLimiter, userController.deleteUser);
 router.post('/login', rateLimiter, login);
 
 
-router.post('/logout', rateLimiter, logout);
+router.post('/logout', rateLimiter, userController.logout);
 
 
 router.post('/createAdmin', userController.createAdmin);

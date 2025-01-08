@@ -9,7 +9,6 @@ const { client } = require("../Utils/redisClient");
 const { Sequelize } = require("sequelize");
 
 const { ErrorResponse, validateInput } = require("../Utils/validateInput.js");
-
 const speakeasy = require("speakeasy");
 dotenv.config();
 const nodemailer = require("nodemailer");
@@ -178,8 +177,7 @@ exports.login = async (req, res) => {
     req.headers["x-forwarded-for"] ||
     req.connection.remoteAddress;
 
-
-
+ 
   if (blockedIps.has(clientIp)) {
     return res
       .status(403)
@@ -219,12 +217,14 @@ exports.login = async (req, res) => {
       if (!email.endsWith("@kasselsoft.com")) {
         return res.status(400).send("Email is not authorized for login process");
       }
-
+     
       const geo = geoip.lookup(clientIp);
 
       if (!geo || geo.country !== "JO") {
         return res.status(403).send("Access is restricted to Jordan IPs only.");
       }
+   
+
 
       if (!mfaCode) {
         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
@@ -236,6 +236,7 @@ exports.login = async (req, res) => {
           "MFA code has been sent to your email. Please enter the code to complete login."
         );
       }
+
 
       if (Date.now() > mfaCodeExpiration) {
         return res.status(400).send("MFA code has expired");
@@ -249,23 +250,27 @@ exports.login = async (req, res) => {
         return res.status(400).send("Invalid MFA code");
       }
     } else if (user.user_type_id === 2) {
+      const storedDeviceInfo = await User.getDeviceInfo(user.id);
+      const parsedStoredDeviceInfo = storedDeviceInfo
+        ? JSON.parse(storedDeviceInfo)
+        : null;
 
         if (!mfaCode) {
           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
           mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
-  
+ 
           await sendVerificationCode(email, mfaCodeMemory);
-  
+ 
           return res.status(200).send(
             "MFA code has been sent to your email. Please enter the code to complete login."
           );
         }
-  
-  
+ 
+ 
         if (Date.now() > mfaCodeExpiration) {
           return res.status(400).send("MFA code has expired");
         }
-  
+ 
         if (String(mfaCode) !== String(mfaCodeMemory)) {
           await AuditLog.create({
             action: "Failed MFA Verification",
@@ -279,7 +284,9 @@ exports.login = async (req, res) => {
       { id: user.id, user_type_id: user.user_type_id, name: user.name },
       SECRET_KEY,
       { expiresIn: "1h" }
-    );        
+    );
+   
+         
     await AuditLog.create({
       action: "Successful Login",
       details: `Login successful for user: ${email} from IP: ${clientIp}`,
@@ -318,31 +325,6 @@ exports.login = async (req, res) => {
 
 
 
-
-exports.logout = async (req, res) => {
-  const { token } = req.body;
-
-  if (!token)
-    return res.status(400).json( ErrorResponse("Token is required"));
-
-  try {
-    // const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    // await client.del(`user:${decoded.id}:session`);
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    console.error("JWT Error:", error);
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json( ErrorResponse("Invalid token"));
-    } else if (error.name === "TokenExpiredError") {
-      return res.status(401).json( ErrorResponse("Token has expired"));
-    } else {
-      return res
-        .status(500)
-        .json( ErrorResponse("Server error", error.message));
-    }
-  }
-};
 
 const saveResetToken = async (userId, resetToken) => {
   try {
@@ -409,7 +391,7 @@ exports.requestPasswordReset = async (req, res) => {
 
     // const baseUrl = process.env.BASE_URL || ${req.protocol}://${req.get('host')};
 
-    const resetUrl = `http://localhost:5173/en/resetpassword/${resetToken}`;
+    const resetUrl = `https://rowqan.com/en/resetpassword/${resetToken}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,

@@ -129,6 +129,7 @@ const PaymentsRoutes = require("./Routes/PaymentsRoutes");
 const AboutRoutes = require('./Routes/AboutusRoutes')
 const BlogRoutes = require('./Routes/BlogRoutes')
 const allowedOrigins = [
+  "http://localhost:3000",
   "http://localhost:5173",
   "https://rowqan.com",
   "https://rowqanbackend.rowqan.com",
