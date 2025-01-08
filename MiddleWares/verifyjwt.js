@@ -314,6 +314,38 @@ exports.login = async (req, res) => {
         }
     }
 
+
+    else if (user.user_type_id === 5) {
+      const storedDeviceInfo = await User.getDeviceInfo(user.id);
+      const parsedStoredDeviceInfo = storedDeviceInfo
+        ? JSON.parse(storedDeviceInfo)
+        : null;
+
+        if (!mfaCode) {
+          mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+          mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+ 
+          await sendVerificationCode(email, mfaCodeMemory);
+ 
+          return res.status(200).send(
+            "MFA code has been sent to your email. Please enter the code to complete login."
+          );
+        }
+ 
+ 
+        if (Date.now() > mfaCodeExpiration) {
+          return res.status(400).send("MFA code has expired");
+        }
+ 
+        if (String(mfaCode) !== String(mfaCodeMemory)) {
+          await AuditLog.create({
+            action: "Failed MFA Verification",
+            details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+          });
+          return res.status(400).send("Invalid MFA code");
+        }
+    }
+
     const token = jwt.sign(
       { id: user.id, user_type_id: user.user_type_id, name: user.name },
       SECRET_KEY,
@@ -322,8 +354,7 @@ exports.login = async (req, res) => {
     );
    
          
-
-    );        
+      
 
     await AuditLog.create({
       action: "Successful Login",
