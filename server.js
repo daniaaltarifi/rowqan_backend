@@ -10,6 +10,16 @@ const app = express();
 const compression = require("compression");
 app.use(compression());
 
+
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+
+
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -21,12 +31,15 @@ app.use((req, res, next) => {
   next();
 });
 
+
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
   })
 );
+
 
 app.use(express.json());
 
@@ -122,46 +135,49 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 
-app.use("/users", UsersRoutes);
-app.use("/logos", LogoRoutes);
-app.use("/header", HeaderRoutes);
-app.use("/heroes", HeroesRoutes);
-app.use("/services", ServicesRoutes);
-app.use("/footer", FooterRoutes);
-app.use("/footericons", FooterIconRoutes);
-app.use("/heroChalets", HeroChaletsRoutes);
-app.use("/chalets", ChaletsRoutes);
-app.use("/statuschalets", statusChaletRoutes);
-app.use("/chaletsimages", ChaletImagesRoutes);
-app.use("/BreifDetailsChalets", BreifDetailsChaletsRoutes);
-app.use("/ReservationDates", ReservatioDatesRoutes);
-app.use("/ContactUs", ContactUsRoutes);
-app.use("/RightTimes", RightTimeRoutes);
-app.use("/status", StatusRoutes);
-app.use("/chaletsdetails", ChaletsDetailsRoutes);
-app.use("/heroevents", HeroEventsRoutes);
-app.use("/events", EventsTypesRoutes);
-app.use("/subevents", SubEventsRoutes);
-app.use("/availablevents", AvailableEventsRoutes);
-app.use("/availableimages", AvailableImages);
-app.use("/plans", PlansRoutes);
-app.use("/reservationsEvents", ReservatioEventsRoutes);
-app.use("/categorieslands", CategoryLandsRoutes);
-app.use("/propertyLands", PrpertyLandsRoutes);
-app.use("/imageslands", ImagesLandsRoutes);
-app.use("/BreifLands", BreifLandsRoutes);
-app.use("/reservationLands", ReservationeLandsRoutes);
-app.use("/reservations", ReservationsRoutes);
-app.use("/userstypes", UsersTypesRoutes);
-app.use("/ReservationsChalets", ReservationsChaletsRoutes);
-app.use("/Wallet", WalletRoutes);
-app.use("/propschalets", PropsChaletsRoutes);
-app.use("/FeedBacks", FeedBackRoutes);
-app.use("/messages", MessagesRoutes);
-app.use("/heroLands", HeroLands);
-app.use("/payments", PaymentsRoutes);
+
+
+app.use('/users', UsersRoutes);
+app.use('/logos', LogoRoutes);
+app.use('/header', HeaderRoutes);
+app.use('/heroes', HeroesRoutes);
+app.use('/services', ServicesRoutes);
+app.use('/footer', FooterRoutes);
+app.use('/footericons', FooterIconRoutes);
+app.use('/heroChalets', HeroChaletsRoutes);
+app.use('/chalets', ChaletsRoutes);
+app.use('/statuschalets', statusChaletRoutes);
+app.use('/chaletsimages', ChaletImagesRoutes);
+app.use('/BreifDetailsChalets', BreifDetailsChaletsRoutes);
+app.use('/ReservationDates', ReservatioDatesRoutes);
+app.use('/ContactUs', ContactUsRoutes);
+app.use('/RightTimes', RightTimeRoutes);
+app.use('/status', StatusRoutes);
+app.use('/chaletsdetails', ChaletsDetailsRoutes);
+app.use('/heroevents', HeroEventsRoutes);
+app.use('/events', EventsTypesRoutes);
+app.use('/subevents', SubEventsRoutes);
+app.use('/availablevents', AvailableEventsRoutes);
+app.use('/availableimages', AvailableImages);
+app.use('/plans', PlansRoutes);
+app.use('/reservationsEvents', ReservatioEventsRoutes);
+app.use('/categorieslands', CategoryLandsRoutes);
+app.use('/propertyLands', PrpertyLandsRoutes);
+app.use('/imageslands', ImagesLandsRoutes);
+app.use('/BreifLands', BreifLandsRoutes);
+app.use('/reservationLands', ReservationeLandsRoutes);
+app.use('/reservations', ReservationsRoutes);
+app.use('/userstypes', UsersTypesRoutes);
+app.use('/ReservationsChalets', ReservationsChaletsRoutes);
+app.use('/Wallet', WalletRoutes);
+app.use('/propschalets', PropsChaletsRoutes);
+app.use('/FeedBacks', FeedBackRoutes);
+app.use('/messages', MessagesRoutes);
+app.use('/heroLands', HeroLands);
+app.use('/payments', PaymentsRoutes); 
 app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
+
 const IP_LOOKUP_API =
   "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
 

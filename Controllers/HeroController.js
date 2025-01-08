@@ -153,7 +153,7 @@ exports.getHeroesByLang = async (req, res) => {
     const { lang } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-
+client.del(`heroes:lang:${lang}:page:${page}:limit:${limit}`)
     const cacheKey = `heroes:lang:${lang}:page:${page}:limit:${limit}`;
     
     const cachedData = await client.get(cacheKey);

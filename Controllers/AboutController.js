@@ -108,7 +108,7 @@ exports.createAbout = async (req, res) => {
       const { id } = req.params;
       const { lang } = req.query;
   
-      
+      client.del(`about:${id}:lang:${lang || 'all'}`)
       const cacheKey = `about:${id}:lang:${lang || 'all'}`;
   
       

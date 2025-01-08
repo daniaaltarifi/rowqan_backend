@@ -67,7 +67,7 @@ exports.createBlog = async (req, res) => {
       if (!lang || typeof lang !== "string") {
         return res
           .status(400)
-          .json(new ErrorResponse("Invalid language", ["Language parameter is required and must be a string"]));
+          .json(ErrorResponse("Invalid language", ["Language parameter is required and must be a string"]));
       }
   
       client.del(`blogs:lang:${lang}:page:${page}:limit:${limit}`)
@@ -95,7 +95,7 @@ exports.createBlog = async (req, res) => {
       if (!blogEntries.length) {
         return res
           .status(404)
-          .json(new ErrorResponse(lang === "en" ? "No Blogs found" : "لا توجد مدونات"));
+          .json(ErrorResponse(lang === "en" ? "No Blogs found" : "لا توجد مدونات"));
       }
   
     
@@ -109,7 +109,7 @@ exports.createBlog = async (req, res) => {
       return res
         .status(500)
         .json(
-          new ErrorResponse("Failed to retrieve Blogs", [
+           ErrorResponse("Failed to retrieve Blogs", [
             "An internal server error occurred. Please try again later.",
           ])
         );
@@ -130,7 +130,7 @@ exports.createBlog = async (req, res) => {
         return res.status(400).json(new ErrorResponse('Invalid ID or language', validationErrors));
       }
   
-      
+      client.del(`Blog:${id}:lang:${lang || 'all'}`);
       const cacheKey = `Blog:${id}:lang:${lang || 'all'}`;
   
      
