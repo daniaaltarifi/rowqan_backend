@@ -15,7 +15,7 @@ router.get('/getAllReservationChalet/:lang', ReservationsChaletsController.getAl
 router.get('/getAllReservationChaletById/:id/:lang', ReservationsChaletsController.getReservationById);
 
 
-router.put('/reservations/:id', authMiddleware, rateLimiter, ReservationsChaletsController.updateReservation);
+router.put('/reservations/:id', rateLimiter, ReservationsChaletsController.updateReservation);
 
 
 
@@ -28,10 +28,10 @@ router.get('/reservationsByUserId/:user_id/:lang', ReservationsChaletsController
 router.get('/available-times/:chalet_id/:date/:lang',ReservationsChaletsController.getAvailableTimesByDate)
 
 
-router.delete('/reservations/:id', authMiddleware, ReservationsChaletsController.deleteReservation);
+router.delete('/reservations/:id', ReservationsChaletsController.deleteReservation);
 
 
-router.get('/reservationsByChaletId/:chalet_id/:lang', authMiddleware, ReservationsChaletsController.getReservationsByChaletId);
+router.get('/reservationsByChaletId/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
 
 
 // router.get('/reservations/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
