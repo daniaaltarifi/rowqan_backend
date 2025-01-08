@@ -7,16 +7,13 @@ const {client} = require('../Utils/redisClient')
 exports.createBreifDetailsChalet = async (req, res) => {
   try {
     const { type, value, lang, chalet_id } = req.body;
-
     if (!type || !value || !lang || !chalet_id) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
-          "Type, value, lang, and chalet_id are required",
+          "type, value, lang, and chalet_id are required",
         ])
       );
     }
-
-
     if (!['en', 'ar'].includes(lang)) {
       return res.status(400).json( ErrorResponse('Invalid language'));
     }
@@ -60,7 +57,42 @@ exports.createBreifDetailsChalet = async (req, res) => {
   }
 };
 
+exports.getAllBreifChalet = async (req, res) => {
+  try {
+    const { lang } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+    client.del(`chalet:${page}:breifDetails:${lang}`);
+    const cacheKey = `chalet:${page}:breifDetails:${lang}`;
+    const cachedData = await client.get(cacheKey);
 
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    const whereClause = lang ? { lang } : {};
+    const brief = await BreifDetailsChalets.findAll({
+      where: whereClause,
+      include: [{ model: Chalet, attributes: ["title"] }],
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    await client.setEx(cacheKey, 3600, JSON.stringify(brief));
+
+    res.status(200).json(brief);
+  } catch (error) {
+    console.error("Error in getAllBreifDetailsChalets:", error.message);
+    res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to fetch Chalet brief", [
+          "An internal server error occurred.",
+        ])
+      );
+  }
+};
 exports.getBreifDetailsByChaletId = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
@@ -118,7 +150,7 @@ exports.getBreifDetailsById = async (req, res) => {
     if (!['en', 'ar'].includes(lang)) {
       return res.status(400).json(new ErrorResponse('Invalid language'));
     }
-
+client.del(`breifDetails:${id}:${lang}`)
     const cacheKey = `breifDetails:${id}:${lang}`;
 
     const cachedData = await client.get(cacheKey);
@@ -131,7 +163,7 @@ exports.getBreifDetailsById = async (req, res) => {
 
    
     const breifDetailsChalet = await BreifDetailsChalets.findOne({
-      attributes: ['id', 'type', 'value'], 
+      attributes: ['id', 'type', 'value','chalet_id'], 
       where: { id, lang },
     });
 
@@ -163,21 +195,21 @@ exports.updateBreifDetailsChalet = async (req, res) => {
 
     const validationErrors = validateInput({ type, value, lang, chalet_id });
     if (validationErrors.length > 0) {
-      return res.status(400).json(new ErrorResponse(validationErrors));
+      return res.status(400).json(ErrorResponse(validationErrors));
     }
 
     if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json(new ErrorResponse('Invalid language'));
+      return res.status(400).json(ErrorResponse('Invalid language'));
     }
 
     const breifDetailsChalet = await BreifDetailsChalets.findByPk(id);
     if (!breifDetailsChalet) {
-      return res.status(404).json(new ErrorResponse('BreifDetailsChalet not found'));
+      return res.status(404).json(ErrorResponse('BreifDetailsChalet not found'));
     }
 
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
-      return res.status(404).json(new ErrorResponse('Chalet not found'));
+      return res.status(404).json(ErrorResponse('Chalet not found'));
     }
 
     const updatedFields = {};
@@ -201,7 +233,7 @@ exports.updateBreifDetailsChalet = async (req, res) => {
     console.error("Error in updateBreifDetailsChalet:", error);
 
     return res.status(500).json(
-      new ErrorResponse('Failed to update BreifDetailsChalet', [
+      ErrorResponse('Failed to update BreifDetailsChalet', [
         'An internal server error occurred. Please try again later.',
       ])
     );

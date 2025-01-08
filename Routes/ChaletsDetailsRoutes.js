@@ -8,7 +8,7 @@ const rateLimiter = require('../MiddleWares/rateLimiter');
 router.post('/createdetails', rateLimiter, chaletsDetailsController.createChaletDetail);
 router.put('/updatedetails/:id', rateLimiter, chaletsDetailsController.updateChaletDetail);
 
-
+router.get('/getChaletDetailsById/:id/:lang', chaletsDetailsController.getChaletDetailsById);
 router.get('/getalldetails/:lang', chaletsDetailsController.getAllDetails);
 router.get('/getChaletDetailsById/:id/:lang', chaletsDetailsController.getChaletDetailsById);
 router.get('/getdetailsbychaletid/:id/:lang', chaletsDetailsController.getChaletDetailsByChaletId);
