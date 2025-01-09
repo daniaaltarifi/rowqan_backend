@@ -4,7 +4,7 @@ const {client} = require('../Utils/redisClient')
 
 exports.createHeader = async (req, res) => {
     try {
-      const { header_name, lang } = req.body;
+      const { header_name, lang, url } = req.body;
    
       if (!['ar', 'en'].includes(lang)) {
         return res.status(400).json({ error: 'Invalid language' });
@@ -13,6 +13,7 @@ exports.createHeader = async (req, res) => {
       const newheader = await Header.create({
         header_name,
         lang,
+        url
       });
   
       res.status(201).json( newheader );
@@ -73,7 +74,7 @@ exports.createHeader = async (req, res) => {
       if (!id || !lang) {
         return res.status(400).json(ErrorResponse('ID and language are required'));
       }
-  
+  client.del(`header:${id}:lang:${lang}`)
       const cacheKey = `header:${id}:lang:${lang}`;
   
       const cachedData = await client.get(cacheKey);
@@ -97,7 +98,7 @@ exports.createHeader = async (req, res) => {
   
       await client.setEx(cacheKey, 3600, JSON.stringify(header));
   
-      res.status(200).json({ header });
+      res.status(200).json(header);
     } catch (error) {
       console.error('Error retrieving header:', error);
       res.status(500).json(ErrorResponse('Failed to retrieve header'));
@@ -108,7 +109,7 @@ exports.createHeader = async (req, res) => {
 exports.updateHeader = async (req, res) => {
     try {
       const { id } = req.params;
-      const { header_name, lang } = req.body;
+      const { header_name, lang, url } = req.body;
   
       const header = await Header.findOne({
         where: { id }
@@ -121,6 +122,7 @@ exports.updateHeader = async (req, res) => {
    
       header.header_name = header_name || header.header_name;  
       header.lang = lang || header.lang; 
+      header.url = url || header.url; 
 
     await header.save();
 

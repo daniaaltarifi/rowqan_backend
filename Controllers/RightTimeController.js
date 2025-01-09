@@ -2,7 +2,8 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const RightTimeModel = require('../Models/RightTimeModel');
 const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
-const { client } = require("../Utils/redisClient");
+const {client} = require('../Utils/redisClient')
+
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 exports.createRightTime = async (req, res) => {
@@ -49,6 +50,44 @@ exports.createRightTime = async (req, res) => {
 
 
 exports.getRightTimeById = async (req, res) => {
+    try {
+      const { id, lang } = req.params;
+      client.del(`rightTime:${id}:${lang}`)
+      const cacheKey = `rightTime:${id}:${lang}`;
+  
+      const cachedData = await client.get(cacheKey);
+      if (cachedData) {
+        console.log("Cache hit for RightTime:", id);
+        return res.status(200).json(
+          JSON.parse(cachedData),
+        );
+      }
+      console.log("Cache miss for RightTime:", id);
+  
+
+      const rightTime = await RightTimeModel.findOne({
+        where: { id, lang },
+        include: [
+          { model: Chalet },
+          { model: ReservationDate }
+        ]
+      });
+  
+      if (!rightTime) {
+        return res.status(404).json({
+          message: lang === 'en' ? 'RightTime not found' : 'لم يتم العثور على الوقت المناسب'
+        });
+      }
+  
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTime));
+  
+      return res.status(200).json({ rightTime });
+    } catch (error) {
+      console.error("Error in getRightTimeById:", error);
+  
+      return res.status(500).json({
+        message: lang === 'en' ? 'Failed to fetch RightTime entry' : 'فشل في جلب الوقت المناسب'
+      });
   try {
     const { id } = req.params;
     const { lang } = req.query;
@@ -115,7 +154,7 @@ exports.getRightTimeById = async (req, res) => {
       const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
   
       
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
       if (cachedData) {
         console.log("Cache hit for RightTimes by Chalet:", chalet_id);
         return res.status(200).json(
@@ -146,7 +185,7 @@ exports.getRightTimeById = async (req, res) => {
       }
   
      
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json({ rightTimes });
     } catch (error) {
@@ -206,7 +245,7 @@ exports.deleteRightTime = async (req, res) => {
      
       const [rightTime, _] = await Promise.all([
         RightTimeModel.findByPk(id, { where: { lang } }),
-        redisClient.del(`rightTime:${id}:${lang}`), 
+        client.del(`rightTime:${id}:${lang}`), 
       ]);
   
       if (!rightTime) {
@@ -240,9 +279,9 @@ exports.get = async (req, res) => {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
   
-      
+client.del(`rightTimes:lang:${lang}:page:${page}:limit:${limit}`)      
       const cacheKey = `rightTimes:lang:${lang}:page:${page}:limit:${limit}`;
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
   
       if (cachedData) {
         console.log("Cache hit for RightTimes:", lang, page, limit);
@@ -270,7 +309,7 @@ exports.get = async (req, res) => {
       }
   
     
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json(
         rightTimes,

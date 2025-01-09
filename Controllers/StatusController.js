@@ -6,6 +6,10 @@ const {client} = require('../Utils/redisClient')
 
 exports.createStatus = async (req, res) => {
   try {
+    const { status, lang } = req.body;
+    const { error } = validateInput(req.body);
+    if (error) {
+      return next(ErrorResponse(error.details[0].message, 400)); 
     const { status, lang } = req.body || {};
 
     if (!status || !lang) {
@@ -33,6 +37,7 @@ exports.createStatus = async (req, res) => {
     
     const existingStatus = await Status.findOne({ where: { status, lang } });
     if (existingStatus) {
+      return next(ErrorResponse('Status with the same name and language already exists', 400));  
       return res
         .status(400)
         .json({
@@ -52,6 +57,7 @@ exports.createStatus = async (req, res) => {
       data: newStatus,
     });
   } catch (error) {
+    next(ErrorResponse('Failed to create Status', 500)); 
     console.error("Error in createStatus:", error.message);
 
    
@@ -110,8 +116,7 @@ exports.getAllStatuses = async (req, res) => {
 
 exports.getStatusById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { lang } = req.query;
+    const { id, lang } = req.params;
 
     if (!['en', 'ar'].includes(lang)) {
       return res.status(400).json({ error: 'Invalid language' });
@@ -161,7 +166,9 @@ exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, lang } = req.body;
-
+    const { error } = validateInput({ status, lang });
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
     
     const validationErrors = validateInput({ status, lang });
     if (validationErrors.length > 0) {

@@ -156,7 +156,7 @@ exports.getALLContactUs = async (req, res) => {
     if (!['en', 'ar'].includes(lang)) {
       return res.status(400).json(ErrorResponse('Invalid language, must be "en" or "ar"'));
     }
-
+client.del(`contactUs:lang:${lang}`)
     const cacheKey = `contactUs:lang:${lang}`;
     const cachedData = await client.get(cacheKey);
 
