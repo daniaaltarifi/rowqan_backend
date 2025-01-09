@@ -168,7 +168,7 @@ exports.createBlog = async (req, res) => {
      
       return res
         .status(500)
-        .json(new ErrorResponse("Failed to fetch Blog entry", [
+        .json( ErrorResponse("Failed to fetch Blog entry", [
           "An internal server error occurred. Please try again later.",
         ]));
     }
