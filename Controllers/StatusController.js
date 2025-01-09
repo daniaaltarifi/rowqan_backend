@@ -67,44 +67,59 @@ exports.createStatus = async (req, res) => {
 
 exports.getAllStatuses = async (req, res) => {
   try {
-    const { lang } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
 
-    if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json({ error: 'Invalid language' });
-    }
+  
+    client.del(`statuses:page:${page}:limit:${limit}:lang:${req.params.lang}`);
 
-   client.del(`statuses:lang:${lang}`)
-    const cacheKey = `statuses:lang:${lang}`;
+   
+    const cacheKey = `statuses:page:${page}:limit:${limit}:lang:${req.params.lang}`;
     const cachedData = await client.get(cacheKey);
 
-   
     if (cachedData) {
-      return res.status(200).json(
-        JSON.parse(cachedData),
-      );
+      return res.status(200).json(JSON.parse(cachedData));
     }
 
-   
-    const statuses = await Status.findAll({ where: { lang } });
+    
+    const whereCondition = req.params.lang ? { lang: req.params.lang } : {};
 
+    
+    const statuses = await Status.findAll({
+      attributes: ["id", "status","lang"],
+      where: whereCondition,
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    
     if (!statuses.length) {
-      return res.status(404).json({ error: 'No statuses found for this language' });
+      return res.status(404).json({
+        success: false,
+        message: 'No statuses found for this language',
+        data: null,
+      });
     }
 
-   
+    
     await client.setEx(cacheKey, 3600, JSON.stringify(statuses));
 
-    res.status(200).json(
-      statuses,
-    );
+    
+    return res.status(200).json(statuses);
   } catch (error) {
     console.error("Error in getAllStatuses:", error.message);
-    res.status(500).json({
-      error: 'Failed to retrieve statuses',
-      message: "An internal server error occurred. Please try again later.",
+
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve statuses',
+      data: null,
+      error: 'An internal server error occurred. Please try again later.',
     });
   }
 };
+
 
 
 
@@ -213,14 +228,7 @@ exports.updateStatus = async (req, res) => {
 
 exports.deleteStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { lang } = req.query;
-
-
-    if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json({ error: 'Invalid language' });
-    }
-
+    const { id,lang } = req.params;
    
     const [status, _] = await Promise.all([
       Status.findOne({ where: { id, lang } }),

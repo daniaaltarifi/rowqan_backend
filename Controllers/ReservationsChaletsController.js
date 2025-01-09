@@ -539,19 +539,20 @@ exports.getAvailableTimesByDate = async (req, res) => {
 exports.getReservationsByRightTimeName = async (req, res) => {
   const { chalet_id, name, lang } = req.params;
 
-  try {
-    // Split the rightTimeName to handle cases like "Morning Full day" or "Evening Full day"
-    const timePeriods = name.split(' ');
+  console.log("Received chalet_id:", chalet_id);
+  console.log("Received rightTime name:", name);
 
-    // Initialize an array to hold all the reservations
+  try {
+    const timePeriods = name.split(' ');
     let reservations = [];
-    let fullDayAdded = false; // To track if Full day has been added already
+    let fullDayAdded = false;
 
     // Step 1: Fetch reservations for each time period requested
     for (let period of timePeriods) {
+      console.log(`Processing time period: ${period}`);
+
       if (period === 'Full' || period === 'day') {
         if (!fullDayAdded) {
-          // Fetch Full day reservations (where right_time_id is a valid ID, not null)
           const fullDayRightTime = await RightTimeModel.findOne({
             where: {
               name: 'Full day',
@@ -559,48 +560,54 @@ exports.getReservationsByRightTimeName = async (req, res) => {
             },
           });
 
-          // If Full day right time exists, fetch the corresponding reservations
           if (fullDayRightTime) {
+            console.log("Found Full day right time:", fullDayRightTime);
+
             const fullDayReservations = await Reservations_Chalets.findAll({
               where: {
                 lang: lang,
-                chalet_id:chalet_id,
-                right_time_id: fullDayRightTime.id, // Use Full day's right_time_id
+                chalet_id: chalet_id,
+                right_time_id: fullDayRightTime.id,
               },
             });
+            console.log("Found full day reservations:", fullDayReservations);
+
             reservations = [...reservations, ...fullDayReservations];
-            fullDayAdded = true; // Mark Full day as added
+            fullDayAdded = true;
           }
         }
       } else {
-        // Fetch the corresponding right time (Morning or Evening)
         const rightTime = await RightTimeModel.findOne({
           where: {
             name: period,
             lang: lang,
+            chalet_id: chalet_id,
           },
         });
 
-        // If the right time (Morning or Evening) is found, fetch the corresponding reservations
         if (rightTime) {
+          console.log("Found right time:", rightTime);
+
           const timeReservations = await Reservations_Chalets.findAll({
             where: {
               lang: lang,
-              chalet_id:chalet_id,
+              chalet_id: chalet_id,
               right_time_id: rightTime.id,
             },
           });
+          console.log("Found reservations for time period:", timeReservations);
+
           reservations = [...reservations, ...timeReservations];
         }
       }
     }
 
-    // Step 2: Return the combined results
+    console.log("Final reservations:", reservations);
+
     res.json({
       rightTime: name,
       reservations: reservations,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
