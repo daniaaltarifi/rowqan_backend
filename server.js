@@ -8,8 +8,9 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
-
-
+const geoip = require('geoip-lite');
+const axios = require('axios');
+const requestIp = require('request-ip');
 
 
 
@@ -279,6 +280,10 @@ app.use('/Blogs',BlogRoutes)
 
 app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
+
+
+
+
 const IP_LOOKUP_API =
   "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
 
@@ -348,6 +353,8 @@ app.use("/dashboard", async (req, res, next) => {
 
   res.status(200).json({ message: "Access granted to the dashboard" });
 });
+
+
 
 sequelize.sync({ force: false }).then(() => {
   console.log("Database connected and synced!");

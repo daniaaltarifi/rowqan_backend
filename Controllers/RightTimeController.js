@@ -2,7 +2,8 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const RightTimeModel = require('../Models/RightTimeModel');
 const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
-
+const { client } = require("../Utils/redisClient");
+const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 exports.createRightTime = async (req, res) => {
     try {
@@ -48,46 +49,64 @@ exports.createRightTime = async (req, res) => {
 
 
 exports.getRightTimeById = async (req, res) => {
-    try {
-      const { id, lang } = req.params;
-      const cacheKey = `rightTime:${id}:${lang}`;
-  
-      const cachedData = await redisClient.get(cacheKey);
-      if (cachedData) {
-        console.log("Cache hit for RightTime:", id);
-        return res.status(200).json(
-          JSON.parse(cachedData),
-        );
-      }
-      console.log("Cache miss for RightTime:", id);
-  
+  try {
+    const { id } = req.params;
+    const { lang } = req.query;
 
-      const rightTime = await RightTimeModel.findOne({
-        where: { id, lang },
-        include: [
-          { model: Chalet },
-          { model: ReservationDate }
-        ]
-      });
-  
-      if (!rightTime) {
-        return res.status(404).json({
-          message: lang === 'en' ? 'RightTime not found' : 'لم يتم العثور على الوقت المناسب'
-        });
-      }
-  
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTime));
-  
-      return res.status(200).json({ rightTime });
-    } catch (error) {
-      console.error("Error in getRightTimeById:", error);
-  
-      return res.status(500).json({
-        message: lang === 'en' ? 'Failed to fetch RightTime entry' : 'فشل في جلب الوقت المناسب'
-      });
+    
+    const cacheKey = `rightTime:${id}:${lang || "all"}`;
+
+    
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
     }
-  };
-  
+
+    
+    const whereCondition = lang ? { id, lang } : { id };
+
+    
+    const rightTimeEntry = await RightTimeModel.findOne({
+      attributes: ["id", "time", "lang"],
+      where: whereCondition,
+      include: [
+        { model: Chalet, attributes: ["id", "title","reserve_price"] },
+      ],
+    });
+
+   
+    if (!rightTimeEntry) {
+      return res
+        .status(404)
+        .json(
+          ErrorResponse(
+            lang === "ar"
+              ? "لم يتم العثور على الوقت المناسب"
+              : "RightTime not found",
+            ["No RightTime entry found with the given ID and language."]
+          )
+        );
+    }
+
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(rightTimeEntry));
+
+    
+    return res.status(200).json(rightTimeEntry);
+  } catch (error) {
+    console.error("Error in getRightTimeById:", error);
+
+    return res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to fetch RightTime entry", [
+          "An internal server error occurred. Please try again later.",
+        ])
+      );
+  }
+};
+
+
 
 
   exports.getAllRightTimesByChaletId = async (req, res) => {

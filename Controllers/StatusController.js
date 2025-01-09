@@ -4,30 +4,66 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
 
-exports.createStatus = async (req, res, next) => {
-  
+exports.createStatus = async (req, res) => {
   try {
-    const { status, lang } = req.body;
-    const { error } = validateInput(req.body);
-    if (error) {
-      return next(new ErrorResponse(error.details[0].message, 400)); 
+    const { status, lang } = req.body || {};
+
+    if (!status || !lang) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Validation failed",
+          errors: ["Status and language are required"],
+        });
     }
 
+    
+    const validationErrors = validateInput({ status, lang });
+    if (validationErrors.length > 0) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Validation failed",
+          errors: validationErrors,
+        });
+    }
+
+    
     const existingStatus = await Status.findOne({ where: { status, lang } });
     if (existingStatus) {
-      return next(new ErrorResponse('Status with the same name and language already exists', 400));  
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Validation failed",
+          errors: ["Status with the same name and language already exists"],
+        });
     }
 
-
+    
     const newStatus = await Status.create({ status, lang });
 
-    res.status(201).json(
-      newStatus,
-    );
+    
+    return res.status(201).json({
+      success: true,
+      message: "Status created successfully",
+      data: newStatus,
+    });
   } catch (error) {
-    next(new ErrorResponse('Failed to create Status', 500)); 
+    console.error("Error in createStatus:", error.message);
+
+   
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create Status",
+      errors: ["An internal server error occurred."],
+    });
   }
 };
+
+
 
 exports.getAllStatuses = async (req, res) => {
   try {
@@ -126,30 +162,54 @@ exports.updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status, lang } = req.body;
 
-    const { error } = validateStatusInput({ status, lang });
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+    
+    const validationErrors = validateInput({ status, lang });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors,
+      });
     }
 
-    const statusRecord = await Status.findOne({ where: { id, lang } });
-
+   
+    const statusRecord = await Status.findByPk(id);
     if (!statusRecord) {
-      return res.status(404).json({ error: 'Status not found for the specified language' });
+      return res.status(404).json({
+        success: false,
+        message: "Status not found",
+        errors: [`No status entry found with ID: ${id}`],
+      });
     }
 
-    statusRecord.status = status || statusRecord.status;
-    statusRecord.lang = lang || statusRecord.lang;
+    
+    const updatedFields = {};
+    if (status && status !== statusRecord.status) updatedFields.status = status;
+    if (lang && lang !== statusRecord.lang) updatedFields.lang = lang;
 
-    await statusRecord.save();
+    
+    if (Object.keys(updatedFields).length > 0) {
+      await statusRecord.update(updatedFields);
+    }
 
-    res.status(200).json(
-     statusRecord,
-    );
+    
+    return res.status(200).json({
+      success: true,
+      message: "Status updated successfully",
+      data: statusRecord.toJSON(),
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to update Status' });
+    console.error("Error in updateStatus:", error);
+
+    
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update Status",
+      errors: ["An internal server error occurred. Please try again later."],
+    });
   }
 };
+
 
 
 exports.deleteStatus = async (req, res) => {

@@ -216,17 +216,7 @@ exports.login = async (req, res) => {
     }
 
     if (user.user_type_id === 1) {
-      if (!email.endsWith("@kasselsoft.com")) {
-        return res.status(400).send("Email is not authorized for login process");
-      }
-     
-      const geo = geoip.lookup(clientIp);
-
-      if (!geo || geo.country !== "JO") {
-        return res.status(403).send("Access is restricted to Jordan IPs only.");
-      }
-   
-
+    
 
       if (!mfaCode) {
         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
