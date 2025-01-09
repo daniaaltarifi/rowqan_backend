@@ -621,6 +621,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 
 
+
 exports.updateReservation = async (req, res) => {
   try {
     const { id } = req.params;
