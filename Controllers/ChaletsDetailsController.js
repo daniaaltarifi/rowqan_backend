@@ -65,7 +65,7 @@ exports.createChaletDetail = async (req, res) => {
 
 exports.getAllDetails = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 120 } = req.query;
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
