@@ -74,24 +74,25 @@ exports.createStatus = async (req, res) => {
 exports.getAllStatuses = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const { lang } = req.params;
-
     const offset = (page - 1) * limit;
 
-    
-    if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid language',
-        data: null,
-      });
+  
+    client.del(`statuses:page:${page}:limit:${limit}:lang:${req.params.lang}`);
+
+   
+    const cacheKey = `statuses:page:${page}:limit:${limit}:lang:${req.params.lang}`;
+    const cachedData = await client.get(cacheKey);
+
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
     }
 
     
-    const whereCondition = lang ? { lang } : {};
+    const whereCondition = req.params.lang ? { lang: req.params.lang } : {};
 
     
     const statuses = await Status.findAll({
+      attributes: ["id", "status","lang"],
       where: whereCondition,
       order: [["id", "DESC"]],
       limit: parseInt(limit),
@@ -108,11 +109,10 @@ exports.getAllStatuses = async (req, res) => {
     }
 
     
-    return res.status(200).json({
-      success: true,
-      message: 'Statuses retrieved successfully',
-      data: statuses,
-    });
+    await client.setEx(cacheKey, 3600, JSON.stringify(statuses));
+
+    
+    return res.status(200).json(statuses);
   } catch (error) {
     console.error("Error in getAllStatuses:", error.message);
 
@@ -125,6 +125,9 @@ exports.getAllStatuses = async (req, res) => {
     });
   }
 };
+
+
+
 
 
 
