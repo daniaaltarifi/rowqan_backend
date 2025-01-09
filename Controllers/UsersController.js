@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/UsersModel');
 const ReservationModel = require('../Models/ReservationsModel');
 const UserTypes = require('../Models/UsersTypes');
+const Wallet = require('../Models/WalletModel');
 require('dotenv').config();
 
 
@@ -171,15 +172,23 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   const { id, lang } = req.params;
   try {
+    // Find the user in the database
     const user = await User.findOne({
       where: { id, lang },
     });
+
     if (!user) {
       return res.status(404).json({
         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
       });
     }
 
+    // Delete all associated wallets
+    await Wallet.destroy({
+      where: { user_id: id },
+    });
+
+    // Now delete the user
     await user.destroy();
 
     res.status(200).json({
