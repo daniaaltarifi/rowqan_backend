@@ -204,7 +204,7 @@ exports.updateChaletDetail = async (req, res) => {
     const { Detail_Type, lang, chalet_id } = req.body;
     const image = req.file?.filename || null;
 
-    // التحقق من صحة المدخلات
+    
     const validationErrors = validateInput({ Detail_Type, lang, chalet_id });
     if (validationErrors.length > 0) {
       return res
@@ -212,19 +212,19 @@ exports.updateChaletDetail = async (req, res) => {
         .json(ErrorResponse("Validation failed", validationErrors));
     }
 
-    // البحث عن تفاصيل الشاليه في قاعدة البيانات
+    
     const chaletDetail = await ChaletsDetails.findByPk(id);
     if (!chaletDetail) {
       return res.status(404).json(ErrorResponse("Chalet detail not found"));
     }
 
-    // البحث عن الشاليه في قاعدة البيانات
+    
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json(ErrorResponse("Chalet not found"));
     }
 
-    // تحديد الحقول المحدثة
+   
     const updatedFields = {};
     if (Detail_Type && Detail_Type !== chaletDetail.Detail_Type)
       updatedFields.Detail_Type = Detail_Type;
@@ -233,21 +233,19 @@ exports.updateChaletDetail = async (req, res) => {
       updatedFields.chalet_id = chalet_id;
     if (image) updatedFields.img = image;
 
-    // إذا كانت هناك تغييرات، يتم تحديث البيانات في قاعدة البيانات
     if (Object.keys(updatedFields).length > 0) {
       await chaletDetail.update(updatedFields);
     }
 
-    // حذف الكاش القديم
+    
     const cacheKey = `chaletdetails:${chalet_id}:${lang}`;
-    await client.del(cacheKey); // حذف الكاش القديم
+    await client.del(cacheKey);
 
-    // تخزين البيانات المحدثة في الكاش
+    
     const updatedChaletDetail = chaletDetail.toJSON();
-    await client.setEx(cacheKey, 3600, JSON.stringify(updatedChaletDetail));
+    await client.setEx(cacheKey, 3600, JSON.stringify(updatedChaletDetail)); 
 
-    // إرجاع التفاصيل المحدثة
-    return res.status(200).json(updatedChaletDetail);
+    return res.status(200).json(updatedChaletDetail); 
   } catch (error) {
     console.error("Error in updateChaletDetail:", error);
     return res
@@ -260,15 +258,15 @@ exports.updateChaletDetail = async (req, res) => {
   }
 };
 
+
+
+
 exports.deleteChaletDetail = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, lang } = req.params;  
 
-    const [chaletDetail, _] = await Promise.all([
-      ChaletsDetails.findByPk(id),
-      client.del(`chaletdetail:${id}`),
-    ]);
-
+    
+    const chaletDetail = await ChaletsDetails.findByPk(id);
     if (!chaletDetail) {
       return res
         .status(404)
@@ -279,8 +277,16 @@ exports.deleteChaletDetail = async (req, res) => {
         );
     }
 
+    
+    const cacheKey = `chaletdetails:${chaletDetail.chalet_id}:${lang}`;
+    
+    
+    await client.del(cacheKey);
+
+    
     await chaletDetail.destroy();
 
+    
     return res
       .status(200)
       .json({ message: "Chalet detail deleted successfully" });
@@ -296,17 +302,19 @@ exports.deleteChaletDetail = async (req, res) => {
       );
   }
 };
+
 exports.getChaletDetailsById = async (req, res) => {
   try {
     const { id, lang } = req.params;
 
-    const cacheKey = `chaletdetails:${id}:${lang}`;
-
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));
+    
+    if (!lang || !["ar", "en"].includes(lang)) {
+      return res
+        .status(400)
+        .json(ErrorResponse('Language must be either "ar" or "en"'));
     }
 
+    
     const chaletDetails = await ChaletsDetails.findOne({
       where: { id, lang },
     });
@@ -321,9 +329,8 @@ exports.getChaletDetailsById = async (req, res) => {
         );
     }
 
-    await client.setEx(cacheKey, 3600, JSON.stringify(chaletDetails));
-
-    return res.status(200).json(chaletDetails);
+    
+    return res.status(200).json(chaletDetails); 
   } catch (error) {
     console.error("Error in getChaletDetailsById:", error);
 
@@ -336,3 +343,5 @@ exports.getChaletDetailsById = async (req, res) => {
       );
   }
 };
+
+
