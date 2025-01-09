@@ -216,6 +216,7 @@ exports.updateChaletDetail = async (req, res) => {
       updatedFields.chalet_id = chalet_id;
     if (image) updatedFields.img = image;
 
+    // إذا كانت هناك تغييرات، يتم تحديث البيانات في قاعدة البيانات
     if (Object.keys(updatedFields).length > 0) {
       await chaletDetail.update(updatedFields);
     }
@@ -304,7 +305,6 @@ exports.getChaletDetailsById = async (req, res) => {
       return res.status(200).json(JSON.parse(cachedData));
     }
 
-    
     const chaletDetails = await ChaletsDetails.findOne({
       where: { id, lang },
     });
