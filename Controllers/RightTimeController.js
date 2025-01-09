@@ -2,6 +2,7 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const RightTimeModel = require('../Models/RightTimeModel');
 const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
+const {client} = require('../Utils/redisClient')
 
 
 exports.createRightTime = async (req, res) => {
@@ -50,9 +51,10 @@ exports.createRightTime = async (req, res) => {
 exports.getRightTimeById = async (req, res) => {
     try {
       const { id, lang } = req.params;
+      client.del(`rightTime:${id}:${lang}`)
       const cacheKey = `rightTime:${id}:${lang}`;
   
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
       if (cachedData) {
         console.log("Cache hit for RightTime:", id);
         return res.status(200).json(
@@ -76,7 +78,7 @@ exports.getRightTimeById = async (req, res) => {
         });
       }
   
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTime));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTime));
   
       return res.status(200).json({ rightTime });
     } catch (error) {
@@ -96,7 +98,7 @@ exports.getRightTimeById = async (req, res) => {
       const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
   
       
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
       if (cachedData) {
         console.log("Cache hit for RightTimes by Chalet:", chalet_id);
         return res.status(200).json(
@@ -127,7 +129,7 @@ exports.getRightTimeById = async (req, res) => {
       }
   
      
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json({ rightTimes });
     } catch (error) {
@@ -187,7 +189,7 @@ exports.deleteRightTime = async (req, res) => {
      
       const [rightTime, _] = await Promise.all([
         RightTimeModel.findByPk(id, { where: { lang } }),
-        redisClient.del(`rightTime:${id}:${lang}`), 
+        client.del(`rightTime:${id}:${lang}`), 
       ]);
   
       if (!rightTime) {
@@ -221,9 +223,9 @@ exports.get = async (req, res) => {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
   
-      
+client.del(`rightTimes:lang:${lang}:page:${page}:limit:${limit}`)      
       const cacheKey = `rightTimes:lang:${lang}:page:${page}:limit:${limit}`;
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
   
       if (cachedData) {
         console.log("Cache hit for RightTimes:", lang, page, limit);
@@ -251,7 +253,7 @@ exports.get = async (req, res) => {
       }
   
     
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json(
         rightTimes,

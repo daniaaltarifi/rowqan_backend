@@ -148,7 +148,7 @@ app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
 app.use('/chalets', ChaletsRoutes);
-app.use('/statuschalets', statusChaletRoutes);
+// app.use('/statuschalets', statusChaletRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
 app.use('/BreifDetailsChalets', BreifDetailsChaletsRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
