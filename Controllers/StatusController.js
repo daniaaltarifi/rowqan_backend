@@ -73,44 +73,59 @@ exports.createStatus = async (req, res) => {
 
 exports.getAllStatuses = async (req, res) => {
   try {
+    const { page = 1, limit = 20 } = req.query;
     const { lang } = req.params;
 
+    const offset = (page - 1) * limit;
+
+    
     if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json({ error: 'Invalid language' });
-    }
-
-   
-    const cacheKey = `statuses:lang:${lang}`;
-    const cachedData = await client.get(cacheKey);
-
-    
-    if (cachedData) {
-      return res.status(200).json(
-        JSON.parse(cachedData),
-      );
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid language',
+        data: null,
+      });
     }
 
     
-    const statuses = await Status.findAll({ where: { lang } });
+    const whereCondition = lang ? { lang } : {};
 
+    
+    const statuses = await Status.findAll({
+      where: whereCondition,
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    
     if (!statuses.length) {
-      return res.status(404).json({ error: 'No statuses found for this language' });
+      return res.status(404).json({
+        success: false,
+        message: 'No statuses found for this language',
+        data: null,
+      });
     }
 
     
-    await client.setEx(cacheKey, 3600, JSON.stringify(statuses));
-
-    res.status(200).json(
-      statuses,
-    );
+    return res.status(200).json({
+      success: true,
+      message: 'Statuses retrieved successfully',
+      data: statuses,
+    });
   } catch (error) {
     console.error("Error in getAllStatuses:", error.message);
-    res.status(500).json({
-      error: 'Failed to retrieve statuses',
-      message: "An internal server error occurred. Please try again later.",
+
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve statuses',
+      data: null,
+      error: 'An internal server error occurred. Please try again later.',
     });
   }
 };
+
 
 
 
