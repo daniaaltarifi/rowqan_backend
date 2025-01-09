@@ -14,6 +14,6 @@ router.get('/getstatusbyid/:id/:lang', statusController.getStatusById);
 
 router.put('/updatestatus/:id', rateLimiter, statusController.updateStatus);
 
-router.delete('/deletestatus/:id', statusController.deleteStatus);
+router.delete('/deletestatus/:id/:lang', statusController.deleteStatus);
 
 module.exports = router;

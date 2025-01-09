@@ -57,6 +57,7 @@ const io = socketIo(server, {
     origin: [
       "http://localhost:5173",
       "https://rowqan.com",
+      "https://dashboard.rowqan.com",
       "https://rowqanbackend.rowqan.com",
     ], // Allow frontend to connect
     methods: ["GET", "POST"],
@@ -123,6 +124,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://rowqan.com",
+  "https://dashboard.rowqan.com",
   "https://rowqanbackend.rowqan.com",
 ];
 
