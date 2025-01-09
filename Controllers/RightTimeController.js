@@ -50,49 +50,12 @@ exports.createRightTime = async (req, res) => {
 
 
 exports.getRightTimeById = async (req, res) => {
-    try {
-      const { id, lang } = req.params;
-      client.del(`rightTime:${id}:${lang}`)
-      const cacheKey = `rightTime:${id}:${lang}`;
-  
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) {
-        console.log("Cache hit for RightTime:", id);
-        return res.status(200).json(
-          JSON.parse(cachedData),
-        );
-      }
-      console.log("Cache miss for RightTime:", id);
-  
-
-      const rightTime = await RightTimeModel.findOne({
-        where: { id, lang },
-        include: [
-          { model: Chalet },
-          { model: ReservationDate }
-        ]
-      });
-  
-      if (!rightTime) {
-        return res.status(404).json({
-          message: lang === 'en' ? 'RightTime not found' : 'لم يتم العثور على الوقت المناسب'
-        });
-      }
-  
-      await client.setEx(cacheKey, 3600, JSON.stringify(rightTime));
-  
-      return res.status(200).json({ rightTime });
-    } catch (error) {
-      console.error("Error in getRightTimeById:", error);
-  
-      return res.status(500).json({
-        message: lang === 'en' ? 'Failed to fetch RightTime entry' : 'فشل في جلب الوقت المناسب'
-      });
+ 
   try {
     const { id } = req.params;
     const { lang } = req.query;
 
-    
+    client.del(`rightTime:${id}:${lang || "all"}`)
     const cacheKey = `rightTime:${id}:${lang || "all"}`;
 
     
@@ -106,7 +69,7 @@ exports.getRightTimeById = async (req, res) => {
 
     
     const rightTimeEntry = await RightTimeModel.findOne({
-      attributes: ["id", "time", "lang"],
+      attributes: ["id", "time", "lang","price","name","image"],
       where: whereCondition,
       include: [
         { model: Chalet, attributes: ["id", "title","reserve_price"] },
@@ -210,12 +173,12 @@ exports.updateRightTime = async (req, res) => {
      
         const validationErrors = validateInput({ name, time, lang, chalet_id, price });
         if (validationErrors.length > 0) {
-            return res.status(400).json(new ErrorResponse('Validation failed', validationErrors));
+            return res.status(400).json( ErrorResponse('Validation failed', validationErrors));
         }
 
         const rightTime = await RightTimeModel.findByPk(id);
         if (!rightTime) {
-            return res.status(404).json(new ErrorResponse('RightTime not found'));
+            return res.status(404).json( ErrorResponse('RightTime not found'));
         }
 
       
@@ -233,7 +196,7 @@ exports.updateRightTime = async (req, res) => {
         );
     } catch (error) {
         console.error(error);
-        return res.status(500).json(new ErrorResponse('Internal server error'));
+        return res.status(500).json( ErrorResponse('Internal server error'));
     }
 };
 
