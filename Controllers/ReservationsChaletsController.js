@@ -249,7 +249,6 @@ exports.getAllReservations = async (req, res) => {
     return res.status(200).json(
        reservations.map(reservation => ({
         id: reservation.id,
-        initial_amount: reservation.initial_amount,
         reserve_price: reservation.reserve_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,
@@ -342,7 +341,6 @@ exports.getReservationById = async (req, res) => {
     return res.status(200).json(
       {
         id: reservation.id,
-        initial_amount: reservation.initial_amount,
         reserve_price: reservation.reserve_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,
@@ -442,7 +440,6 @@ exports.getReservationsByChaletId = async (req, res) => {
     return res.status(200).json(
        reservations.map(reservation => ({
         id: reservation.id,
-        initial_amount: reservation.initial_amount,
         reserve_price: reservation.reserve_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,

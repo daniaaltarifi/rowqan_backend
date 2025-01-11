@@ -34,6 +34,7 @@ exports.createChaletImages = async (req, res) => {
       return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
     }
 
+
     
     const validFiles = files.map((file) => {
       const extension = file.originalname.split('.').pop(); 
