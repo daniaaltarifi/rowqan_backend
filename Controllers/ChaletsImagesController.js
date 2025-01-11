@@ -33,38 +33,33 @@ exports.createChaletImages = async (req, res) => {
     if (validFiles.length === 0) {
       return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
     }
+    const BASE_URL = "https://res.cloudinary.com/durjqlivi/";
+
 
     
     const validFiles = files.map((file) => {
-      const extension = file.originalname.split(".").pop().toLowerCase();
-            if (!["png", "jpeg", "mp4"].includes(extension)) {
-        return null; 
+      const extension = file.originalname.split('.').pop(); 
+      if (!['png', 'jpeg', 'mp4', 'svg'].includes(extension)) {
+        return null;
       }
 
       const filenameWithExtension = `${file.filename}.${extension}`; 
-      const baseUrl =
-        extension === "mp4" ? BASE_URL_VIDEO : BASE_URL_IMAGE; 
-
       return {
         chalet_id,
-        image: `${baseUrl}${filenameWithExtension}`, 
+        image: `${BASE_URL}${filenameWithExtension}`,
       };
     }).filter(Boolean); 
 
     if (validFiles.length === 0) {
-      return res
-        .status(400)
-        .json(
-          ErrorResponse("Invalid file types. Allowed: .png, .jpeg, .mp4")
-        );
+      return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4, .svg'));
     }
 
-   
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json(ErrorResponse("Chalet not found"));
     }
 
+    
     const newFiles = await ChaletsImages.bulkCreate(validFiles);
 
     res.status(201).json({
