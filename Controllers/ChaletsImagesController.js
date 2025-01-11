@@ -29,7 +29,10 @@ exports.createChaletImages = async (req, res) => {
     const BASE_URL_IMAGE = "https://res.cloudinary.com/durjqlivi/";
     const BASE_URL_VIDEO = "https://res.cloudinary.com/durjqlivi/video/upload/v1736589099/";
 
-   
+ 
+    if (validFiles.length === 0) {
+      return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
+    }
     const BASE_URL = "https://res.cloudinary.com/durjqlivi/";
 
     
@@ -67,6 +70,8 @@ exports.createChaletImages = async (req, res) => {
     res.status(500).json(ErrorResponse("Failed to create chalet files"));
   }
 };
+
+
 
 
 
