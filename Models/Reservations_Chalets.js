@@ -10,10 +10,6 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     primaryKey: true,
     autoIncrement: true,
   },
-  initial_amount: {
-    type: DataTypes.FLOAT,
-    allowNull: false,  
-  },
   reserve_price:{
     type: DataTypes.FLOAT,
     allowNull: false,
