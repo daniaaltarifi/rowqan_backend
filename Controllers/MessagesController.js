@@ -62,6 +62,7 @@ exports.getMessagesForChalet = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
+    res.status(200).json( messages );
     if (messages.length === 0) {
       return res.status(404).json({ message: 'No messages found for this chalet' });
     }
