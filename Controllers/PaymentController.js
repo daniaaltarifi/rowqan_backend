@@ -7,9 +7,9 @@ const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qN
 
 exports.createPayment = async (req, res) => {
     try {
-      const { user_id, reservation_id, status, paymentMethod } = req.body;
+      const { user_id, reservation_id, status, paymentMethod,UserName,Phone_Number } = req.body;
  
-      if (!reservation_id || !status || !paymentMethod) {
+      if (!reservation_id || !status || !paymentMethod || !UserName || !Phone_Number) {
         return res
           .status(400)
           .json(
@@ -19,7 +19,7 @@ exports.createPayment = async (req, res) => {
           );
       }
  
-      const validationErrors = validateInput({ status, paymentMethod });
+      const validationErrors = validateInput({ status, paymentMethod,UserName,Phone_Number });
       if (validationErrors.length > 0) {
         return res
           .status(400)
@@ -44,6 +44,8 @@ exports.createPayment = async (req, res) => {
         reservation_id,
         status,
         paymentMethod,
+        UserName,
+        Phone_Number,
       });
  
       res.status(201).json({
