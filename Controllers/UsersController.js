@@ -4,8 +4,9 @@ const User = require('../Models/UsersModel');
 const ReservationModel = require('../Models/ReservationsModel');
 const UserTypes = require('../Models/UsersTypes');
 const Wallet = require('../Models/WalletModel');
+const { argon2d } = require('argon2');
 require('dotenv').config();
-
+const argon2 = require("argon2");
 
 
 exports.createUser = async (req, res) => {
@@ -30,7 +31,7 @@ exports.createUser = async (req, res) => {
     }
 
     
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await argon2.hash(password);
 
     
     const finalUserType = user_type_id || 2;
@@ -334,7 +335,7 @@ exports.createAdmin = async (req, res) => {
     }
 
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await argon2d.hash(password, saltRounds);
 
     const newAdmin = await User.create({
       name,
