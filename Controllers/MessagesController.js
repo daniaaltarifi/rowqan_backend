@@ -46,14 +46,19 @@ exports.createMessage = async (req, res) => {
 
 exports.getMessagesForChalet = async (req, res) => {
   try {
-    const { chaletId } = req.params;
+    const { chaletId, receiverId, senderId } = req.params;
 
-    if (!chaletId) {
-      return res.status(400).json({ message: 'chaletId is required' });
+    
+    if (!chaletId || !receiverId || !senderId) {
+      return res.status(400).json({ message: 'All fields are required: chaletId, receiverId, senderId' });
     }
 
     const messages = await Messages.findAll({
-      where: { chaletId },
+      where: {
+        chaletId,
+        senderId,
+        receiverId,
+      },
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
         { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email'] },
@@ -62,18 +67,20 @@ exports.getMessagesForChalet = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
+    
     if (messages.length === 0) {
-      return res.status(404).json({ message: 'No messages found for this chalet' });
+      return res.status(404).json({ message: 'No messages found for this chalet with the given criteria' });
     }
 
+    
+    res.status(200).json( messages);
 
-    res.status(200).json(messages);
-
+    
     if (req.socketIoInstance) {
       req.socketIoInstance.emit('received_messages', messages);
-      console.log(`The Messages Retrieved Successfully for this chalet is`)
+      console.log('Messages retrieved successfully and emitted via Socket.IO');
     } else {
-      console.error('socketIoInstance is undefined');
+      console.error('Socket.IO instance is undefined');
     }
   } catch (error) {
     console.error('Error retrieving messages:', error);
