@@ -1,4 +1,3 @@
-
 const express = require('express');
 const sequelize = require('./Config/dbConnect');
 const helmet = require('helmet');
@@ -7,12 +6,6 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
-
-
-const geoip = require('geoip-lite');
-const axios = require('axios');
-const requestIp = require('request-ip');
-
 const app = express();
 const compression = require('compression');
 app.use(compression());
@@ -22,13 +15,9 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+const server = http.createServer(app);
+const io = socketIo(server);
 
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  })
-);
 
 app.use((req, res, next) => {
   req.socketIoInstance = io;  
@@ -41,20 +30,6 @@ app.use(helmet({
 }));
 
 app.use(express.json());
-
-// Create HTTP server and attach Socket.IO
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://rowqan.com",
-      "https://dashboard.rowqan.com",
-      "https://rowqanbackend.rowqan.com",
-    ], // Allow frontend to connect
-    methods: ["GET", "POST"],
-  },
-});
 
 io.on("connection", (socket) => {
   console.log("A user connected");
@@ -119,31 +94,11 @@ const BlogRoutes = require('./Routes/BlogRoutes')
 
 
 
-
-
-
-// Example Socket.IO connection event
-io.on("connection", (socket) => {
-  console.log("a user connected");
-
-  // Handle message events
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
-    // Broadcast to other users
-    io.emit("receive_message", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
-});
-
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://rowqan.com",
-  "https://dashboard.rowqan.com",
-  "https://rowqanbackend.rowqan.com",
+  'http://localhost:5173',
+  'http://localhost:3001',
+  'https://rowqan.com',
+  'https://rowqanbackend.rowqan.com',
 ];
 
 const corsOptions = {
@@ -170,7 +125,7 @@ app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
 app.use('/chalets', ChaletsRoutes);
-// app.use('/statuschalets', statusChaletRoutes);
+app.use('/statuschalets', statusChaletRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
 app.use('/BreifDetailsChalets', BreifDetailsChaletsRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
@@ -201,14 +156,13 @@ app.use('/heroLands', HeroLands);
 app.use('/payments', PaymentsRoutes); 
 app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
-app.use('/aboutUs',AboutRoutes)
-app.use('/Blogs',BlogRoutes)
 
 
 
 
-const IP_LOOKUP_API =
-  "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
+
+const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
 
 
 async function checkVPN(userIP) {
