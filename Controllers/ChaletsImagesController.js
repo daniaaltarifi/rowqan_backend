@@ -35,6 +35,7 @@ exports.createChaletImages = async (req, res) => {
     }
     const BASE_URL = "https://res.cloudinary.com/durjqlivi/";
 
+
     
     const validFiles = files.map((file) => {
       const extension = file.originalname.split('.').pop(); 

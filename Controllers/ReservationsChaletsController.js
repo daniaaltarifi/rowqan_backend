@@ -12,7 +12,6 @@ const moment = require('moment');
 exports.createReservation = async (req, res) => {
   try {
     const {
-      initial_amount,
       date,
       lang,
       additional_visitors,
@@ -22,7 +21,7 @@ exports.createReservation = async (req, res) => {
       right_time_id,
     } = req.body || {};
 
-    if (!initial_amount || !date || !lang || !chalet_id || !right_time_id) {
+    if (!date || !lang || !chalet_id || !right_time_id) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
           "Initial amount, date, lang, user_id, chalet_id, and right_time_id are required",
@@ -85,7 +84,6 @@ exports.createReservation = async (req, res) => {
 
     const cashback = total_amount * 0.05;
 
-    const remaining_amount = total_amount - initial_amount;
 
     const existingReservation = await Reservations_Chalets.findOne({
       where: {
@@ -124,11 +122,9 @@ exports.createReservation = async (req, res) => {
     }
 
     const reservation = await Reservations_Chalets.create({
-      initial_amount,
       reserve_price: reserve_price,
       total_amount,
       cashback,
-      remaining_amount,
       date: formattedDate,
       lang,
       status:'Pending',
@@ -161,11 +157,9 @@ exports.createReservation = async (req, res) => {
       message: lang === 'en' ? 'Reservation created successfully' : 'تم إنشاء الحجز بنجاح',
       reservation: {
         id: reservation.id,
-        initial_amount,
         reserve_price: reserve_price,
         total_amount,
         cashback,
-        remaining_amount,
         date: formattedDate,
         lang,
         status: reservation.status,
