@@ -1,12 +1,22 @@
+const Chalet = require('../Models/ChaletsModel');
 const Messages = require('../Models/MessageModel');
 const Users = require('../Models/UsersModel');
 
+const emitSocketEvent = (socketIoInstance, event, data) => {
+  if (socketIoInstance) {
+    socketIoInstance.emit(event, data);
+  } else {
+    console.error('socketIoInstance is undefined');
+  }
+};
+
+
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, receiverId, message, lang } = req.body;
+    const { senderId, receiverId, message, lang, chaletId } = req.body;
 
-    if (!senderId || !receiverId || !message || !lang) {
-      return res.status(400).json({ message: 'All fields are required: senderId, receiverId, message, lang' });
+    if (!senderId || !receiverId || !message || !lang || !chaletId) {
+      return res.status(400).json({ message: 'All fields are required: senderId, receiverId, message, lang, chaletId' });
     }
 
     const newMessage = await Messages.create({
@@ -14,63 +24,59 @@ exports.createMessage = async (req, res) => {
       receiverId,
       message,
       lang,
+      chaletId,
     });
 
-   
+    emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
+
+    res.status(201).json( newMessage);
     if (req.socketIoInstance) {
-      req.socketIoInstance.emit('receive_message', {
-        senderId,
-        receiverId,
-        message,
-        lang,
-      });
-      console.log('Message Recieved Successfully');
-      console.log(message)
+      req.socketIoInstance.emit('sent_messages', message);
+      console.log(`The Message is created Successfully is:${message}`)
     } else {
-      console.log('Error to Recieved Message')
       console.error('socketIoInstance is undefined');
     }
-
-    res.status(201).json({ message: 'Message created successfully', data: newMessage });
   } catch (error) {
-    console.error(error);
+    console.error('Error creating message:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
 
-exports.getMessagesBetweenUsers = async (req, res) => {
-  try {
-    const { senderId, receiverId } = req.params;
 
-    if (!senderId || !receiverId) {
-      return res.status(400).json({ message: 'Both senderId and receiverId are required' });
+exports.getMessagesForChalet = async (req, res) => {
+  try {
+    const { chaletId } = req.params;
+
+    if (!chaletId) {
+      return res.status(400).json({ message: 'chaletId is required' });
     }
 
     const messages = await Messages.findAll({
-      where: {
-        senderId,
-        receiverId,
-      },
+      where: { chaletId },
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
         { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email'] },
+        { model: Chalet, as: 'Chalet', attributes: ['id', 'title'] },
       ],
       order: [['id', 'ASC']],
     });
 
-    res.status(200).json( messages );
+    if (messages.length === 0) {
+      return res.status(404).json({ message: 'No messages found for this chalet' });
+    }
 
-   
+
+    res.status(200).json(messages);
+
     if (req.socketIoInstance) {
-      console.log('Get All Mesasges Successfully')
-      console.log(messages)
-      req.socketIoInstance.emit('receive_message_batch', messages);
+      req.socketIoInstance.emit('received_messages', messages);
+      console.log(`The Messages Retrieved Successfully for this chalet is`)
     } else {
       console.error('socketIoInstance is undefined');
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error retrieving messages:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
