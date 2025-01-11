@@ -18,6 +18,14 @@ const Payments = sequelize.define('Payments', {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    UserName:{
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    Phone_Number:{
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     user_id: {  
       type: DataTypes.INTEGER,
       allowNull: true,  
