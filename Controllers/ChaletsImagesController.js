@@ -21,8 +21,13 @@ exports.createChaletImages = async (req, res) => {
     const files = req.files ? req.files : [];
 
     if (files.length === 0) {
-      return res.status(400).json(ErrorResponse('Files are required'));
+      return res.status(400).json(ErrorResponse("Files are required"));
     }
+
+
+    
+    const BASE_URL_IMAGE = "https://res.cloudinary.com/durjqlivi/";
+    const BASE_URL_VIDEO = "https://res.cloudinary.com/durjqlivi/video/upload/v1736589099/";
 
    
     const BASE_URL = "https://res.cloudinary.com/durjqlivi/";
@@ -45,26 +50,23 @@ exports.createChaletImages = async (req, res) => {
       return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4, .svg'));
     }
 
-   
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
-      return res.status(404).json(ErrorResponse('Chalet not found'));
+      return res.status(404).json(ErrorResponse("Chalet not found"));
     }
 
-   
+    
     const newFiles = await ChaletsImages.bulkCreate(validFiles);
 
     res.status(201).json({
-      message: 'Chalet files uploaded successfully',
+      message: "Chalet files uploaded successfully",
       files: newFiles,
     });
   } catch (error) {
-    console.error('Error in createChaletImages:', error);
-    res.status(500).json(ErrorResponse('Failed to create chalet files'));
+    console.error("Error in createChaletImages:", error);
+    res.status(500).json(ErrorResponse("Failed to create chalet files"));
   }
 };
-
-
 
 
 
