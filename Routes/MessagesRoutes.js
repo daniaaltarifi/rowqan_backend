@@ -23,6 +23,12 @@ router.get('/betweenMessage/:chaletId/:senderId/:receiverId', (req, res, next) =
   MessagesController.getMessagesForChalet(req, res, next);
 });
 
+
+router.get('/getMessagesByRecieverId/:receiverId', (req, res, next) => {
+  MessagesController.getMessagesForRecieverId(req, res, next);
+});
+
+
 router.get('/sent/:senderId', (req, res, next) => {
   MessagesController.getSentMessages(req, res, next);
 });

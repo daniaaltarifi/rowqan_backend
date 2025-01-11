@@ -1,7 +1,7 @@
 const Chalet = require('../Models/ChaletsModel');
 const Messages = require('../Models/MessageModel');
 const Users = require('../Models/UsersModel');
-
+const { Sequelize } = require('sequelize');
 const emitSocketEvent = (socketIoInstance, event, data) => {
   if (socketIoInstance) {
     socketIoInstance.emit(event, data);
@@ -86,6 +86,64 @@ exports.getMessagesForChalet = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+
+
+
+
+
+
+exports.getMessagesForRecieverId = async (req, res) => {
+  try {
+    const { receiverId } = req.params;
+
+  
+    if (!receiverId) {
+      return res.status(400).json({ message: 'The Receiver Id is required' });
+    }
+
+   
+    const messages = await Messages.findAll({
+      where: { receiverId },
+      include: [
+        { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
+      ],
+      attributes: [
+        'receiverId',
+        [Sequelize.col('Messages.senderId'), 'senderId'],
+        [Sequelize.fn('MAX', Sequelize.col('Messages.id')), 'messageId'], 
+        [Sequelize.literal('(SELECT message FROM Messages AS M WHERE M.id = MAX(Messages.id))'), 'message'], 
+            ],
+      group: ['Messages.senderId', 'receiverId'], 
+      order: [[Sequelize.fn('MAX', Sequelize.col('Messages.id')), 'DESC']], 
+    });
+
+    
+    if (messages.length === 0) {
+      return res.status(404).json({ message: 'No messages found for this receiver with the given criteria' });
+    }
+
+    
+    res.status(200).json({ message: 'Messages retrieved successfully', data: messages });
+
+    
+    if (req.socketIoInstance) {
+      req.socketIoInstance.emit('received_messages', messages);
+      console.log('Messages retrieved successfully and emitted via Socket.IO');
+    } else {
+      console.error('Socket.IO instance is undefined');
+    }
+  } catch (error) {
+    console.error('Error retrieving messages:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+
+
+
+
+
 
 exports.getSentMessages = async (req, res) => {
   try {

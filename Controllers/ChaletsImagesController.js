@@ -17,43 +17,39 @@ exports.createChaletImages = async (req, res) => {
 
     const images = req.files ? req.files.map((file) => file.filename) : [];
 
-    
     if (images.length === 0) {
       return res.status(400).json(ErrorResponse('Images are required'));
     }
 
-    
+  
+    const validImages = images.map((image) => {
+      if (!image.endsWith('.mp4')) {
+        return `${image}.mp4`; 
+      }
+      return image; 
+    });
+
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json(ErrorResponse('Chalet not found'));
     }
 
-    
-    const newImages = await ChaletsImages.bulkCreate(
-      images.map((image) => ({ chalet_id, image }))
-    );
-
    
-    const cacheDeletePromises = [
-      client.del(`chalet:${chalet_id}`), 
-      client.del(`chaletsHero:page:1:limit:20`), 
-    ];
-
-    
-    await Promise.all(cacheDeletePromises);
-
-    
-    const cacheKey = `chaletImages:${chalet_id}`;
-    await client.set(cacheKey, JSON.stringify(newImages), { EX: 3600 });
-
-    res.status(201).json(
-      newImages,
+    const newImages = await ChaletsImages.bulkCreate(
+      validImages.map((image) => ({ chalet_id, image }))
     );
+
+    res.status(201).json({
+      message: 'Chalet images uploaded successfully',
+      images: newImages,
+    });
   } catch (error) {
     console.error('Error in createChaletImages:', error);
     res.status(500).json(ErrorResponse('Failed to create chalet images'));
   }
 };
+
+
 
 
 exports.getImagesByChaletId = async (req, res) => {
