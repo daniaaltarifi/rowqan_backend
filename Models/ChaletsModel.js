@@ -27,6 +27,10 @@ const Chalet = sequelize.define('Chalet', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  intial_Amount:{
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
   lang: {
     type: DataTypes.STRING,
     allowNull: false,

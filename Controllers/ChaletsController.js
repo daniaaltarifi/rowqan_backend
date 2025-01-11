@@ -14,14 +14,14 @@ const Chalet_props = require("../Models/ChaletsProps");
 
 exports.createChalet = async (req, res) => {
   try {
-    const { title, lang, status_id, reserve_price } = req.body || {};
+    const { title, lang, status_id, reserve_price,intial_Amount } = req.body || {};
 
-    if (!title || !lang || !status_id || !reserve_price) {
+    if (!title || !lang || !status_id || !reserve_price||!intial_Amount) {
       return res
         .status(400)
         .json(
           ErrorResponse("Validation failed", [
-            "Title, language, status_id, and reserve_price are required",
+            "Title, language, status_id, and reserve_price and intial_Amount are required",
           ])
         );
     }
@@ -31,6 +31,7 @@ exports.createChalet = async (req, res) => {
       lang,
       status_id,
       reserve_price,
+      intial_Amount
     });
     if (validationErrors.length > 0) {
       return res
@@ -61,6 +62,7 @@ exports.createChalet = async (req, res) => {
       lang,
       status_id,
       reserve_price,
+      intial_Amount
     });
 
     const cacheDeletePromises = [client.del(`chalet:page:1:limit:20`)];
@@ -232,7 +234,7 @@ exports.getChaletById = async (req, res) => {
       image: chalet.image,
       reserve_price: chalet.reserve_price,
       lang: chalet.lang,
-      status: [{ id: chalet.Status.id, status: chalet.Status.status }],  // Modified this part to return both id and status in an array
+      status: [{ id: chalet.Status.id, status: chalet.Status.status }],  
       ChaletsImages: chalet.ChaletsImages.map(img => img.image),
       BreifDetailsChalets: chalet.BreifDetailsChalets.map(detail => detail.type),
       RightTimeModels: chalet.RightTimeModels.map(time => time.time),
@@ -253,7 +255,7 @@ exports.getChaletById = async (req, res) => {
 exports.updateChalet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, lang, status_id, reserve_price } = req.body;
+    const { title, lang, status_id, reserve_price,intial_Amount } = req.body;
     const image = req.file ? req.file.filename : null;
 
     const validationErrors = validateInput({
@@ -261,6 +263,7 @@ exports.updateChalet = async (req, res) => {
       lang,
       status_id,
       reserve_price,
+      intial_Amount
     });
     if (validationErrors.length > 0) {
       return res
@@ -299,6 +302,8 @@ exports.updateChalet = async (req, res) => {
       updatedFields.status_id = status_id;
     if (reserve_price && reserve_price !== chalet.reserve_price)
       updatedFields.reserve_price = reserve_price;
+    if (intial_Amount && intial_Amount !== chalet.intial_Amount)
+      updatedFields.intial_Amount = intial_Amount;
     if (image && image !== chalet.image) updatedFields.image = image;
 
     if (Object.keys(updatedFields).length > 0) {
