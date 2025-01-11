@@ -29,20 +29,7 @@ exports.createChaletImages = async (req, res) => {
     const BASE_URL_IMAGE = "https://res.cloudinary.com/durjqlivi/";
     const BASE_URL_VIDEO = "https://res.cloudinary.com/durjqlivi/video/upload/v1736589099/";
 
-   
-    const validFiles = files.map((file) => {
-      const extension = file.originalname.split('.').pop(); 
-      if (!['png', 'jpeg', 'mp4','svg'].includes(extension)) {
-        return null; 
-      }
-
-      const filenameWithExtension = `${file.filename}.${extension}`;
-      return {
-        chalet_id,
-        image: `uploads/chalets_images/${filenameWithExtension}`, 
-      };
-    }).filter(Boolean); 
-
+ 
     if (validFiles.length === 0) {
       return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
     }
@@ -91,6 +78,7 @@ exports.createChaletImages = async (req, res) => {
     res.status(500).json(ErrorResponse("Failed to create chalet files"));
   }
 };
+
 
 
 
