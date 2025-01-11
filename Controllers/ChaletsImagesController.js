@@ -3,6 +3,9 @@ const ChaletsImages = require('../Models/ChaletsImagesModel');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient')
 
+
+
+
 exports.createChaletImages = async (req, res) => {
   try {
     const { chalet_id } = req.body;
@@ -15,39 +18,49 @@ exports.createChaletImages = async (req, res) => {
       );
     }
 
-    const images = req.files ? req.files.map((file) => file.filename) : [];
+    const files = req.files ? req.files : [];
 
-    if (images.length === 0) {
-      return res.status(400).json(ErrorResponse('Images are required'));
+    if (files.length === 0) {
+      return res.status(400).json(ErrorResponse('Files are required'));
     }
 
-  
-    const validImages = images.map((image) => {
-      if (!image.endsWith('.mp4')) {
-        return `${image}.mp4`; 
+   
+    const validFiles = files.map((file) => {
+      const extension = file.originalname.split('.').pop(); 
+      if (!['png', 'jpeg', 'mp4','svg'].includes(extension)) {
+        return null; 
       }
-      return image; 
-    });
+
+      const filenameWithExtension = `${file.filename}.${extension}`;
+      return {
+        chalet_id,
+        image: `uploads/chalets_images/${filenameWithExtension}`, 
+      };
+    }).filter(Boolean); 
+
+    if (validFiles.length === 0) {
+      return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
+    }
 
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json(ErrorResponse('Chalet not found'));
     }
 
-   
-    const newImages = await ChaletsImages.bulkCreate(
-      validImages.map((image) => ({ chalet_id, image }))
-    );
+    
+    const newFiles = await ChaletsImages.bulkCreate(validFiles);
 
     res.status(201).json({
-      message: 'Chalet images uploaded successfully',
-      images: newImages,
+      message: 'Chalet files uploaded successfully',
+      files: newFiles,
     });
   } catch (error) {
     console.error('Error in createChaletImages:', error);
-    res.status(500).json(ErrorResponse('Failed to create chalet images'));
+    res.status(500).json(ErrorResponse('Failed to create chalet files'));
   }
 };
+
+
 
 
 
