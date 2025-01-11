@@ -10,10 +10,10 @@ router.post('/createstatus', rateLimiter, statusController.createStatus);
 
 router.get('/getallstatuses/:lang', statusController.getAllStatuses);
 
-router.get('/getstatusbyid/:id', statusController.getStatusById);
+router.get('/getstatusbyid/:id/:lang', statusController.getStatusById);
 
 router.put('/updatestatus/:id', rateLimiter, statusController.updateStatus);
 
-router.delete('/deletestatus/:id', statusController.deleteStatus);
+router.delete('/deletestatus/:id/:lang', statusController.deleteStatus);
 
 module.exports = router;

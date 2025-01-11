@@ -67,7 +67,6 @@ exports.getMessagesForChalet = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
-    
     if (messages.length === 0) {
       return res.status(404).json({ message: 'No messages found for this chalet with the given criteria' });
     }

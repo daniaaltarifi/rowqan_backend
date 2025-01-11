@@ -1,3 +1,4 @@
+
 const express = require('express');
 const sequelize = require('./Config/dbConnect');
 const helmet = require('helmet');
@@ -6,6 +7,12 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+
+
+const geoip = require('geoip-lite');
+const axios = require('axios');
+const requestIp = require('request-ip');
+
 const app = express();
 const compression = require('compression');
 app.use(compression());
@@ -19,6 +26,14 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
 app.use((req, res, next) => {
   req.socketIoInstance = io;  
   next();
@@ -30,6 +45,7 @@ app.use(helmet({
 }));
 
 app.use(express.json());
+
 
 
 io.on("connection", (socket) => {
@@ -95,11 +111,84 @@ const BlogRoutes = require('./Routes/BlogRoutes')
 
 
 
+
+// Create HTTP server and attach Socket.IO
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      "https://rowqan.com",
+      "https://dashboard.rowqan.com",
+      "https://rowqanbackend.rowqan.com",
+    ], // Allow frontend to connect
+    methods: ["GET", "POST"],
+  },
+});
+
+// Example Socket.IO connection event
+io.on("connection", (socket) => {
+  console.log("a user connected");
+
+  // Handle message events
+  socket.on("send_message", (data) => {
+    console.log("Message received:", data);
+    // Broadcast to other users
+    io.emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+});
+
+const UsersRoutes = require("./Routes/UsersRoutes");
+const LogoRoutes = require("./Routes/LogoRoutes");
+const HeaderRoutes = require("./Routes/HeaderRoutes");
+const HeroesRoutes = require("./Routes/HeroRoutes");
+const ServicesRoutes = require("./Routes/ServicesRoutes");
+const FooterRoutes = require("./Routes/FooterRoutes");
+const FooterIconRoutes = require("./Routes/FooterIconsRoutes");
+const HeroChaletsRoutes = require("./Routes/ChaletsHeroRoutes");
+const ChaletsRoutes = require("./Routes/ChaletsRoutes");
+const statusChaletRoutes = require("./Routes/StatusChaletsRoutes");
+const ChaletImagesRoutes = require("./Routes/ChaletsImagesRoutes");
+const BreifDetailsChaletsRoutes = require("./Routes/BreifDetailsChaletsRoutes");
+const ReservatioDatesRoutes = require("./Routes/ReservationsDateRoutes");
+const ContactUsRoutes = require("./Routes/ContactUsRoutes");
+const RightTimeRoutes = require("./Routes/RightTimeRoutes");
+const StatusRoutes = require("./Routes/StatusRoutes");
+const ChaletsDetailsRoutes = require("./Routes/ChaletsDetailsRoutes");
+const HeroEventsRoutes = require("./Routes/EventsHeroRoutes");
+const EventsTypesRoutes = require("./Routes/TypesEventsRoutes");
+const SubEventsRoutes = require("./Routes/SubEventsRoutes");
+const AvailableEventsRoutes = require("./Routes/AvailableEventsRoutes");
+const AvailableImages = require("./Routes/AvailableImagesRoutes");
+const PlansRoutes = require("./Routes/PlansRoutes");
+const ReservatioEventsRoutes = require("./Routes/ReservationsEventsRoutes");
+const CategoryLandsRoutes = require("./Routes/CategoriesLandsRoutes");
+const PrpertyLandsRoutes = require("./Routes/PropertiesLandsRoutes");
+const ImagesLandsRoutes = require("./Routes/CategoriesImagesRoutes");
+const BreifLandsRoutes = require("./Routes/BriefLandsRoutes");
+const ReservationeLandsRoutes = require("./Routes/ReservationsLandsRoutes");
+const ReservationsRoutes = require("./Routes/ReservationsRoutes");
+const UsersTypesRoutes = require("./Routes/UsersTypesRoutes");
+const ReservationsChaletsRoutes = require("./Routes/ReservationsChaletsRoutes");
+const WalletRoutes = require("./Routes/WalletRoutes");
+const PropsChaletsRoutes = require("./Routes/ChaletsPropsRoutes");
+const FeedBackRoutes = require("./Routes/FeedBacksRoutes");
+const MessagesRoutes = require("./Routes/MessagesRoutes");
+const HeroLands = require("./Routes/HeroLandsRoutes");
+const PaymentsRoutes = require("./Routes/PaymentsRoutes");
+const AboutRoutes = require('./Routes/AboutusRoutes')
+const BlogRoutes = require('./Routes/BlogRoutes')
+
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3001',
-  'https://rowqan.com',
-  'https://rowqanbackend.rowqan.com',
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://rowqan.com",
+  "https://dashboard.rowqan.com",
+  "https://rowqanbackend.rowqan.com",
 ];
 
 const corsOptions = {
@@ -126,7 +215,7 @@ app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
 app.use('/chalets', ChaletsRoutes);
-app.use('/statuschalets', statusChaletRoutes);
+// app.use('/statuschalets', statusChaletRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
 app.use('/BreifDetailsChalets', BreifDetailsChaletsRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
@@ -163,7 +252,18 @@ app.use('/Blogs',BlogRoutes)
 
 
 
+
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
+app.use('/aboutUs',AboutRoutes)
+app.use('/Blogs',BlogRoutes)
+
+
+
+
+const IP_LOOKUP_API =
+  "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
 
 async function checkVPN(userIP) {
   try {

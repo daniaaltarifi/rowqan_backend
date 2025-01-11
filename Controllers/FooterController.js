@@ -41,7 +41,7 @@ exports.getAllFooters = async (req, res) => {
     if (!lang) {
       return res.status(400).json(ErrorResponse("Language is required"));
     }
-
+client.del(`footers:lang:${lang}:page:${page}:limit:${limit}`)
     const cacheKey = `footers:lang:${lang}:page:${page}:limit:${limit}`;
     const cachedData = await client.get(cacheKey);
 
@@ -89,7 +89,7 @@ exports.getFooterById = async (req, res) => {
     if (!id || !lang) {
       return res.status(400).json(ErrorResponse("ID and Language are required"));
     }
-
+client.del(`footer:${id}:lang:${lang}`)
     const cacheKey = `footer:${id}:lang:${lang}`;
 
     const cachedData = await client.get(cacheKey);

@@ -29,7 +29,7 @@ exports.getAllLogos = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-
+client.del(`logos:page:${page}:limit:${limit}`)
     const cacheKey = `logos:page:${page}:limit:${limit}`;
     const cachedData = await client.get(cacheKey);
 

@@ -5,24 +5,24 @@ const {client} = require('../Utils/redisClient')
 
 exports.createFooterIcon = async (req, res) => {
   try {
-    const { footer_id, link_to } = req.body;
+    const { link_to } = req.body;
     const icon = req.file ? req.file.filename : null;
 
-    if (!footer_id || !link_to) {
+    if (!link_to) {
       return res
         .status(400)
         .json(ErrorResponse("Footer ID and link are required."));
     }
 
     const [newIcon, created] = await FooterIcons.findOrCreate({
-      where: { footer_id, link_to },
-      defaults: { footer_id, link_to, icon },
+      where: {link_to },
+      defaults: {link_to, icon },
     });
 
     if (!created) {
       return res
         .status(400)
-        .json(ErrorResponse("Footer Icon with the same footer_id and link already exists"));
+        .json(ErrorResponse("Footer Icon with the same and link already exists"));
     }
 
     res.status(201).json(
@@ -41,7 +41,7 @@ exports.getAllFooterIcons = async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-   
+   client.del(`footerIcons:page:${page}:limit:${limit}`)
     const cacheKey = `footerIcons:page:${page}:limit:${limit}`;
     const cachedData = await client.get(cacheKey);
 
@@ -52,7 +52,6 @@ exports.getAllFooterIcons = async (req, res) => {
     }
 
     const footerIcons = await FooterIcons.findAll({
-      include: [{ model: Footer, attributes: ['title', 'lang'] }],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['id', 'DESC']], 
@@ -90,9 +89,7 @@ exports.getFooterIconById = async (req, res) => {
     console.log("Cache miss for footer icon:", id);
 
    
-    const icon = await FooterIcons.findByPk(id, {
-      include: [{ model: Footer, attributes: ['title', 'lang'] }],
-    });
+    const icon = await FooterIcons.findByPk(id);
 
    
     if (!icon) {
@@ -102,7 +99,7 @@ exports.getFooterIconById = async (req, res) => {
     
     await client.setEx(cacheKey, 3600, JSON.stringify(icon));
 
-    res.status(200).json({ icon });
+    res.status(200).json( icon );
   } catch (error) {
     console.error('Error fetching footer icon:', error);
     res.status(500).json(ErrorResponse('Failed to fetch footer icon'));
@@ -114,10 +111,10 @@ exports.getFooterIconById = async (req, res) => {
 exports.updateFooterIcon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { footer_id, link_to } = req.body;
+    const {link_to } = req.body;
     const icon = req.file ? req.file.filename : null;
 
-    const validationErrors = validateInput({ footer_id, link_to });
+    const validationErrors = validateInput({link_to });
     if (validationErrors.length > 0) {
       return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
     }
@@ -128,7 +125,6 @@ exports.updateFooterIcon = async (req, res) => {
     }
    
     const updatedFields = {};
-    if (footer_id && footer_id !== footerIcon.footer_id) updatedFields.footer_id = footer_id;
     if (link_to && link_to !== footerIcon.link_to) updatedFields.link_to = link_to;
     if (icon && icon !== footerIcon.icon) updatedFields.icon = icon;
 

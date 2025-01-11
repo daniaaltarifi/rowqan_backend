@@ -115,7 +115,7 @@ exports.getAllChalets = async (req, res) => {
       where: whereClause,
       include: [
         { model: Status, attributes: ["status"] },
-        { model: chaletsImages, attributes: ["image"] },
+        { model: chaletsImages, attributes: ["id","image"] },
         { model: RightTimeModel, attributes: ["time"] },
         { model: ChaletsDetails, attributes: ["detail_type"] },
         { model: ReservationsModel, attributes: ["id"] },
