@@ -33,7 +33,6 @@ exports.createChaletImages = async (req, res) => {
     if (validFiles.length === 0) {
       return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
     }
-    const BASE_URL = "https://res.cloudinary.com/durjqlivi/";
 
     
     const validFiles = files.map((file) => {
