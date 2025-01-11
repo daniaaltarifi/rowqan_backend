@@ -15,10 +15,6 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-const server = http.createServer(app);
-const io = socketIo(server);
-
-
 app.use((req, res, next) => {
   req.socketIoInstance = io;  
   next();
@@ -30,8 +26,18 @@ app.use(helmet({
 }));
 
 app.use(express.json());
-
-
+// Create HTTP server and attach Socket.IO
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: [
+      "http://localhost:5173",
+      "https://rowqan.com",
+      "https://rowqanbackend.rowqan.com",
+    ], // Allow frontend to connect
+    methods: ["GET", "POST"],
+  },
+});
 io.on("connection", (socket) => {
   console.log("A user connected");
 
@@ -164,6 +170,7 @@ app.use('/Blogs',BlogRoutes)
 
 
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
 
 async function checkVPN(userIP) {
   try {
