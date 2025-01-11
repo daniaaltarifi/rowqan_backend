@@ -25,6 +25,7 @@ exports.createMessage = async (req, res) => {
         lang,
       });
       console.log('Message Recieved Successfully');
+      console.log(message)
     } else {
       console.log('Error to Recieved Message')
       console.error('socketIoInstance is undefined');
@@ -63,6 +64,7 @@ exports.getMessagesBetweenUsers = async (req, res) => {
    
     if (req.socketIoInstance) {
       console.log('Get All Mesasges Successfully')
+      console.log(messages)
       req.socketIoInstance.emit('receive_message_batch', messages);
     } else {
       console.error('socketIoInstance is undefined');
