@@ -3,8 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/UsersModel');
 const ReservationModel = require('../Models/ReservationsModel');
 const UserTypes = require('../Models/UsersTypes');
-const Wallet = require('../Models/WalletModel');
-const { argon2d } = require('argon2');
 require('dotenv').config();
 const argon2 = require("argon2");
 

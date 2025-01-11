@@ -58,7 +58,7 @@ exports.getMessagesBetweenUsers = async (req, res) => {
       order: [['id', 'ASC']],
     });
 
-    res.status(200).json({ message: 'Messages retrieved successfully', data: messages });
+    res.status(200).json( messages );
 
    
     if (req.socketIoInstance) {
