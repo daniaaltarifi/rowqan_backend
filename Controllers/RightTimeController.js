@@ -2,7 +2,8 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const RightTimeModel = require('../Models/RightTimeModel');
 const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
-const { client } = require("../Utils/redisClient");
+const {client} = require('../Utils/redisClient')
+
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 exports.createRightTime = async (req, res) => {
@@ -49,11 +50,12 @@ exports.createRightTime = async (req, res) => {
 
 
 exports.getRightTimeById = async (req, res) => {
+ 
   try {
     const { id } = req.params;
     const { lang } = req.query;
 
-    
+    client.del(`rightTime:${id}:${lang || "all"}`)
     const cacheKey = `rightTime:${id}:${lang || "all"}`;
 
     
@@ -67,7 +69,7 @@ exports.getRightTimeById = async (req, res) => {
 
     
     const rightTimeEntry = await RightTimeModel.findOne({
-      attributes: ["id", "time", "lang"],
+      attributes: ["id", "time", "lang","price","name","image"],
       where: whereCondition,
       include: [
         { model: Chalet, attributes: ["id", "title","reserve_price"] },
@@ -115,7 +117,7 @@ exports.getRightTimeById = async (req, res) => {
       const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
   
       
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
       if (cachedData) {
         console.log("Cache hit for RightTimes by Chalet:", chalet_id);
         return res.status(200).json(
@@ -146,7 +148,7 @@ exports.getRightTimeById = async (req, res) => {
       }
   
      
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json({ rightTimes });
     } catch (error) {
@@ -171,12 +173,12 @@ exports.updateRightTime = async (req, res) => {
      
         const validationErrors = validateInput({ name, time, lang, chalet_id, price });
         if (validationErrors.length > 0) {
-            return res.status(400).json(new ErrorResponse('Validation failed', validationErrors));
+            return res.status(400).json( ErrorResponse('Validation failed', validationErrors));
         }
 
         const rightTime = await RightTimeModel.findByPk(id);
         if (!rightTime) {
-            return res.status(404).json(new ErrorResponse('RightTime not found'));
+            return res.status(404).json( ErrorResponse('RightTime not found'));
         }
 
       
@@ -194,7 +196,7 @@ exports.updateRightTime = async (req, res) => {
         );
     } catch (error) {
         console.error(error);
-        return res.status(500).json(new ErrorResponse('Internal server error'));
+        return res.status(500).json( ErrorResponse('Internal server error'));
     }
 };
 
@@ -206,7 +208,7 @@ exports.deleteRightTime = async (req, res) => {
      
       const [rightTime, _] = await Promise.all([
         RightTimeModel.findByPk(id, { where: { lang } }),
-        redisClient.del(`rightTime:${id}:${lang}`), 
+        client.del(`rightTime:${id}:${lang}`), 
       ]);
   
       if (!rightTime) {
@@ -240,9 +242,9 @@ exports.get = async (req, res) => {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
   
-      
+client.del(`rightTimes:lang:${lang}:page:${page}:limit:${limit}`)      
       const cacheKey = `rightTimes:lang:${lang}:page:${page}:limit:${limit}`;
-      const cachedData = await redisClient.get(cacheKey);
+      const cachedData = await client.get(cacheKey);
   
       if (cachedData) {
         console.log("Cache hit for RightTimes:", lang, page, limit);
@@ -270,7 +272,7 @@ exports.get = async (req, res) => {
       }
   
     
-      await redisClient.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
+      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
       return res.status(200).json(
         rightTimes,
