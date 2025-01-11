@@ -547,7 +547,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     let reservations = [];
     let fullDayAdded = false;
 
-    // Step 1: Fetch reservations for each time period requested
+   
     for (let period of timePeriods) {
       console.log(`Processing time period: ${period}`);
 
@@ -572,7 +572,8 @@ exports.getReservationsByRightTimeName = async (req, res) => {
             });
             console.log("Found full day reservations:", fullDayReservations);
 
-            reservations = [...reservations, ...fullDayReservations];
+           
+            reservations = reservations.concat(fullDayReservations);
             fullDayAdded = true;
           }
         }
@@ -597,7 +598,8 @@ exports.getReservationsByRightTimeName = async (req, res) => {
           });
           console.log("Found reservations for time period:", timeReservations);
 
-          reservations = [...reservations, ...timeReservations];
+          
+          reservations = reservations.concat(timeReservations);
         }
       }
     }
@@ -606,13 +608,16 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
     res.json({
       rightTime: name,
-      reservations: reservations,
+      reservations: reservations, 
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+
 
 
 
