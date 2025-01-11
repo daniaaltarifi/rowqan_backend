@@ -547,10 +547,11 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     let reservations = [];
     let fullDayAdded = false;
 
-   
+    
     for (let period of timePeriods) {
       console.log(`Processing time period: ${period}`);
 
+      
       if (period === 'Full' || period === 'day') {
         if (!fullDayAdded) {
           const fullDayRightTime = await RightTimeModel.findOne({
@@ -570,14 +571,14 @@ exports.getReservationsByRightTimeName = async (req, res) => {
                 right_time_id: fullDayRightTime.id,
               },
             });
-            console.log("Found full day reservations:", fullDayReservations);
 
-           
-            reservations = reservations.concat(fullDayReservations);
-            fullDayAdded = true;
+            console.log("Found full day reservations:", fullDayReservations);
+            reservations.push(...fullDayReservations); 
+            fullDayAdded = true; 
           }
         }
       } else {
+       
         const rightTime = await RightTimeModel.findOne({
           where: {
             name: period,
@@ -596,14 +597,18 @@ exports.getReservationsByRightTimeName = async (req, res) => {
               right_time_id: rightTime.id,
             },
           });
+
           console.log("Found reservations for time period:", timeReservations);
 
-          
-          reservations = reservations.concat(timeReservations);
+        
+          reservations.push(...timeReservations);
+        } else {
+          console.log(`No right time found for period: ${period}`);
         }
       }
     }
 
+    
     console.log("Final reservations:", reservations);
 
     res.json({
@@ -611,7 +616,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       reservations: reservations, 
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error occurred:", error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
