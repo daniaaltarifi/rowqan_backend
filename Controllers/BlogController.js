@@ -161,7 +161,7 @@ exports.createBlog = async (req, res) => {
       await client.setEx(cacheKey, 3600, JSON.stringify(blogEntry));
   
       
-      return res.status(200).json(blogEntry);
+      return res.status(200).json([blogEntry]);
     } catch (error) {
       console.error("Error in getBlogById:", error);
   
