@@ -138,6 +138,11 @@ exports.getAllChalets = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.getAllChaletsByProps = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -183,6 +188,60 @@ exports.getAllChaletsByProps = async (req, res) => {
     });
   }
 };
+
+
+
+
+exports.getAllChaletsByPropsandDetails = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query; 
+    const offset = (page - 1) * limit;
+    const { lang } = req.params;
+client.del(`chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`)
+    const cacheKey = `chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+
+    
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    
+    if (lang && !["ar", "en"].includes(lang)) {
+      return res.status(400).json({
+        error: 'Invalid language. Supported languages are "ar" and "en".',
+      });
+    }
+
+    
+    const whereClause = lang ? { lang } : {};
+
+    
+    const chalets = await Chalet.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: BreifDetailsChalets,
+          attributes: ["id", "type", "value"],
+        },
+      ],
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+      order: [["id", "DESC"]],
+    });
+
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
+
+    res.status(200).json(chalets);
+  } catch (error) {
+    console.error("Error in getAllChaletsByPropsandDetails:", error.message);
+    res.status(500).json({
+      error: "Failed to fetch chalets",
+    });
+  }
+};
+
 
 exports.getChaletById = async (req, res) => {
   try {
