@@ -5,6 +5,9 @@ const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter');
 
 router.post('/createPayment', rateLimiter, paymentsController.createPayment);
+router.post('/createPayPal', rateLimiter, paymentsController.createPayPalPayment);
+
+
 
 router.post('/createPaymentIntent',rateLimiter, paymentsController.createPaymentIntent);
 
@@ -12,6 +15,8 @@ router.post('/createPaymentIntent',rateLimiter, paymentsController.createPayment
 router.put('/updatePayment/:id', rateLimiter, paymentsController.updatePayment);
 
 router.get('/getPayments',rateLimiter, paymentsController.getPayments);
+
+router.get('/getcapturePayPalPayment',rateLimiter, paymentsController.capturePayPalPayment);
 
 router.get('/getPaymentById/:id', rateLimiter, paymentsController.getPaymentById);
 

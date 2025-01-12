@@ -5,6 +5,76 @@ const { client } = require('../Utils/redisClient');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qNoqUPr65tG7t1OhQ4KVqbj0G7hT2NdJwmtzXlEj9zY2DCVXSNIKE00NeWBobTi');
 
+
+
+const  {Client}  = require('../Config/PayPalClient');
+const paypal = require('@paypal/checkout-server-sdk'); 
+exports.createPayPalPayment = async (req, res) => {
+  try {
+    const { amount, currency } = req.body;
+
+  
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).send({ error: 'Invalid amount provided.' });
+    }
+
+   
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",  
+      purchase_units: [
+        {
+          amount: {
+            currency_code: currency || "USD", 
+            value: amount.toFixed(2),  
+          },
+        },
+      ],
+    });
+
+   
+    const order = await Client.execute(request);
+
+   
+    res.status(201).json({
+      id: order.result.id,
+      status: order.result.status,
+      links: order.result.links, 
+    });
+  } catch (error) {
+    console.error('PayPal Error:', error.message);
+    res.status(500).send({ error: 'Failed to create PayPal payment.' });
+  }
+};
+
+
+
+exports.capturePayPalPayment = async (req, res) => {
+  try {
+    const { orderID } = req.body;
+
+    if (!orderID) {
+      return res.status(400).send({ error: 'Order ID is required.' });
+    }
+
+    const request = new paypal.orders.OrdersCaptureRequest(orderID);
+    request.requestBody({});
+
+    const capture = await Client.execute(request);
+
+    res.status(200).json({
+      id: capture.result.id,
+      status: capture.result.status,
+      capture_details: capture.result.purchase_units[0].payments.captures,
+    });
+  } catch (error) {
+    console.error('PayPal Error:', error.message);
+    res.status(500).send({ error: 'Failed to capture PayPal payment.' });
+  }
+};
+
+
 exports.createPayment = async (req, res) => {
     try {
       const { user_id, reservation_id, status, paymentMethod,UserName,Phone_Number } = req.body;

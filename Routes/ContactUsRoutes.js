@@ -6,8 +6,8 @@ const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter'); 
 
 
-router.post('/createcontactus', rateLimiter, multer.single('image'), ContactUsController.createContactUs);
-router.put('/updatecontactus/:id', rateLimiter, multer.single('image'), ContactUsController.updateContactUs);
+router.post('/createcontactus', rateLimiter, ContactUsController.createContactUs);
+router.put('/updatecontactus/:id', rateLimiter,ContactUsController.updateContactUs);
 
 
 router.get('/getcontactusid/:id/:lang', ContactUsController.getContactUsById);
