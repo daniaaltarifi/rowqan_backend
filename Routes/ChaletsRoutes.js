@@ -17,6 +17,8 @@ router.get('/getchaletsbydetailtype/:type/:lang', chaletController.getChaletsByD
 
 router.get('/getAllChaletProps/:lang',rateLimiter,chaletController.getAllChaletsByProps)
 
+router.get('/getAllChaletsByPropsandDetails/:lang',rateLimiter,chaletController.getAllChaletsByPropsandDetails)
+
 router.put('/updatechalet/:id', rateLimiter, multer.single('image'), chaletController.updateChalet);
 
 
