@@ -6,6 +6,7 @@ const {client} = require('../Utils/redisClient')
 
 
 
+
 exports.createChaletImages = async (req, res) => {
   try {
     const { chalet_id } = req.body;
@@ -33,7 +34,7 @@ exports.createChaletImages = async (req, res) => {
     
     validFiles = files.map((file) => {
       const extension = file.originalname.split(".").pop().toLowerCase();
-      if (!["png", "jpeg", "mp4"].includes(extension)) {
+      if (!["png", "jpeg", "mp4",'jpg','avi'].includes(extension)) {
         return null; 
       }
 
