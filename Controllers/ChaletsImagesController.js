@@ -30,7 +30,9 @@ exports.createChaletImages = async (req, res) => {
     
     let validFiles = [];
 
+
     
+
     validFiles = files.map((file) => {
       const extension = file.originalname.split(".").pop().toLowerCase();
       if (!["png", "jpeg", "mp4"].includes(extension)) {
@@ -43,14 +45,30 @@ exports.createChaletImages = async (req, res) => {
       return {
         chalet_id,
         image: `${baseUrl}${filenameWithExtension}`,
+
+    const validFiles = files.map((file) => {
+      const extension = file.originalname.split('.').pop(); 
+      if (!['png', 'jpeg', 'mp4', 'svg'].includes(extension)) {
+        return null;
+      }
+
+      const filenameWithExtension = `${file.filename}.${extension}`; 
+      return {
+        chalet_id,
+        image: `${BASE_URL}${filenameWithExtension}`,
+
       };
     }).filter(Boolean); 
 
     
     if (validFiles.length === 0) {
+
       return res
         .status(400)
         .json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4'));
+
+      return res.status(400).json(ErrorResponse('Invalid file types. Allowed: .png, .jpeg, .mp4, .svg'));
+
     }
 
     const chalet = await Chalet.findByPk(chalet_id);
