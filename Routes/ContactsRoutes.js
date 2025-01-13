@@ -11,6 +11,7 @@ router.put('/updateContacts/:id', rateLimiter, upload.single('image'), contactCo
 
 
 router.get('/getContactsbyid/:id/:lang', contactController.getContactById);
+router.get('/getAllContacts/:lang', contactController.getContacts);
 
 router.delete('/deleteContacts/:id', contactController.deleteContact);
 
