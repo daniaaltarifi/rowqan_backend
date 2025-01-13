@@ -31,7 +31,7 @@ const Messages = sequelize.define('Messages', {
     allowNull: false,
     references: {
       model: Users,
-      key: 'id',
+      key: 'user_type_id',
     },
     onDelete: 'CASCADE',
   },

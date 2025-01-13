@@ -99,7 +99,7 @@ exports.getAllBreifChalet = async (req, res) => {
 
 exports.getChaletsByLocation = async (req, res) => {
   try {
-    const { type, value, page = 1, limit = 20 } = req.body;
+    const { type, value, page = 1, limit = 200 } = req.body;
     const { lang } = req.params;
     const offset = (page - 1) * limit;
 
@@ -119,13 +119,13 @@ exports.getChaletsByLocation = async (req, res) => {
       });
     }
 
-    
+  
     const chalets = await Chalet.findAll({
       include: [
         {
           model: BreifDetailsChalets,
           where: {
-            Detail_Type: "location",
+            type: "location",
             value: value,
           },
           attributes: [], 
