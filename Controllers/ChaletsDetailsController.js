@@ -105,6 +105,11 @@ client.del(`chaletsdetails:lang:${lang}:page:${page}:limit:${limit}`)
   }
 };
 
+
+
+
+
+
 exports.getChaletDetailsByChaletId = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
@@ -216,7 +221,7 @@ exports.updateChaletDetail = async (req, res) => {
       updatedFields.chalet_id = chalet_id;
     if (image) updatedFields.img = image;
 
-    // إذا كانت هناك تغييرات، يتم تحديث البيانات في قاعدة البيانات
+  
     if (Object.keys(updatedFields).length > 0) {
       await chaletDetail.update(updatedFields);
     }

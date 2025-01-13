@@ -1,7 +1,8 @@
 const BreifDetailsChalets = require('../Models/BreifDetailsChalets');
 const Chalet = require('../Models/ChaletsModel');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
-const {client} = require('../Utils/redisClient')
+const {client} = require('../Utils/redisClient');
+const ChaletsDetails = require('../Models/ChaletsDetails');
 
 
 exports.createBreifDetailsChalet = async (req, res) => {
@@ -93,6 +94,76 @@ exports.getAllBreifChalet = async (req, res) => {
       );
   }
 };
+
+
+
+exports.getChaletsByLocation = async (req, res) => {
+  try {
+    const { type, value, page = 1, limit = 20 } = req.body;
+    const { lang } = req.params;
+    const offset = (page - 1) * limit;
+
+    
+    if (type !== "location") {
+      return res.status(400).json({
+        error: "Invalid type",
+        details: ["Type must be 'location'."],
+      });
+    }
+
+    
+    if (!value) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: ["Value (location) is required."],
+      });
+    }
+
+    
+    const chalets = await Chalet.findAll({
+      include: [
+        {
+          model: BreifDetailsChalets,
+          where: {
+            Detail_Type: "location",
+            value: value,
+          },
+          attributes: [], 
+        },
+      ],
+      where: lang ? { lang } : {}, 
+      attributes: ["id", "title", "reserve_price", "intial_Amount"],
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+   
+    if (chalets.length === 0) {
+      return res.status(404).json({
+        error: "No chalets found",
+        details: [`No chalets found for the specified location: ${value}.`],
+      });
+    }
+
+  
+    return res.status(200).json(chalets);
+  } catch (error) {
+    console.error("Error in getChaletsByLocation:", error);
+    return res.status(500).json({
+      error: "Failed to fetch chalets by location",
+      details: ["An internal server error occurred. Please try again later."],
+    });
+  }
+};
+
+
+
+
+
+
+
+
 exports.getBreifDetailsByChaletId = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;

@@ -13,9 +13,9 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, receiverId, message, lang, chaletId } = req.body;
+    const { senderId, receiverId, message, lang } = req.body;
 
-    if (!senderId || !receiverId || !message || !lang || !chaletId) {
+    if (!senderId || !receiverId || !message || !lang) {
       return res.status(400).json({ message: 'All fields are required: senderId, receiverId, message, lang, chaletId' });
     }
 
@@ -24,7 +24,6 @@ exports.createMessage = async (req, res) => {
       receiverId,
       message,
       lang,
-      chaletId,
     });
 
     emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
@@ -46,24 +45,24 @@ exports.createMessage = async (req, res) => {
 
 exports.getMessagesForChalet = async (req, res) => {
   try {
-    const { chaletId, receiverId, senderId } = req.params;
+    const { receiverId, senderId } = req.params;
 
     
-    if (!chaletId || !receiverId || !senderId) {
-      return res.status(400).json({ message: 'All fields are required: chaletId, receiverId, senderId' });
+    if ( !receiverId || !senderId) {
+      return res.status(400).json({ message: 'All fields are required:receiverId, senderId' });
     }
 
     const messages = await Messages.findAll({
       where: {
-        chaletId,
         senderId,
         receiverId,
       },
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
-        { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email'] },
-        { model: Chalet, as: 'Chalet', attributes: ['id', 'title'] },
+        { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email']},
       ],
+
+      
       order: [['id', 'ASC']],
     });
 
