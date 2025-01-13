@@ -220,7 +220,7 @@ exports.getAllReservations = async (req, res) => {
         {
           model: Chalet,
           as: 'chalet', 
-          attributes: ['id', 'title', 'reserve_price'], 
+          attributes: ['id', 'title', 'reserve_price','total_amount','cashback','date','status','additional_visitors','number_of_days','remaining_amount',''], 
         },
         {
           model: User,
@@ -618,17 +618,13 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 
 
-
-
-
-
-
 exports.updateReservation = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
+    const { id } = req.params; 
+    const { status, lang } = req.body; 
 
-    if (updateData.lang && !['ar', 'en'].includes(updateData.lang)) {
+    
+    if (lang && !['ar', 'en'].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language',
       });
@@ -637,28 +633,36 @@ exports.updateReservation = async (req, res) => {
     const reservation = await Reservations_Chalets.findByPk(id);
     if (!reservation) {
       return res.status(404).json({
-        error: updateData.lang === 'en' ? 'Reservation not found' : 'الحجز غير موجود',
+        error: lang === 'en' ? 'Reservation not found' : 'الحجز غير موجود',
       });
     }
 
-    Object.keys(updateData).forEach((key) => {
-      if (updateData[key] !== undefined) {
-        reservation[key] = updateData[key];
-      }
-    });
+   
+    if (status === undefined) {
+      return res.status(400).json({
+        error: lang === 'en' ? 'Status is required' : 'الحالة مطلوبة',
+      });
+    }
 
+  
+    reservation.status = status;
     await reservation.save();
 
-    res.status(200).json(
+
+    res.status(200).json({
+      message: lang === 'en' ? 'Reservation status updated successfully' : 'تم تحديث حالة الحجز بنجاح',
       reservation,
-    );
+    });
   } catch (error) {
-    console.error('Error updating reservation:', error);
+    console.error('Error updating reservation status:', error);
     res.status(500).json({
-      error: 'Failed to update reservation',
+      error: lang === 'en' ? 'Failed to update reservation status' : 'فشل في تحديث حالة الحجز',
     });
   }
 };
+
+
+
 
 exports.deleteReservation = async (req, res) => {
   try {
