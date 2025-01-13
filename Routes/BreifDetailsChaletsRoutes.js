@@ -11,7 +11,7 @@ router.put('/updateBreif/:id', rateLimiter, BreifDetailsChaletsController.update
 router.get('/getAllBreifChalet/:lang', BreifDetailsChaletsController.getAllBreifChalet);
 
 router.get('/getBreifsByChaletId/:chalet_id/:lang', BreifDetailsChaletsController.getBreifDetailsByChaletId);
-router.get('/getChaletsByLocation/:lang', BreifDetailsChaletsController.getChaletsByLocation);
+router.get('/getChaletsByLocation/:value/:lang', BreifDetailsChaletsController.getChaletsByLocation);
 
 
 router.get('/getChaletsByvalue/:lang', BreifDetailsChaletsController.getChaletsByValue);

@@ -261,7 +261,7 @@ exports.createPayment = async (req, res) => {
           ErrorResponse("Validation failed", ["User ID is required."])
         );
       }
-  
+  client.del(`payments:userId:${userId}:page:${page}:limit:${limit}`)
       const cacheKey = `payments:userId:${userId}:page:${page}:limit:${limit}`;
   
      
