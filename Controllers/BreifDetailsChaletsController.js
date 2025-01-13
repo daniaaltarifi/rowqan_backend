@@ -3,7 +3,7 @@ const Chalet = require('../Models/ChaletsModel');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient');
 const ChaletsDetails = require('../Models/ChaletsDetails');
-
+const { Sequelize } = require('sequelize');
 
 exports.createBreifDetailsChalet = async (req, res) => {
   try {
@@ -150,15 +150,15 @@ exports.getChaletsByLocation = async (req, res) => {
 
 
 
-exports.getChaletsByvalue = async (req, res) => {
+exports.getChaletsByValue = async (req, res) => {
   try {
-
+    
     const locationValues = await BreifDetailsChalets.findAll({
       where: { type: 'location' },  
-      attributes: ['value'],        
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('value')), 'value']], 
     });
 
-    
+  
     if (locationValues.length === 0) {
       return res.status(404).json({
         error: "No locations found",
@@ -166,17 +166,18 @@ exports.getChaletsByvalue = async (req, res) => {
       });
     }
 
-    
+   
     return res.status(200).json(locationValues);
 
   } catch (error) {
-    console.error("Error in getChaletsLocationValues:", error);
+    console.error("Error in getChaletsByValue:", error);
     return res.status(500).json({
       error: "Failed to fetch location values",
       details: ["An internal server error occurred. Please try again later."],
     });
   }
 };
+
 
 
 
