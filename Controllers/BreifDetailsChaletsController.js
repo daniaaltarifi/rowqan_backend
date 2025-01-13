@@ -4,6 +4,8 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient');
 const ChaletsDetails = require('../Models/ChaletsDetails');
 const { Sequelize } = require('sequelize');
+const chalets_props = require('../Models/ChaletsProps')
+
 
 exports.createBreifDetailsChalet = async (req, res) => {
   try {
@@ -121,9 +123,19 @@ exports.getChaletsByLocation = async (req, res) => {
           },
           attributes: [], 
         },
+
+        {
+          model: chalets_props,
+          attributes: ["id", "image", "title"],
+        },
+        {
+          model:ChaletsDetails,
+          attributes:["Detail_Type"]
+        }
+      
       ],
       where: lang ? { lang } : {}, 
-      attributes: ["id", "title", "reserve_price", "intial_Amount"],
+      attributes: ["id", "title", "reserve_price", "intial_Amount","image",],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),
