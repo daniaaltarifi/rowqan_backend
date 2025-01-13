@@ -13,6 +13,7 @@ router.get('/getalldetails/:lang', chaletsDetailsController.getAllDetails);
 router.get('/getChaletDetailsById/:id/:lang', chaletsDetailsController.getChaletDetailsById);
 // router.get('/getdetailsbychaletid/:id/:lang', chaletsDetailsController.getChaletDetailsByChaletId);
 router.get('/getChaletDetailsByChaletId/:chalet_id/:lang', chaletsDetailsController.getChaletDetailsByChaletId);
+
 router.delete('/deleteddetaile/:id/:lang', chaletsDetailsController.deleteChaletDetail);
 
 module.exports = router;
