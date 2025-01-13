@@ -219,22 +219,21 @@ exports.getAllReservations = async (req, res) => {
       include: [
         {
           model: Chalet,
-          as: 'chalet', 
-          attributes: ['id', 'title', 'reserve_price','total_amount','cashback','date','status','additional_visitors','number_of_days','remaining_amount',''], 
+          as:'reservations',
+          attributes: ['id', 'title', 'image','reserve_price','intial_Amount'], 
         },
         {
           model: User,
-          as: 'user', 
           attributes: ['id', 'name', 'email'], 
         },
         {
           model: RightTimeModel,
-          as: 'rightTime',
           attributes: ['id', 'time'], 
         }
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
+      attributes:["id","reserve_price","total_amount","cashback","date","status","additional_visitors","number_of_days"]
     });
 
     if (!reservations || reservations.length === 0) {
