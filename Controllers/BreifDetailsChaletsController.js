@@ -99,17 +99,10 @@ exports.getAllBreifChalet = async (req, res) => {
 
 exports.getChaletsByLocation = async (req, res) => {
   try {
-    const { type, value, page = 1, limit = 200 } = req.body;
+    const { value, page = 1, limit = 200 } = req.body;
     const { lang } = req.params;
     const offset = (page - 1) * limit;
 
-    
-    if (type !== "location") {
-      return res.status(400).json({
-        error: "Invalid type",
-        details: ["Type must be 'location'."],
-      });
-    }
 
     
     if (!value) {
@@ -118,14 +111,12 @@ exports.getChaletsByLocation = async (req, res) => {
         details: ["Value (location) is required."],
       });
     }
-
   
     const chalets = await Chalet.findAll({
       include: [
         {
           model: BreifDetailsChalets,
           where: {
-            type: "location",
             value: value,
           },
           attributes: [], 
@@ -156,6 +147,39 @@ exports.getChaletsByLocation = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getChaletsByvalue = async (req, res) => {
+  try {
+
+    const locationValues = await BreifDetailsChalets.findAll({
+      where: { type: 'location' },  
+      attributes: ['value'],        
+    });
+
+    
+    if (locationValues.length === 0) {
+      return res.status(404).json({
+        error: "No locations found",
+        details: ["No locations found for the specified type 'location'."],
+      });
+    }
+
+    
+    return res.status(200).json(locationValues);
+
+  } catch (error) {
+    console.error("Error in getChaletsLocationValues:", error);
+    return res.status(500).json({
+      error: "Failed to fetch location values",
+      details: ["An internal server error occurred. Please try again later."],
+    });
+  }
+};
+
+
+
 
 
 

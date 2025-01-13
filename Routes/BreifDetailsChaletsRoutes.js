@@ -14,6 +14,9 @@ router.get('/getBreifsByChaletId/:chalet_id/:lang', BreifDetailsChaletsControlle
 router.get('/getChaletsByLocation/:lang', BreifDetailsChaletsController.getChaletsByLocation);
 
 
+router.get('/getChaletsByvalue/:lang', BreifDetailsChaletsController.getChaletsByvalue);
+
+
 router.get('/getById/:id/:lang', BreifDetailsChaletsController.getBreifDetailsById);
 router.delete('/deleteBreif/:id/:lang', BreifDetailsChaletsController.deleteBreifDetailsChalet);
 

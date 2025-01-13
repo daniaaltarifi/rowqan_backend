@@ -99,7 +99,7 @@ const AboutRoutes = require('./Routes/AboutUsRoutes')
 const BlogRoutes = require('./Routes/BlogRoutes');
 const axios = require('axios');
 const geoip = require('geoip-lite');
-
+const ContactsRoutes = require('./Routes/ContactsRoutes')
 
 
 const allowedOrigins = [
@@ -164,7 +164,7 @@ app.use('/heroLands', HeroLands);
 app.use('/payments', PaymentsRoutes); 
 app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
-
+app.use('/Contacts',ContactsRoutes)
 
 
 
