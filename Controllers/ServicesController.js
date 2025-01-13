@@ -5,19 +5,28 @@ const {client} = require('../Utils/redisClient')
 
 exports.createService = async (req, res) => {
   try {
-    const { title, status_service, url, lang } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const { title, status_service, url, lang } = req.body || {};
+    const image = req.file?.filename || null;
+
+    
+    if (!title || !status_service || !url || !lang || !image) {
+      return res
+        .status(400)
+        .json(
+          ErrorResponse("Validation failed", [
+            "All Fields are required",
+          ])
+        );
+    }
 
     const validationErrors = validateInput({ title, status_service, url, lang });
-    if (validationErrors) {
-      return res.status(400).json({ error: validationErrors });
+    if (validationErrors.length > 0) {
+      return res
+        .status(400)
+        .json(ErrorResponse("Validation failed", validationErrors));
     }
 
-    const existingService = await Services.findOne({ where: { title, lang } });
-    if (existingService) {
-      return res.status(400).json({ error: 'Service with the same title and language already exists' });
-    }
-
+   
     const newService = await Services.create({
       title,
       status_service,
@@ -26,14 +35,35 @@ exports.createService = async (req, res) => {
       image,
     });
 
-    res.status(201).json(
-    newService,
-    );
+    
+    const cacheDeletePromises = [client.del(`services:lang:${lang}:page:1:limit:20`)];
+    
+    
+    
+    await Promise.all(cacheDeletePromises);
+
+    
+    await client.set(`service:${newService.id}`, JSON.stringify(newService), {
+      EX: 3600,
+    });
+
+   
+    res.status(201).json({
+      message: "Service created successfully",
+      service: newService,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create service' });
+    console.error("Error in createService:", error.message);
+    res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to create service", [
+          "An internal server error occurred.",
+        ])
+      );
   }
 };
+
 
 exports.getAllServices = async (req, res) => {
   try {
@@ -49,10 +79,13 @@ exports.getAllServices = async (req, res) => {
     const cachedData = await client.get(cacheKey);
 
     if (cachedData) {
+      console.log("Cache hit for services:", lang);
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
+
+    console.log("Cache miss for services:", lang);
 
     const services = await Services.findAll({
       where: { lang },
@@ -65,11 +98,10 @@ exports.getAllServices = async (req, res) => {
       return res.status(404).json({ error: 'No services found for this language' });
     }
 
+ 
     await client.setEx(cacheKey, 3600, JSON.stringify(services));
 
-    res.status(200).json(
-      services,
-    );
+    res.status(200).json(services);
   } catch (error) {
     console.error("Error in getAllServices:", error.message);
     res.status(500).json({
@@ -80,6 +112,7 @@ exports.getAllServices = async (req, res) => {
 };
 
 
+
 exports.getServiceByStatus = async (req, res) => {
   try {
     const { status_service, lang } = req.params;
@@ -88,6 +121,7 @@ exports.getServiceByStatus = async (req, res) => {
       return res.status(400).json({ error: 'status_service and lang are required' });
     }
 
+    await client.del(`services:status:${status_service}:lang:${lang}`);
     const cacheKey = `services:status:${status_service}:lang:${lang}`;
     
     
@@ -135,6 +169,8 @@ exports.getServiceByStatusOnlyLang = async (req, res) => {
       return res.status(400).json({ error: 'Invalid language' });
     }
 
+
+    await client.del(`services:lang:${lang}`);
     const cacheKey = `services:lang:${lang}`;
     
     const cachedData = await client.get(cacheKey);
@@ -257,10 +293,8 @@ exports.deleteService = async (req, res) => {
       return res.status(400).json({ error: 'Invalid language' });
     }
 
-    const [service, _] = await Promise.all([
-      Services.findByPk(id),
-      client.del(`service:${id}:lang:${lang}`) 
-    ]);
+    
+    const service = await Services.findByPk(id);
 
     if (!service) {
       return res.status(404).json({
@@ -269,7 +303,10 @@ exports.deleteService = async (req, res) => {
       });
     }
 
+    
+    await client.del(`service:${id}:lang:${lang}`);
 
+  
     await service.destroy();
 
     return res.status(200).json({ message: "Service deleted successfully" });
@@ -282,3 +319,4 @@ exports.deleteService = async (req, res) => {
     });
   }
 };
+
