@@ -27,7 +27,7 @@ exports.createHero = async (req, res) => {
     );
   } catch (error) {
     console.error(error);
-    res.status(500).json(new ErrorResponse('Failed to create Hero', ['An error occurred while creating the hero']));
+    res.status(500).json( ErrorResponse('Failed to create Hero', ['An error occurred while creating the hero']));
   }
 };
 
