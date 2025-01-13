@@ -24,8 +24,8 @@ exports.createChaletImages = async (req, res) => {
       return res.status(400).json(ErrorResponse("Files are required"));
     }
 
-    const BASE_URL_IMAGE = "https://res.cloudinary.com/durjqlivi/";
-    const BASE_URL_VIDEO = "https://res.cloudinary.com/durjqlivi/video/upload/v1736589099/";
+    const BASE_URL_IMAGE = "https://res.cloudinary.com/dqimsdiht/";
+    const BASE_URL_VIDEO = "https://res.cloudinary.com/dqimsdiht/video/upload/v1736589099/";
 
     
     let validFiles = [];
