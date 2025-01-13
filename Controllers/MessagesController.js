@@ -52,37 +52,36 @@ exports.createMessage = async (req, res) => {
 
 
 
-exports.getMessagesForChalet = async (req, res) => {
+exports.getMessagesBetweenUsers = async (req, res) => {
   try {
-    const { receiverId, senderId } = req.params;
-
+    const { senderId } = req.params;
     
-    if ( !receiverId || !senderId) {
-      return res.status(400).json({ message: 'All fields are required:receiverId, senderId' });
+   
+    const receiverId = 4;
+
+    if (!senderId) {
+      return res.status(400).json({ message: 'All fields are required: senderId' });
     }
 
     const messages = await Messages.findAll({
       where: {
         senderId,
-        receiverId,
+        receiverId,  
       },
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
         { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email']},
       ],
-
-      
       order: [['id', 'ASC']],
     });
 
     if (messages.length === 0) {
-      return res.status(404).json({ message: 'No messages found for this chalet with the given criteria' });
+      return res.status(404).json({ message: 'No messages found for this sender and receiver' });
     }
 
-    
-    res.status(200).json( messages);
+    res.status(200).json(messages);
 
-    
+   
     if (req.socketIoInstance) {
       req.socketIoInstance.emit('received_messages', messages);
       console.log('Messages retrieved successfully and emitted via Socket.IO');
@@ -94,6 +93,7 @@ exports.getMessagesForChalet = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
 
 
 
