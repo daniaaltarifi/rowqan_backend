@@ -14,18 +14,18 @@ exports.createRightTime = async (req, res) => {
     
         const validationErrors = validateInput({ name, time, lang, chalet_id, price });
         if (validationErrors.length > 0) {
-            return res.status(400).json(new ErrorResponse('Validation failed', validationErrors));
+            return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
         }
 
       
         if (!['en', 'ar'].includes(lang)) {
-            return res.status(400).json(new ErrorResponse('Invalid language'));
+            return res.status(400).json(ErrorResponse('Invalid language'));
         }
 
      
         const chalet = await Chalet.findByPk(chalet_id);
         if (!chalet) {
-            return res.status(404).json(new ErrorResponse('Chalet not found'));
+            return res.status(404).json(ErrorResponse('Chalet not found'));
         }
 
      
@@ -44,7 +44,7 @@ exports.createRightTime = async (req, res) => {
       );
     } catch (error) {
         console.error(error);
-        return res.status(500).json(new ErrorResponse('Internal server error'));
+        return res.status(500).json(ErrorResponse('Internal server error'));
     }
 };
 
