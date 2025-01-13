@@ -13,11 +13,11 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, message, lang } = req.body;
+    const { senderId,status, message, lang } = req.body;
 
     
-    if (!senderId || !message || !lang) {
-      return res.status(400).json({ message: 'All fields are required: senderId, message, lang' });
+    if (!senderId || !status|| !message || !lang) {
+      return res.status(400).json({ message: 'All fields are required: senderId, message, lang and status' });
     }
 
     
@@ -26,6 +26,7 @@ exports.createMessage = async (req, res) => {
     
     const newMessage = await Messages.create({
       senderId,
+      status,
       receiverId,  
        message,
       lang,

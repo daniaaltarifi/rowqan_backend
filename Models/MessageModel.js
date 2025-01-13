@@ -35,8 +35,13 @@ const Messages = sequelize.define('Messages', {
     },
     onDelete: 'CASCADE',
   },
+  status:{
+    type: DataTypes.STRING,
+    defaultValue: 'sent',
+    allowNull: false,
+  }
 }, {
-  timestamps: false,
+  timestamps: true,
 });
 
 
