@@ -13,25 +13,33 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, receiverId, message, lang } = req.body;
+    const { senderId, message, lang } = req.body;
 
-    if (!senderId || !receiverId || !message || !lang) {
-      return res.status(400).json({ message: 'All fields are required: senderId, receiverId, message, lang, chaletId' });
+    
+    if (!senderId || !message || !lang) {
+      return res.status(400).json({ message: 'All fields are required: senderId, message, lang' });
     }
 
+    
+    const receiverId = 4;
+
+    
     const newMessage = await Messages.create({
       senderId,
-      receiverId,
-      message,
+      receiverId,  
+       message,
       lang,
     });
 
+    
     emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
 
-    res.status(201).json( newMessage);
+    res.status(201).json(newMessage);
+
+    
     if (req.socketIoInstance) {
       req.socketIoInstance.emit('sent_messages', message);
-      console.log(`The Message is created Successfully is:${message}`)
+      console.log(`The Message is created Successfully: ${message}`);
     } else {
       console.error('socketIoInstance is undefined');
     }
@@ -40,6 +48,7 @@ exports.createMessage = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
 
 
 
