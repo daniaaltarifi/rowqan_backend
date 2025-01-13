@@ -5,8 +5,8 @@ const cloudinary = require('../Config/cloudinaryConfig');
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary, 
   params: {
-    folder: 'uploads/chalets_images',  
-    allowed_formats: ['jpg', 'png', 'mp4', 'avi', 'mkv', 'pdf', 'doc', 'docx', 'txt'],  
+    folder: 'Chalets_Images',  
+    allowed_formats: ['jpg', 'png', 'mp4', 'avi', 'mkv', 'pdf', 'doc', 'docx', 'txt','jpeg','webp'],  
     resource_type: 'auto',  
   },
 });
