@@ -100,7 +100,7 @@ const BlogRoutes = require('./Routes/BlogRoutes');
 const axios = require('axios');
 const geoip = require('geoip-lite');
 const ContactsRoutes = require('./Routes/ContactsRoutes')
-
+const TagRoutes = require('./Routes/TagRoutes')
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -165,7 +165,7 @@ app.use('/payments', PaymentsRoutes);
 app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
 app.use('/Contacts',ContactsRoutes)
-
+app.use('/Tags',TagRoutes)
 
 
 
