@@ -6,7 +6,16 @@ const authMiddleware = require('../MiddleWares/authMiddleware');
 const rateLimiter = require('../MiddleWares/rateLimiter'); 
 
 
-router.post('/createchalet', rateLimiter, multer.single('image'), chaletController.createChalet);
+router.post(
+    '/createchalet',
+    rateLimiter,
+    multer.fields([
+      { name: 'image', maxCount: 1 }, 
+      { name: 'chalet_images', maxCount: 10 }, 
+    ]),
+    chaletController.createChalet
+  );
+  
 
 
 router.get('/getallchalets/:lang', chaletController.getAllChalets);
