@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const chaletController = require('../Controllers/ChaletsController');
-const multer = require('../Config/Multer');
+const upload = require('../Config/Multer');
 const authMiddleware = require('../MiddleWares/authMiddleware');  
 const rateLimiter = require('../MiddleWares/rateLimiter'); 
 
 
 router.post(
-    '/createchalet',
-    rateLimiter,
-    multer.fields([
-      { name: 'image', maxCount: 1 }, 
-      { name: 'chalet_images', maxCount: 10 }, 
-    ]),
-    chaletController.createChalet
-  );
+  '/createchalet',
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'rightTimesData[image]', maxCount: 1 },
+  ]),
+  chaletController.createChalet
+);
+
   
 
 
@@ -28,7 +28,7 @@ router.get('/getAllChaletProps/:lang',rateLimiter,chaletController.getAllChalets
 
 router.get('/getAllChaletsByPropsandDetails/:lang',rateLimiter,chaletController.getAllChaletsByPropsandDetails)
 
-router.put('/updatechalet/:id', rateLimiter, multer.single('image'), chaletController.updateChalet);
+router.put('/updatechalet/:id', rateLimiter, upload.single('image'), chaletController.updateChalet);
 
 
 router.delete('/deletechalet/:id/:lang', chaletController.deleteChalet);

@@ -15,129 +15,114 @@ const Chalet_props = require("../Models/ChaletsProps");
 
 exports.createChalet = async (req, res) => {
   try {
-    const {
-      title,
-      lang,
-      status_id,
-      reserve_price,
-      intial_Amount,
-      properties,
-      breifDetails,
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+
+    const { 
+      title, 
+      description, 
+      Rating, 
+      city, 
+      area, 
+      intial_Amount, 
+      type, 
+      features, 
+      Additional_features,
+      near_me,
+      lang, 
+      rightTimesData, 
+      status_id 
     } = req.body || {};
 
-    
-    if (!title || !lang || !status_id || !reserve_price || !intial_Amount) {
+   
+    console.log("Received lang:", lang);
+
+    const image = req.files?.image?.[0]?.path || null; 
+    if (!image) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
-          "Title, language, status_id, reserve_price, and intial_Amount are required.",
+          "Image is required"
         ])
       );
     }
 
-    const validationErrors = validateInput({
-      title,
-      lang,
-      status_id,
-      reserve_price,
-      intial_Amount,
-    });
-    if (validationErrors.length > 0) {
-      return res
-        .status(400)
-        .json(ErrorResponse("Validation failed", validationErrors));
-    }
-
-    if (!["ar", "en"].includes(lang)) {
+    if (!status_id) {
       return res.status(400).json(
-        ErrorResponse(
-          'Invalid language. Supported languages are "ar" and "en".'
-        )
+        ErrorResponse('Validation failed', ['status_id is required'])
       );
     }
 
-    const status = await Status.findByPk(status_id);
-    if (!status) {
-      return res.status(404).json(ErrorResponse("Status not found"));
+    
+    if (!["en", "ar"].includes(lang)) {
+      return res.status(400).json(
+        ErrorResponse('Invalid language, it should be "en" or "ar"')
+      );
     }
 
-   
+    console.log("Image path:", image);
+
+    
     const newChalet = await Chalet.create({
       title,
-      image: req.files?.image ? req.files.image[0].filename : 'img1.png', 
-      lang,
-      status_id,
-      reserve_price,
+      description,
+      image, 
+      Rating,
+      city,
+      area,
       intial_Amount,
+      type,
+      features,
+      Additional_features,
+      near_me,
+      lang,  
+      status_id
     });
 
-   
-    if (Array.isArray(properties)) {
-      const chaletPropsData = properties.map((property) => ({
-        Chalet_Id: newChalet.id, 
-        title: property.title,
-        lang: property.lang,
-        image: property.image || null,
-      }));
+    console.log("Chalet created:", newChalet);
 
-      await Chalet_props.bulkCreate(chaletPropsData);
-     
-    }
-    console.log(`The chalets properties data is:${properties}`)
-
-   
-  
-    if (breifDetails && breifDetails.Detail_Type && breifDetails.lang) {
-      const breifDetail = {
-        chalet_id: newChalet.chalet_id,  
-        Detail_Type: breifDetails.Detail_Type,
-        lang: breifDetails.lang,
-      };
-
-      await BreifDetailsChalets.create(breifDetail);  
-      console.log(newChalet.id)
-    }
-    console.log(`The Chalet Id is:${newChalet.id}`)
-    console.log(`The Brefi details is :${breifDetails}`)
     
-    if (req.files?.chalet_images && req.files.chalet_images.length > 0) {
-      const BASE_URL_IMAGE = "https://res.cloudinary.com/dqimsdiht/";
-      const BASE_URL_VIDEO = "https://res.cloudinary.com/dqimsdiht/video/upload/v1736589099/";
-
-      const validFiles = req.files.chalet_images
-        .map((file) => {
-          const extension = file.originalname.split(".").pop().toLowerCase();
-          if (!["png", "jpeg", "mp4"].includes(extension)) {
-            return null;
-          }
-
-          const filenameWithExtension = `${file.filename}.${extension}`;
-          const baseUrl = extension === "mp4" ? BASE_URL_VIDEO : BASE_URL_IMAGE;
-
-          return {
-            chalet_id: newChalet.id,  
-            chalet_images: `${baseUrl}${filenameWithExtension}`,
-          };
-        })
-        .filter(Boolean);
-
-      if (validFiles.length > 0) {
-        await chaletsImages.bulkCreate(validFiles);
+    if (rightTimesData) {
+      
+      console.log("Right time data lang:", rightTimesData.lang); 
+      if (!["en", "ar"].includes(rightTimesData.lang)) {
+        return res.status(400).json(
+          ErrorResponse('Invalid language for rightTimesData, it should be "en" or "ar"')
+        );
       }
+
+      const rightTimesImage = req.files?.['rightTimesData[image]']?.[0]?.path || null;
+
+      if (!rightTimesImage) {
+        return res.status(400).json(
+          ErrorResponse("Validation failed", [
+            "Image for right time data is required"
+          ])
+        );
+      }
+
+      await RightTimeModel.create({
+        id: rightTimesData.id,
+        image: rightTimesImage, 
+        type_of_time: rightTimesData.type_of_time,
+        from_time: rightTimesData.from_time,
+        to_time: rightTimesData.to_time,
+        lang: rightTimesData.lang, 
+        price: rightTimesData.price,
+        After_Offer: rightTimesData.After_Offer,
+        chalet_id: newChalet.id, 
+      });
     }
 
     res.status(201).json(newChalet);
+
   } catch (error) {
     console.error("Error in createChalet:", error);
-
-    res
-      .status(500)
-      .json(
-        ErrorResponse("Failed to create Chalet", [
-          "An internal server error occurred.",
-        ])
-      );
+    res.status(500).json(ErrorResponse("Error creating chalet"));
   }
 };
+
+
+
 
 
 
