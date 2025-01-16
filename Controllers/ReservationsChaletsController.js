@@ -537,11 +537,9 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     let reservations = [];
     let fullDayAdded = false;
 
-    
     for (let period of timePeriods) {
       console.log(`Processing time period: ${period}`);
 
-      
       if (period === 'Full' || period === 'day') {
         if (!fullDayAdded) {
           const fullDayRightTime = await RightTimeModel.findOne({
@@ -563,12 +561,11 @@ exports.getReservationsByRightTimeName = async (req, res) => {
             });
 
             console.log("Found full day reservations:", fullDayReservations);
-            reservations.push(...fullDayReservations); 
-            fullDayAdded = true; 
+            reservations.push(...fullDayReservations);
+            fullDayAdded = true;
           }
         }
       } else {
-       
         const rightTime = await RightTimeModel.findOne({
           where: {
             name: period,
@@ -590,26 +587,26 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
           console.log("Found reservations for time period:", timeReservations);
 
-        
-          reservations.push(...timeReservations);
+         
+          const reservationsWithTime = timeReservations.map(reservation => ({
+            ...reservation.toJSON(),
+            right_time: rightTime.time
+          }));
+
+          reservations.push(...reservationsWithTime);
         } else {
           console.log(`No right time found for period: ${period}`);
         }
       }
     }
 
-    
-    console.log("Final reservations:", reservations);
-
-    res.json({
-      rightTime: name,
-      reservations: reservations, 
-    });
+    res.status(200).json(reservations);
   } catch (error) {
-    console.error("Error occurred:", error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error in getReservationsByRightTimeName:", error);
+    res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
 
 
 

@@ -7,8 +7,12 @@ const ChaletsDetails = sequelize.define('ChaletsDetails', {
     primaryKey: true,
     autoIncrement: true,
   },
-  Detail_Type: {
+  Type: {
     type: DataTypes.STRING,
+    allowNull: false,
+  },
+  value:{
+    type: DataTypes.JSON,
     allowNull: false,
   },
   lang: {

@@ -12,12 +12,16 @@ const RightTimeModel = sequelize.define('RightTimeModel', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  name: {
+  type_of_time: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  time: {
-    type: DataTypes.TIME, 
+  from_time: {
+    type: DataTypes.STRING, 
+    allowNull: false,
+  },
+  to_time: {
+    type: DataTypes.STRING, 
     allowNull: false,
   },
   lang: {
@@ -28,6 +32,10 @@ const RightTimeModel = sequelize.define('RightTimeModel', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  After_Offer:{
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  }
 }, {
   timestamps: false,
 });
