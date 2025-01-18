@@ -7,6 +7,7 @@ const { argon2d } = require('argon2');
 require('dotenv').config();
 const argon2 = require("argon2");
 const Chalet = require('../Models/ChaletsModel');
+const { client } = require('../Utils/redisClient');
 
 
 exports.createUser = async (req, res) => {
@@ -94,16 +95,27 @@ exports.getAllUsers = async (req, res) => {
 
 
 exports.getUserById = async (req, res) => {
-  const { id, lang } = req.params;
+  const { id } = req.params;
+  const { lang } = req.query;
 
   try {
-    if (!['ar', 'en'].includes(lang)) {
-      return res.status(400).json({
-        error: 'Invalid language. Please use "ar" or "en".',
-      });
+    
+    const cacheKey = `user:${id}:lang:${lang || 'all'}`;
+    client.del(cacheKey);  
+
+    
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+    
+      return res.status(200).json(JSON.parse(cachedData));
     }
+
+    
+    const whereCondition = lang ? { id, lang } : { id };
+
+    
     const user = await User.findOne({
-      where: { id, lang },
+      where: whereCondition,
       include: [
         {
           model: ReservationModel,
@@ -114,17 +126,21 @@ exports.getUserById = async (req, res) => {
           attributes: ['id', 'type'],
         },
       ],
+      attributes: ['id', 'name', 'email', 'phone_number', 'country', 'password'],
     });
 
+    
     if (!user) {
       return res.status(404).json({
         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
       });
     }
 
-    res.status(200).json(
-      user,
-    );
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(user));
+
+    
+    res.status(200).json(user);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({
@@ -132,6 +148,7 @@ exports.getUserById = async (req, res) => {
     });
   }
 };
+
 
 
 exports.updateUser = async (req, res) => {
