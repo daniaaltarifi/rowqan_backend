@@ -38,7 +38,7 @@ exports.createChalet = async (req, res) => {
     } = req.body || {};
 
     console.log("Received lang:", lang);
-
+ 
     const image = req.files?.image?.[0]?.path || null; 
     if (!image) {
       return res.status(400).json(
@@ -48,19 +48,21 @@ exports.createChalet = async (req, res) => {
       );
     }
 
+   
     if (!status_id) {
       return res.status(400).json(
         ErrorResponse('Validation failed', ['status_id is required'])
       );
     }
 
+   
     if (!["en", "ar"].includes(lang)) {
       return res.status(400).json(
         ErrorResponse('Invalid language, it should be "en" or "ar"')
       );
     }
 
-   
+    
     const geoApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
 
     const geoResponse = await axios.get(geoApiUrl);
@@ -72,8 +74,9 @@ exports.createChalet = async (req, res) => {
 
       console.log("Latitude:", latitude, "Longitude:", longitude);
 
-     
-      const nearMeData = near_me ? JSON.stringify({ latitude, longitude }) : JSON.stringify({ latitude, longitude });
+      const nearMeData = near_me 
+        ? JSON.stringify({ latitude, longitude }) 
+        : JSON.stringify({ latitude, longitude });
 
       
       const newChalet = await Chalet.create({
@@ -95,41 +98,42 @@ exports.createChalet = async (req, res) => {
       console.log("Chalet created:", newChalet);
 
      
-      if (rightTimesData && Array.isArray(rightTimesData)) {
-        for (let rightTime of rightTimesData) {
-          console.log("Right time data lang:", rightTime.lang); 
+      if (Array.isArray(rightTimesData) && rightTimesData.length > 0) {
+       
+        await Promise.all(
+          rightTimesData.map(async (rightTime, index) => {
           
-          if (!["en", "ar"].includes(rightTime.lang)) {
-            return res.status(400).json(
-              ErrorResponse('Invalid language for rightTimesData, it should be "en" or "ar"')
-            );
-          }
+            const rightTimesImage = req.files?.[`rightTimesData[${index}][image]`]?.[0]?.path || null;
+            if (!rightTimesImage) {
+              return res.status(400).json(
+                ErrorResponse("Validation failed", [
+                  `Image for right time data at index ${index} is required`
+                ])
+              );
+            }
 
-          const rightTimesImage = req.files?.[`rightTimesData[${rightTime.id}][image]`]?.[0]?.path || null;
-
-          if (!rightTimesImage) {
-            return res.status(400).json(
-              ErrorResponse("Validation failed", [
-                `Image for right time data with ID ${rightTime.id} is required`
-              ])
-            );
-          }
-
-          await RightTimeModel.create({
-            id: rightTime.id,
-            image: rightTimesImage, 
-            type_of_time: rightTime.type_of_time,
-            from_time: rightTime.from_time,
-            to_time: rightTime.to_time,
-            lang: rightTime.lang, 
-            price: rightTime.price,
-            After_Offer: rightTime.After_Offer,
-            chalet_id: newChalet.id, 
-          });
-        }
+            
+            await RightTimeModel.create({
+              image: rightTimesImage,
+              type_of_time: rightTime.type_of_time,
+              from_time: rightTime.from_time,
+              to_time: rightTime.to_time,
+              lang: rightTime.lang, 
+              price: rightTime.price,
+              After_Offer: rightTime.After_Offer,
+              chalet_id: newChalet.id, 
+            });
+          })
+        );
+      } else {
+        console.log("No rightTimesData provided or it's not an array");
       }
 
-      res.status(201).json(newChalet);
+    
+      res.status(201).json({
+        message: lang === "en" ? "Chalet created successfully" : "تم إنشاء الشاليه بنجاح",
+        chalet: newChalet,
+      });
 
     } else {
       return res.status(400).json({ error: "Failed to fetch geolocation for the given city." });
@@ -140,6 +144,8 @@ exports.createChalet = async (req, res) => {
     res.status(500).json(ErrorResponse("Error creating chalet"));
   }
 };
+
+
 
 
 
@@ -658,6 +664,7 @@ exports.filterChaletsByLocation = async (req, res) => {
     if (chalets.length === 0) {
       return res.status(404).json({ message: "No chalets found" });
     }
+
     
     const nearbyChalets = chalets.filter(chalet => {
       const chaletLocation = JSON.parse(chalet.near_me); 
@@ -683,7 +690,7 @@ exports.filterChaletsByLocation = async (req, res) => {
       return res.status(404).json({ message: "No chalets found within the specified radius" });
     }
 
-   
+    
     res.status(200).json({ chalets: nearbyChalets });
 
   } catch (error) {
