@@ -9,11 +9,14 @@ const rateLimiter = require('../MiddleWares/rateLimiter');
 router.post(
   '/createchalet',
   upload.fields([
-    { name: 'image', maxCount: 1 },
-    { name: 'rightTimesData[image]', maxCount: 1 },
+    { name: 'image', maxCount: 1 }, 
+    { name: 'rightTimesData[0][image]', maxCount: 1 }, 
+    { name: 'rightTimesData[1][image]', maxCount: 1 } ,
+    { name: 'rightTimesData[2][image]', maxCount: 1 } ,
   ]),
   chaletController.createChalet
 );
+
 
   
 
@@ -29,6 +32,10 @@ router.get('/getAllChaletProps/:lang',rateLimiter,chaletController.getAllChalets
 router.get('/getAllChaletAfterOffer/:lang',rateLimiter,chaletController.getAllChaletsAfterOffer)
 
 router.get('/getAllChaletsByType/:lang',rateLimiter,chaletController.getChaletsByType)
+
+router.get('/filterByAreaOrCity/:lang',rateLimiter,chaletController.filterByCityAndArea)
+
+router.get('/filterByChaletLocation/:lang',rateLimiter,chaletController.filterChaletsByLocation)
 
 router.get('/getAllChaletsByPropsandDetails/:lang',rateLimiter,chaletController.getAllChaletsByPropsandDetails)
 

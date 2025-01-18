@@ -12,7 +12,8 @@ const moment = require('moment');
 exports.createReservation = async (req, res) => {
   try {
     const {
-      date,
+      start_date,
+      end_date,
       lang,
       additional_visitors,
       number_of_days,
@@ -21,50 +22,51 @@ exports.createReservation = async (req, res) => {
       right_time_id,
     } = req.body || {};
 
-    if (!date || !lang || !chalet_id || !right_time_id) {
+    if (!start_date || !end_date || !lang || !chalet_id || !right_time_id) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
-          "Initial amount, date, lang, user_id, chalet_id, and right_time_id are required",
+          "Start date, end date, lang, chalet_id, and right_time_id are required",
         ])
       );
     }
 
-    const formattedDate = new Date(date);
-    if (isNaN(formattedDate.getTime())) {
+    const formattedStartDate = new Date(start_date);
+    const formattedEndDate = new Date(end_date);
+
+    if (isNaN(formattedStartDate.getTime()) || isNaN(formattedEndDate.getTime())) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Invalid date format' : 'تنسيق التاريخ غير صالح',
+        error: lang === "en" ? "Invalid date format" : "تنسيق التاريخ غير صالح",
       });
     }
 
-    if (!['ar', 'en'].includes(lang)) {
+    if (!["ar", "en"].includes(lang)) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Invalid language' : 'اللغة غير صالحة',
+        error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
       });
     }
 
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json({
-        error: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود',
+        error: lang === "en" ? "Chalet not found" : "الشاليه غير موجود",
       });
     }
 
-   
-    const reserve_price = chalet.reserve_price;
+    const reserve_price = Chalet.reserve_price;
 
     const rightTime = await RightTimeModel.findByPk(right_time_id);
     if (!rightTime) {
       return res.status(404).json({
-        error: lang === 'en' ? 'Right time not found' : 'الوقت المناسب غير موجود',
+        error: lang === "en" ? "Right time not found" : "الوقت المناسب غير موجود",
       });
     }
 
     let finalPrice;
-    if (rightTime.name === 'Morning') {
+    if (rightTime.type_of_time === "Mornning") {
       finalPrice = reserve_price + rightTime.price;
-    } else if (rightTime.name === 'Evening') {
+    } else if (rightTime.type_of_time === "Evenning") {
       finalPrice = reserve_price + rightTime.price;
-    } else if (rightTime.name === 'Full day') {
+    } else if (rightTime.type_of_time === "Full day") {
       finalPrice = reserve_price + rightTime.price;
     } else {
       return res.status(400).json({ error: "Invalid time selection" });
@@ -80,56 +82,37 @@ exports.createReservation = async (req, res) => {
       days_fee = number_of_days * 20;
     }
 
-    let total_amount = finalPrice + additional_fee + days_fee;
-
+    const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
-
 
     const existingReservation = await Reservations_Chalets.findOne({
       where: {
         chalet_id,
-        date: formattedDate,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
         right_time_id: rightTime.id,
       },
     });
 
     if (existingReservation) {
       return res.status(400).json({
-        error: lang === 'en'
-          ? 'This chalet is already reserved for the selected date and time'
-          : 'هذا الشاليه محجوز بالفعل في التاريخ والوقت المحدد',
+        error:
+          lang === "en"
+            ? "This chalet is already reserved for the selected date and time"
+            : "هذا الشاليه محجوز بالفعل في التاريخ والوقت المحدد",
       });
-    }
-
-    if (rightTime.name === 'Full Day') {
-      const conflictingReservation = await Reservations_Chalets.findOne({
-        where: {
-          chalet_id,
-          date: formattedDate,
-          right_time_id: {
-            [Op.ne]: rightTime.id,
-          },
-        },
-      });
-
-      if (conflictingReservation) {
-        return res.status(400).json({
-          error: lang === 'en'
-            ? 'This chalet is already reserved for the selected date for a different time slot'
-            : 'هذا الشاليه محجوز بالفعل في التاريخ المحدد في وقت آخر',
-        });
-      }
     }
 
     const reservation = await Reservations_Chalets.create({
-      reserve_price: reserve_price,
-      total_amount,
+      reserve_price,
+      Total_Amount: total_amount,
       cashback,
-      date: formattedDate,
-      lang,
-      status:'Pending',
+      start_date: formattedStartDate,
+      end_date: formattedEndDate,
+      Time: rightTime.name,
       additional_visitors,
       number_of_days,
+      lang,
       user_id: user_id || null,
       chalet_id,
       right_time_id,
@@ -154,15 +137,15 @@ exports.createReservation = async (req, res) => {
     }
 
     res.status(201).json({
-      message: lang === 'en' ? 'Reservation created successfully' : 'تم إنشاء الحجز بنجاح',
+      message: lang === "en" ? "Reservation created successfully" : "تم إنشاء الحجز بنجاح",
       reservation: {
         id: reservation.id,
-        reserve_price: reserve_price,
+        reserve_price,
         total_amount,
         cashback,
-        date: formattedDate,
-        lang,
-        status: reservation.status,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        Time: reservation.Time,
         additional_visitors,
         number_of_days,
         user_id,
@@ -177,14 +160,15 @@ exports.createReservation = async (req, res) => {
         : null,
     });
   } catch (error) {
-    console.error('Error creating reservation:', error);
+    console.error("Error creating reservation:", error);
     res.status(500).json(
-      ErrorResponse('Failed to create reservation', [
-        'An internal server error occurred.',
+      ErrorResponse("Failed to create reservation", [
+        "An internal server error occurred.",
       ])
     );
   }
 };
+
 
 
 
