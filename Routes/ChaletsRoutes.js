@@ -30,6 +30,10 @@ router.get('/getAllChaletAfterOffer/:lang',rateLimiter,chaletController.getAllCh
 
 router.get('/getAllChaletsByType/:lang',rateLimiter,chaletController.getChaletsByType)
 
+router.get('/filterByAreaOrCity/:lang',rateLimiter,chaletController.filterByCityAndArea)
+
+router.get('/filterByChaletLocation/:lang',rateLimiter,chaletController.filterChaletsByLocation)
+
 router.get('/getAllChaletsByPropsandDetails/:lang',rateLimiter,chaletController.getAllChaletsByPropsandDetails)
 
 router.put('/updatechalet/:id', rateLimiter, upload.single('image'), chaletController.updateChalet);

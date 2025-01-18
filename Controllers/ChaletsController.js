@@ -60,7 +60,7 @@ exports.createChalet = async (req, res) => {
       );
     }
 
-    
+   
     const geoApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
 
     const geoResponse = await axios.get(geoApiUrl);
@@ -73,6 +73,9 @@ exports.createChalet = async (req, res) => {
       console.log("Latitude:", latitude, "Longitude:", longitude);
 
      
+      const nearMeData = near_me ? JSON.stringify({ latitude, longitude }) : JSON.stringify({ latitude, longitude });
+
+      
       const newChalet = await Chalet.create({
         title,
         description,
@@ -84,14 +87,14 @@ exports.createChalet = async (req, res) => {
         type,
         features,
         Additional_features,
-        near_me: JSON.stringify({ latitude, longitude }), 
+        near_me: nearMeData, 
         lang,  
         status_id
       });
 
       console.log("Chalet created:", newChalet);
 
-      
+     
       if (rightTimesData && Array.isArray(rightTimesData)) {
         for (let rightTime of rightTimesData) {
           console.log("Right time data lang:", rightTime.lang); 
@@ -137,6 +140,7 @@ exports.createChalet = async (req, res) => {
     res.status(500).json(ErrorResponse("Error creating chalet"));
   }
 };
+
 
 
 
@@ -593,6 +597,106 @@ exports.deleteChalet = async (req, res) => {
       );
   }
 };
+
+
+
+
+
+
+exports.filterByCityAndArea = async (req, res) => {
+  try {
+    const { city, area } = req.body; 
+
+    
+    if (!city && !area) {
+      return res.status(400).json({ error: "Please provide either a city or area to filter" });
+    }
+
+    
+    const allChalets = await Chalet.findAll(); 
+
+    
+    const filteredChalets = allChalets.filter(chalet => {
+      const chaletCity = chalet.city.toLowerCase();
+      const chaletArea = chalet.area.toLowerCase();
+
+      
+      const cityMatches = city ? chaletCity === city.toLowerCase() : true;
+      const areaMatches = area ? chaletArea === area.toLowerCase() : true;
+
+      return cityMatches && areaMatches; 
+    });
+
+    if (filteredChalets.length === 0) {
+      return res.status(404).json({ message: "No chalets found for the given city or area" });
+    }
+
+    return res.status(200).json(filteredChalets);
+
+  } catch (error) {
+    console.error("Error in filterByCityAndArea:", error);
+    return res.status(500).json({ error: "Error filtering chalets" });
+  }
+};
+
+
+
+
+const geolib = require('geolib');
+
+exports.filterChaletsByLocation = async (req, res) => {
+  try {
+    const { latitude, longitude, radius = 10 } = req.body; 
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ error: "Latitude and Longitude are required" });
+    }
+
+    
+    const chalets = await Chalet.findAll(); 
+
+    if (chalets.length === 0) {
+      return res.status(404).json({ message: "No chalets found" });
+    }
+    
+    const nearbyChalets = chalets.filter(chalet => {
+      const chaletLocation = JSON.parse(chalet.near_me); 
+      
+      if (!chaletLocation || !chaletLocation.latitude || !chaletLocation.longitude) {
+        console.log(`Invalid location data for chalet with ID: ${chalet.id}`);
+        return false; 
+      }
+
+      const distance = geolib.getDistance(
+        { latitude: parseFloat(latitude), longitude: parseFloat(longitude) }, 
+        { latitude: parseFloat(chaletLocation.latitude), longitude: parseFloat(chaletLocation.longitude) } 
+      );
+
+      
+      const distanceInKm = distance / 1000;
+
+      
+      return distanceInKm <= radius;
+    });
+
+    if (nearbyChalets.length === 0) {
+      return res.status(404).json({ message: "No chalets found within the specified radius" });
+    }
+
+   
+    res.status(200).json({ chalets: nearbyChalets });
+
+  } catch (error) {
+    console.error("Error in filterChaletsByLocation:", error);
+    res.status(500).json({ error: "Error filtering chalets by location" });
+  }
+};
+
+
+
+
+
+
 
 exports.getChaletByStatus = async (req, res) => {
   try {
