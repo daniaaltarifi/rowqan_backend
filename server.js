@@ -95,6 +95,12 @@ const axios = require('axios');
 const geoip = require('geoip-lite');
 const ContactsRoutes = require('./Routes/ContactsRoutes')
 const TagRoutes = require('./Routes/TagRoutes')
+const number_Of_Stars = require('./Routes/numberOfStarsRoutes')
+
+
+
+
+
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -161,7 +167,7 @@ app.use('/aboutUs',AboutRoutes)
 app.use('/Blogs',BlogRoutes)
 app.use('/Contacts',ContactsRoutes)
 app.use('/Tags',TagRoutes)
-
+app.use('/NOstars',number_Of_Stars)
 
 
 
