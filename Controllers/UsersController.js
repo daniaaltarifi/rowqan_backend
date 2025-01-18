@@ -6,6 +6,7 @@ const UserTypes = require('../Models/UsersTypes');
 const { argon2d } = require('argon2');
 require('dotenv').config();
 const argon2 = require("argon2");
+const Chalet = require('../Models/ChaletsModel');
 
 
 exports.createUser = async (req, res) => {
@@ -318,37 +319,48 @@ exports.logout = (req, res) => {
 
 
 exports.createAdmin = async (req, res) => {
-  const { name, email, phone_number, country, password, RepeatPassword, role_user, lang } = req.body;
+  const { name, email, phone_number, country, password, RepeatPassword, user_type_id, lang, chalet_id } = req.body;
 
   try {
+    
     if (password !== RepeatPassword) {
       return res.status(400).json({
         error: lang === 'en' ? 'Password and Repeat Password do not match' : 'كلمة المرور وتكرار كلمة المرور غير متطابقتين',
       });
     }
 
-    if (role_user !== 'admin') {
+    
+    if (user_type_id !== '1') {
       return res.status(400).json({
         error: lang === 'en' ? 'Role must be admin to create an admin user' : 'يجب أن يكون الدور "admin" لإنشاء مستخدم أدمن',
       });
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await argon2d.hash(password, saltRounds);
+    
+    const chalet = await Chalet.findByPk(chalet_id);
+    if (!chalet) {
+      return res.status(400).json({
+        error: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود',
+      });
+    }
 
+    
+    const saltRounds = 10;
+    const hashedPassword = await argon2.hash(password, saltRounds);
+
+    
     const newAdmin = await User.create({
       name,
       email,
       phone_number,
       country,
       password: hashedPassword,
-      role_user,
+      user_type_id,
       lang,
+      chalet_id, 
     });
 
-    res.status(201).json(
-      newAdmin,
-    );
+    res.status(201).json(newAdmin);
   } catch (error) {
     console.error('Error creating admin:', error);
     res.status(500).json({
@@ -356,6 +368,7 @@ exports.createAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 exports.verifyToken = (req, res, next) => {
