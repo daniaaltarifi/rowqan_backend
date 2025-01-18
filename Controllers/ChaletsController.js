@@ -11,133 +11,136 @@ const ReservationsModel = require("../Models/ReservationsModel");
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
 const Chalet_props = require("../Models/ChaletsProps");
+const { Op,Sequelize } = require("sequelize");
 
+
+const axios = require('axios');
 
 exports.createChalet = async (req, res) => {
   try {
-    const {
-      title,
-      lang,
-      status_id,
-      reserve_price,
-      intial_Amount,
-      properties,
-      breifDetails,
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+
+    const { 
+      title, 
+      description, 
+      Rating, 
+      city,  
+      area, 
+      intial_Amount, 
+      type, 
+      features, 
+      Additional_features,
+      near_me,
+      lang, 
+      rightTimesData, 
+      status_id 
     } = req.body || {};
 
-    
-    if (!title || !lang || !status_id || !reserve_price || !intial_Amount) {
+    console.log("Received lang:", lang);
+
+    const image = req.files?.image?.[0]?.path || null; 
+    if (!image) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
-          "Title, language, status_id, reserve_price, and intial_Amount are required.",
+          "Image is required"
         ])
       );
     }
 
-    const validationErrors = validateInput({
-      title,
-      lang,
-      status_id,
-      reserve_price,
-      intial_Amount,
-    });
-    if (validationErrors.length > 0) {
-      return res
-        .status(400)
-        .json(ErrorResponse("Validation failed", validationErrors));
-    }
-
-    if (!["ar", "en"].includes(lang)) {
+    if (!status_id) {
       return res.status(400).json(
-        ErrorResponse(
-          'Invalid language. Supported languages are "ar" and "en".'
-        )
+        ErrorResponse('Validation failed', ['status_id is required'])
       );
     }
 
-    const status = await Status.findByPk(status_id);
-    if (!status) {
-      return res.status(404).json(ErrorResponse("Status not found"));
+    if (!["en", "ar"].includes(lang)) {
+      return res.status(400).json(
+        ErrorResponse('Invalid language, it should be "en" or "ar"')
+      );
     }
 
-   
-    const newChalet = await Chalet.create({
-      title,
-      image: req.files?.image ? req.files.image[0].filename : 'img1.png', 
-      lang,
-      status_id,
-      reserve_price,
-      intial_Amount,
-    });
-
-   
-    if (Array.isArray(properties)) {
-      const chaletPropsData = properties.map((property) => ({
-        Chalet_Id: newChalet.id, 
-        title: property.title,
-        lang: property.lang,
-        image: property.image || null,
-      }));
-
-      await Chalet_props.bulkCreate(chaletPropsData);
-     
-    }
-    console.log(`The chalets properties data is:${properties}`)
-
-   
-  
-    if (breifDetails && breifDetails.Detail_Type && breifDetails.lang) {
-      const breifDetail = {
-        chalet_id: newChalet.chalet_id,  
-        Detail_Type: breifDetails.Detail_Type,
-        lang: breifDetails.lang,
-      };
-
-      await BreifDetailsChalets.create(breifDetail);  
-      console.log(newChalet.id)
-    }
-    console.log(`The Chalet Id is:${newChalet.id}`)
-    console.log(`The Brefi details is :${breifDetails}`)
     
-    if (req.files?.chalet_images && req.files.chalet_images.length > 0) {
-      const BASE_URL_IMAGE = "https://res.cloudinary.com/dqimsdiht/";
-      const BASE_URL_VIDEO = "https://res.cloudinary.com/dqimsdiht/video/upload/v1736589099/";
+    const geoApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
 
-      const validFiles = req.files.chalet_images
-        .map((file) => {
-          const extension = file.originalname.split(".").pop().toLowerCase();
-          if (!["png", "jpeg", "mp4"].includes(extension)) {
-            return null;
+    const geoResponse = await axios.get(geoApiUrl);
+
+    if (geoResponse.data.length > 0) {
+      const location = geoResponse.data[0];
+      const latitude = location.lat;
+      const longitude = location.lon;
+
+      console.log("Latitude:", latitude, "Longitude:", longitude);
+
+     
+      const newChalet = await Chalet.create({
+        title,
+        description,
+        image, 
+        Rating,
+        city,
+        area,
+        intial_Amount,
+        type,
+        features,
+        Additional_features,
+        near_me: JSON.stringify({ latitude, longitude }), 
+        lang,  
+        status_id
+      });
+
+      console.log("Chalet created:", newChalet);
+
+      
+      if (rightTimesData && Array.isArray(rightTimesData)) {
+        for (let rightTime of rightTimesData) {
+          console.log("Right time data lang:", rightTime.lang); 
+          
+          if (!["en", "ar"].includes(rightTime.lang)) {
+            return res.status(400).json(
+              ErrorResponse('Invalid language for rightTimesData, it should be "en" or "ar"')
+            );
           }
 
-          const filenameWithExtension = `${file.filename}.${extension}`;
-          const baseUrl = extension === "mp4" ? BASE_URL_VIDEO : BASE_URL_IMAGE;
+          const rightTimesImage = req.files?.[`rightTimesData[${rightTime.id}][image]`]?.[0]?.path || null;
 
-          return {
-            chalet_id: newChalet.id,  
-            chalet_images: `${baseUrl}${filenameWithExtension}`,
-          };
-        })
-        .filter(Boolean);
+          if (!rightTimesImage) {
+            return res.status(400).json(
+              ErrorResponse("Validation failed", [
+                `Image for right time data with ID ${rightTime.id} is required`
+              ])
+            );
+          }
 
-      if (validFiles.length > 0) {
-        await chaletsImages.bulkCreate(validFiles);
+          await RightTimeModel.create({
+            id: rightTime.id,
+            image: rightTimesImage, 
+            type_of_time: rightTime.type_of_time,
+            from_time: rightTime.from_time,
+            to_time: rightTime.to_time,
+            lang: rightTime.lang, 
+            price: rightTime.price,
+            After_Offer: rightTime.After_Offer,
+            chalet_id: newChalet.id, 
+          });
+        }
       }
+
+      res.status(201).json(newChalet);
+
+    } else {
+      return res.status(400).json({ error: "Failed to fetch geolocation for the given city." });
     }
 
-    res.status(201).json(newChalet);
   } catch (error) {
     console.error("Error in createChalet:", error);
-
-    res
-      .status(500)
-      .json(
-        ErrorResponse("Failed to create Chalet", [
-          "An internal server error occurred.",
-        ])
-      );
+    res.status(500).json(ErrorResponse("Error creating chalet"));
   }
 };
+
+
+
+
 
 
 
@@ -190,6 +193,119 @@ exports.getAllChalets = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getAllChaletsAfterOffer = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+    const { lang } = req.params;
+
+    if (lang && !["ar", "en"].includes(lang)) {
+      return res.status(400).json({
+        error: 'Invalid language. Supported languages are "ar" and "en".',
+      });
+    }
+
+    const cacheKey = `chalets:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+    const cachedData = await client.get(cacheKey);
+
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    const whereClause = {
+      After_Offer: { [Op.gt]: 0 }, 
+    };
+
+    if (lang) {
+      whereClause.lang = lang;
+    }
+
+    const chaletsafteroffer = await RightTimeModel.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Chalet,
+          attributes: ["id", "title", "image", "Rating", "city", "area"],
+        },
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [["id", "DESC"]],
+    });
+
+    
+    await client.set(
+      cacheKey,
+      JSON.stringify(chaletsafteroffer),
+      "EX",
+      3600 
+    );
+
+    return res.status(200).json(chaletsafteroffer);
+  } catch (error) {
+    console.error("Error in getAllChaletsAfterOffer:", error.message);
+    res.status(500).json({
+      error: "Failed to fetch chalets",
+    });
+  }
+};
+
+
+
+
+
+
+exports.getChaletsByType = async (req, res) => {
+  try {
+
+    const { page = 1, limit = 80 } = req.query;
+    const offset = (page - 1) * limit;
+    const { key, value } = req.query; 
+
+    if (!key || !value) {
+      return res.status(400).json({
+        error: "Both 'key' and 'value' query parameters are required.",
+      });
+    }
+
+    
+    const chalets = await Chalet.findAll({
+      where: Sequelize.where(
+        Sequelize.fn('LOCATE', `${key}:${value}`, Sequelize.col('type')),
+        {
+          [Op.gt]: 0 
+        }
+      ),
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [["id", "DESC"]],
+    });
+
+    if (!chalets.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No chalets found matching the specified criteria.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: chalets,
+    });
+  } catch (error) {
+    console.error("Error in getChaletsByType:", error.message);
+    res.status(500).json({
+      error: "Failed to fetch chalets by type.",
+    });
+  }
+};
+
+
+
+
 
 
 

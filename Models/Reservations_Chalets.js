@@ -14,25 +14,29 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  total_amount: {
-    type: DataTypes.FLOAT,
-    allowNull: true, 
-  },
   cashback: {
     type: DataTypes.FLOAT,
     allowNull: true, 
   },
-  date: {
+  start_date: {
     type: DataTypes.DATE,
     allowNull: false,  
   },
-  lang: {
-    type: DataTypes.ENUM('ar', 'en'),
-    allowNull: false, 
+  end_date:{
+    type: DataTypes.DATE,
+    allowNull: false,
   },
-  status: {
+  Time:{
     type: DataTypes.STRING,
-    allowNull: false,  
+    allowNull: true,
+  },
+  starting_price:{
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  Total_Amount:{
+    type: DataTypes.FLOAT,
+    allowNull: true,
   },
   additional_visitors: {
     type: DataTypes.INTEGER,
@@ -42,9 +46,9 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     type: DataTypes.INTEGER,
     allowNull: false,  
   },
-  remaining_amount: {  
-    type: DataTypes.FLOAT,
-    allowNull: true, 
+  lang: {
+    type: DataTypes.ENUM('ar', 'en'),
+    allowNull: false, 
   },
 }, {
   tableName: 'Reservations_Chalets',

@@ -19,16 +19,46 @@ const Chalet = sequelize.define('Chalet', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+
   image: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  reserve_price:{
+  Rating:{
     type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  city:{
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  area:{
+    type: DataTypes.STRING,
     allowNull: false,
   },
   intial_Amount:{
     type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  type:{
+    type: DataTypes.JSON,
+    allowNull: false,
+  },
+  features:{
+    type: DataTypes.JSON,
+    allowNull: false,
+  },
+  Additional_features:{
+    type: DataTypes.JSON,
+    allowNull: false,
+  },
+
+  near_me:{
+    type: DataTypes.JSON,
     allowNull: false,
   },
   lang: {
