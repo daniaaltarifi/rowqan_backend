@@ -26,7 +26,7 @@ app.use(helmet({
 }));
 
 app.use(express.json());
-// Create HTTP server and attach Socket.IO
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -34,10 +34,14 @@ const io = socketIo(server, {
       "http://localhost:5173",
       "https://rowqan.com",
       "https://rowqanbackend.rowqan.com",
-    ], // Allow frontend to connect
+    ], 
     methods: ["GET", "POST"],
   },
 });
+
+
+
+
 io.on("connection", (socket) => {
   console.log("A user connected");
 
