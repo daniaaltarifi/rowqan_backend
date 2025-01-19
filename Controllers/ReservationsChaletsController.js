@@ -345,12 +345,10 @@ exports.getReservationById = async (req, res) => {
         },
         {
           model: User,
-          as: 'user',
           attributes: ['id', 'name', 'email'], 
         },
         {
           model: RightTimeModel,
-          as: 'rightTime', 
           attributes: ['id', 'time'], 
         }
       ]
