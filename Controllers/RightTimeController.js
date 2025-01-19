@@ -6,23 +6,25 @@ const {client} = require('../Utils/redisClient')
 
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
+
+
 exports.createRightTime = async (req, res) => {
 
   try {
-      
-      const { 
-          name, 
-          type_of_time, 
-          from_time, 
-          to_time, 
-          lang, 
-          price, 
-          After_Offer, 
-          chalet_id 
-      } = req.body || {};
+   
+    const { 
+        name, 
+        type_of_time, 
+        from_time, 
+        to_time, 
+        lang, 
+        price, 
+        After_Offer, 
+        chalet_id 
+    } = req.body || {};
 
-      
-      const image = req.file?.filename || null;
+    
+    const image = req.file?.path || null; 
 
      
       if (!name || !type_of_time || !from_time || !to_time || !lang || !price || !chalet_id || !image) {
@@ -31,84 +33,60 @@ exports.createRightTime = async (req, res) => {
           );
       }
 
-    try {
-        const { name, time, lang, chalet_id, price } = req.body;
-        const image = req.file ? req.file.filename : null;
+   
+    const validationErrors = validateInput({ 
+        name, 
+        type_of_time, 
+        from_time, 
+        to_time, 
+        lang, 
+        price, 
+        After_Offer, 
+        chalet_id 
+    });
 
-    
-        const validationErrors = validateInput({ name, time, lang, chalet_id, price });
-        if (validationErrors.length > 0) {
-            return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
-        }
-
-      
-        if (!['en', 'ar'].includes(lang)) {
-            return res.status(400).json(ErrorResponse('Invalid language'));
-        }
-
-     
-        const chalet = await Chalet.findByPk(chalet_id);
-        if (!chalet) {
-            return res.status(404).json(ErrorResponse('Chalet not found'));
-        }
-
-
-     
-      const validationErrors = validateInput({ 
-          name, 
-          type_of_time, 
-          from_time, 
-          to_time, 
-          lang, 
-          price, 
-          After_Offer, 
-          chalet_id 
-      });
+    if (validationErrors.length > 0) {
+        return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
+    }
 
    
-      if (validationErrors.length > 0) {
-          return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
-      }
+    if (!['en', 'ar'].includes(lang)) {
+        return res.status(400).json(new ErrorResponse('Invalid language'));
+    }
 
-      
-      if (!['en', 'ar'].includes(lang)) {
-          return res.status(400).json(new ErrorResponse('Invalid language'));
-      }
+  
+    const chalet = await Chalet.findByPk(chalet_id);
+    if (!chalet) {
+        return res.status(404).json(new ErrorResponse('Chalet not found'));
+    }
 
-      
-      const chalet = await Chalet.findByPk(chalet_id);
-      if (!chalet) {
-          return res.status(404).json(new ErrorResponse('Chalet not found'));
-      }
+  
+    const newRightTime = await RightTimeModel.create({
+        name, 
+        type_of_time, 
+        from_time, 
+        to_time, 
+        lang, 
+        price, 
+        After_Offer, 
+        chalet_id,
+        image
+    });
 
-      
-      const newRightTime = await RightTimeModel.create({
-          image, 
-          name, 
-          type_of_time, 
-          from_time, 
-          to_time, 
-          lang, 
-          price, 
-          After_Offer, 
-          chalet_id
-      });
+   
+    const cacheDeletePromises = [client.del(`righttime:page:1:limit:20`)];
+    const [newRightTimeResult] = await Promise.all([newRightTime, ...cacheDeletePromises]);
 
-      
-      const cacheDeletePromises = [client.del(`righttime:page:1:limit:20`)];
-      
-      const [newRightTimeResult] = await Promise.all([newRightTime, ...cacheDeletePromises]);
+    
+    await client.set(`righttime:${newRightTimeResult.id}`, JSON.stringify(newRightTimeResult), {
+        EX: 3600,
+    });
 
-      
-      await client.set(`righttime:${newRightTimeResult.id}`, JSON.stringify(newRightTimeResult), {
-          EX: 3600,
-      });
-
-      
-      return res.status(201).json({
-          message: "RightTime created successfully",
-          rightTime: newRightTimeResult,
-      });
+   
+    return res.status(201).json({
+        message: "RightTime created successfully",
+        rightTime: newRightTimeResult,
+    });
   } catch (error) {
       console.error("Error in createRightTime:", error.message);
       return res.status(500).json(
@@ -116,15 +94,10 @@ exports.createRightTime = async (req, res) => {
               "An internal server error occurred.",
           ])
       );
-
   }
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json(ErrorResponse('Internal server error'));
-    }
-
 };
+
+
 
 
 exports.getRightTimeById = async (req, res) => {
