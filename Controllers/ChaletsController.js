@@ -425,9 +425,9 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chaletdetail:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalet:${id}:lang:${lang || "all"}`;
 
-    
+   
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit for chalet:", id);
@@ -449,14 +449,19 @@ exports.getChaletById = async (req, res) => {
     const chalet = await Chalet.findOne({
       where: whereClause,
       include: [
-        { model: Status, attributes: ["id", "status"] },
-        { model: RightTimeModel, attributes: ["type_of_time"] },
+        { 
+          model: Status, 
+          attributes: ["id", "status"], 
+        },
+        { 
+          model: RightTimeModel, 
+          attributes: ["type_of_time"], 
+        },
       ],
       attributes: [
         "id", "title", "description", "image", "Rating", "city", "area",
         "intial_Amount", "type", "features", "Additional_features", "near_me"
       ],
-      raw: true, 
     });
 
     if (!chalet) {
@@ -465,8 +470,11 @@ exports.getChaletById = async (req, res) => {
       });
     }
 
- 
-    const updatedChaletData = {
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(chalet));
+
+    
+    res.status(200).json({
       id: chalet.id,
       title: chalet.title,
       description: chalet.description,
@@ -479,20 +487,15 @@ exports.getChaletById = async (req, res) => {
       features: chalet.features,
       Additional_features: chalet.Additional_features,
       near_me: chalet.near_me,
-      status: chalet.Status ? [{ id: chalet.Status.id, status: chalet.Status.status }] : [], 
-      RightTimeModels: chalet.RightTimeModels ? chalet.RightTimeModels.map(type_of_time => type_of_time.type_of_time) : [], 
-    };
-
-   
-    await client.setEx(cacheKey, 3600, JSON.stringify(updatedChaletData));
-
-    
-    res.status(200).json(updatedChaletData);
+      status: chalet.Status ? { id: chalet.Status.id, status: chalet.Status.status } : null, 
+      RightTimeModels: chalet.RightTimeModels ? chalet.RightTimeModels.map(rt => rt.type_of_time) : [], 
+    });
   } catch (error) {
     console.error("Error in getChaletById:", error);
     res.status(500).json({ error: "Failed to fetch chalet" });
   }
 };
+
 
 
 
