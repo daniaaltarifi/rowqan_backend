@@ -9,16 +9,15 @@ const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qN
 
 const  {Client}  = require('../Config/PayPalClient');
 const paypal = require('@paypal/checkout-server-sdk'); 
+
 exports.createPayPalPayment = async (req, res) => {
   try {
-    const { amount, currency } = req.body;
+    const { amount, currency, user_id, reservation_id } = req.body;
 
-  
     if (!amount || isNaN(amount) || amount <= 0) {
       return res.status(400).send({ error: 'Invalid amount provided.' });
     }
 
-   
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -33,20 +32,38 @@ exports.createPayPalPayment = async (req, res) => {
       ],
     });
 
-   
     const order = await Client.execute(request);
 
-   
-    res.status(201).json({
-      id: order.result.id,
-      status: order.result.status,
-      links: order.result.links, 
-    });
+  
+    if (order.result.status === "COMPLETED") {
+     
+      const reservation = await ReservationChalets.update(
+        { status: "confirmed", amount_paid: amount, currency: currency || "USD" },
+        { where: { reservation_id }, returning: true, plain: true }
+      );
+
+      res.status(201).json({
+        message: 'Payment and reservation confirmed successfully',
+        reservation: reservation[1],  
+      });
+    } else {
+     
+      const reservation = await ReservationChalets.update(
+        { Status: "rejected" },
+        { where: { reservation_id }, returning: true, plain: true }
+      );
+
+      res.status(400).json({
+        error: 'Payment was not successful, reservation status updated to rejected.',
+        reservation: reservation[1],  
+      });
+    }
   } catch (error) {
     console.error('PayPal Error:', error.message);
     res.status(500).send({ error: 'Failed to create PayPal payment.' });
   }
 };
+
 
 
 
@@ -166,39 +183,59 @@ exports.createPayment = async (req, res) => {
 
   exports.createPaymentIntent = async (req, res) => {
     try {
-      const { amount, currency,phone  } = req.body;
+      const { amount, currency, phone, reservation_id } = req.body;
   
       if (!amount || isNaN(amount) || amount <= 0) {
         return res.status(400).send({ error: 'Invalid amount provided.' });
       }
-      let convertedAmount = amount; 
   
-      if (currency === 'jod') {
-        
+      let convertedAmount = amount;
+  
+      
+      if (currency === 'usd') {
         const response = await axios.get('https://v6.exchangerate-api.com/v6/48fb1b6e8b9bab92bb9abe37/latest/USD');
         const exchangeRate = response.data.conversion_rates.JOD;  
-        
+  
         convertedAmount = amount * exchangeRate;
       }
   
       
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: convertedAmount * 100,
-        currency: currency === 'jod' ? 'jod' : 'usd',
-        // payment_method_types: ['card'],
+        amount: convertedAmount * 100,  
+                currency: currency === 'jod' ? 'jod' : 'usd', 
       });
   
       
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-        referenceId: paymentIntent.id,
-        phone: phone, 
-      });
+      if (paymentIntent.status === "succeeded") {
+        
+        const reservation = await ReservationChalets.update(
+          { status: "confirmed" },  
+                    { where: { id: reservation_id } }  
+        );
+ 
+        if (reservation[0] === 0) {
+          return res.status(404).send({ error: 'Reservation not found.' });
+        }
+  
+      
+        res.send({
+          message: 'Payment succeeded and reservation confirmed.',
+          clientSecret: paymentIntent.client_secret,
+          referenceId: paymentIntent.id,
+          phone: phone,
+        });
+      } else {
+      
+        return res.status(400).send({ error: 'Payment was not successful.' });
+      }
     } catch (error) {
       console.error('Stripe Error:', error);
       res.status(400).send({ error: error.message });
     }
   };
+  
+
+
 
   // exports.createPaymentIntent = async (req, res) => {
   //   try {
