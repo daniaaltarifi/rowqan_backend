@@ -181,6 +181,7 @@ exports.createPayment = async (req, res) => {
 
   const axios = require('axios');
 
+
   exports.createPaymentIntent = async (req, res) => {
     try {
       const { amount, currency, phone, reservation_id } = req.body;
@@ -191,7 +192,6 @@ exports.createPayment = async (req, res) => {
   
       let convertedAmount = amount;
   
-      
       if (currency === 'usd') {
         const response = await axios.get('https://v6.exchangerate-api.com/v6/48fb1b6e8b9bab92bb9abe37/latest/USD');
         const exchangeRate = response.data.conversion_rates.JOD;  
@@ -200,24 +200,25 @@ exports.createPayment = async (req, res) => {
       }
   
       
+      const amountInCents = Math.round(convertedAmount * 100);
+  
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: convertedAmount * 100,  
-                currency: currency === 'jod' ? 'jod' : 'usd', 
+        amount: amountInCents,
+        currency: currency === 'jod' ? 'jod' : 'USD',
       });
   
-      
+      console.log('PaymentIntent:', paymentIntent);
+  
       if (paymentIntent.status === "succeeded") {
-        
         const reservation = await ReservationChalets.update(
-          { status: "confirmed" },  
-                    { where: { id: reservation_id } }  
+          { status: "confirmed" },
+          { where: { id: reservation_id } }
         );
- 
+  
         if (reservation[0] === 0) {
           return res.status(404).send({ error: 'Reservation not found.' });
         }
   
-      
         res.send({
           message: 'Payment succeeded and reservation confirmed.',
           clientSecret: paymentIntent.client_secret,
@@ -225,7 +226,7 @@ exports.createPayment = async (req, res) => {
           phone: phone,
         });
       } else {
-      
+        console.log('Payment failed:', paymentIntent);  
         return res.status(400).send({ error: 'Payment was not successful.' });
       }
     } catch (error) {
@@ -233,6 +234,8 @@ exports.createPayment = async (req, res) => {
       res.status(400).send({ error: error.message });
     }
   };
+  
+  
   
 
 
