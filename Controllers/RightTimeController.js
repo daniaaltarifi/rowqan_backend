@@ -7,45 +7,93 @@ const {client} = require('../Utils/redisClient')
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 exports.createRightTime = async (req, res) => {
-    try {
-        const { name, time, lang, chalet_id, price } = req.body;
-        const image = req.file ? req.file.filename : null;
-
-    
-        const validationErrors = validateInput({ name, time, lang, chalet_id, price });
-        if (validationErrors.length > 0) {
-            return res.status(400).json(new ErrorResponse('Validation failed', validationErrors));
-        }
+  try {
+      
+      const { 
+          name, 
+          type_of_time, 
+          from_time, 
+          to_time, 
+          lang, 
+          price, 
+          After_Offer, 
+          chalet_id 
+      } = req.body || {};
 
       
-        if (!['en', 'ar'].includes(lang)) {
-            return res.status(400).json(new ErrorResponse('Invalid language'));
-        }
+      const image = req.file?.filename || null;
 
      
-        const chalet = await Chalet.findByPk(chalet_id);
-        if (!chalet) {
-            return res.status(404).json(new ErrorResponse('Chalet not found'));
-        }
+      if (!name || !type_of_time || !from_time || !to_time || !lang || !price || !chalet_id || !image) {
+          return res.status(400).json(
+              ErrorResponse("Validation failed", ["All Fields are required"])
+          );
+      }
 
      
-        const newRightTime = await RightTimeModel.create({
-            image,
-            name,
-            time,
-            lang,
-            chalet_id,
-            price
-        });
+      const validationErrors = validateInput({ 
+          name, 
+          type_of_time, 
+          from_time, 
+          to_time, 
+          lang, 
+          price, 
+          After_Offer, 
+          chalet_id 
+      });
 
-        
-        return res.status(201).json(
-            newRightTime
+   
+      if (validationErrors.length > 0) {
+          return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
+      }
+
+      
+      if (!['en', 'ar'].includes(lang)) {
+          return res.status(400).json(new ErrorResponse('Invalid language'));
+      }
+
+      
+      const chalet = await Chalet.findByPk(chalet_id);
+      if (!chalet) {
+          return res.status(404).json(new ErrorResponse('Chalet not found'));
+      }
+
+      
+      const newRightTime = await RightTimeModel.create({
+          image, 
+          name, 
+          type_of_time, 
+          from_time, 
+          to_time, 
+          lang, 
+          price, 
+          After_Offer, 
+          chalet_id
+      });
+
+      
+      const cacheDeletePromises = [client.del(`righttime:page:1:limit:20`)];
+      
+      const [newRightTimeResult] = await Promise.all([newRightTime, ...cacheDeletePromises]);
+
+      
+      await client.set(`righttime:${newRightTimeResult.id}`, JSON.stringify(newRightTimeResult), {
+          EX: 3600,
+      });
+
+      
+      return res.status(201).json({
+          message: "RightTime created successfully",
+          rightTime: newRightTimeResult,
+      });
+  } catch (error) {
+      console.error("Error in createRightTime:", error.message);
+      return res.status(500).json(
+          ErrorResponse("Failed to create RightTime", [
+              "An internal server error occurred.",
+          ])
       );
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json(new ErrorResponse('Internal server error'));
-    }
+  }
 };
 
 
@@ -164,31 +212,54 @@ exports.getRightTimeById = async (req, res) => {
 
 
 
-exports.updateRightTime = async (req, res) => {
+  exports.updateRightTime = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, time, lang, chalet_id, price } = req.body;
+        const { 
+            name, 
+            type_of_time, 
+            from_time, 
+            to_time, 
+            lang, 
+            price, 
+            After_Offer, 
+            chalet_id 
+        } = req.body;
         const image = req.file ? req.file.filename : null;
 
-     
-        const validationErrors = validateInput({ name, time, lang, chalet_id, price });
+        
+        const validationErrors = validateInput({ 
+            name, 
+            type_of_time, 
+            from_time, 
+            to_time, 
+            lang, 
+            price, 
+            After_Offer, 
+            chalet_id 
+        });
         if (validationErrors.length > 0) {
             return res.status(400).json( ErrorResponse('Validation failed', validationErrors));
         }
 
+        
         const rightTime = await RightTimeModel.findByPk(id);
         if (!rightTime) {
             return res.status(404).json( ErrorResponse('RightTime not found'));
         }
 
-      
+       
         rightTime.name = name || rightTime.name;
-        rightTime.time = time || rightTime.time;
+        rightTime.type_of_time = type_of_time || rightTime.type_of_time;
+        rightTime.from_time = from_time || rightTime.from_time;
+        rightTime.to_time = to_time || rightTime.to_time;
         rightTime.lang = lang || rightTime.lang;
-        rightTime.chalet_id = chalet_id !== undefined ? chalet_id : rightTime.chalet_id;
         rightTime.price = price || rightTime.price;
+        rightTime.After_Offer = After_Offer || rightTime.After_Offer;
+        rightTime.chalet_id = chalet_id !== undefined ? chalet_id : rightTime.chalet_id;
         rightTime.image = image || rightTime.image;
 
+        
         await rightTime.save();
 
         return res.status(200).json(
@@ -199,6 +270,7 @@ exports.updateRightTime = async (req, res) => {
         return res.status(500).json( ErrorResponse('Internal server error'));
     }
 };
+
 
 
 exports.deleteRightTime = async (req, res) => {
