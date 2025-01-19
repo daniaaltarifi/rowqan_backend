@@ -1,29 +1,33 @@
-const express = require('express');
-const sequelize = require('./Config/dbConnect');
-const helmet = require('helmet');
-const http = require('http');
-const socketIo = require('socket.io');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-require('dotenv').config();
+const express = require("express");
+const sequelize = require("./Config/dbConnect");
+const helmet = require("helmet");
+const http = require("http");
+const socketIo = require("socket.io");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 const app = express();
-const compression = require('compression');
+const compression = require("compression");
 app.use(compression());
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 app.use((req, res, next) => {
-  req.socketIoInstance = io;  
+  req.socketIoInstance = io;
   next();
 });
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 app.use(express.json());
 
@@ -32,8 +36,9 @@ const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:5173",
-      'http://localhost:5174',
+      "http://localhost:5174",
       "https://rowqan.com",
+      "https://dashboard.rowqan.com",
       "https://rowqanbackend.rowqan.com",
     ], 
     methods: ["GET", "POST"],
@@ -45,8 +50,6 @@ const io = socketIo(server, {
 
 io.on("connection", (socket) => {
   console.log("A user connected");
-
-
 
   socket.on("disconnect", () => {
     console.log("A user disconnected");
@@ -107,11 +110,12 @@ const AdditionalFeaturesRoutes = require('./Routes/AdditionalFaeturesRoutes')
 
 
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3001',
-  'https://rowqan.com',
-  'https://rowqanbackend.rowqan.com',
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3001",
+  "https://rowqan.com",
+  "https://dashboard.rowqan.com",
+  "https://rowqanbackend.rowqan.com",
 ];
 
 const corsOptions = {
@@ -119,7 +123,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
@@ -191,17 +195,17 @@ async function checkVPN(userIP) {
       return false;
     }
 
-    if (fraud_score > 50) {  
+    if (fraud_score > 50) {
       console.log("Fraud score is too high.");
       return false;
     }
 
-    if (isp && isp.toLowerCase().includes("vpn") || city === "unknown") {
+    if ((isp && isp.toLowerCase().includes("vpn")) || city === "unknown") {
       console.log("Suspicious ISP or City.");
       return false;
     }
 
-    if (asn && (asn === "12345" || asn === "67890")) {  
+    if (asn && (asn === "12345" || asn === "67890")) {
       console.log("Suspicious ASN detected.");
       return false;
     }
@@ -212,43 +216,44 @@ async function checkVPN(userIP) {
       return false;
     }
 
-    return true; 
-
+    return true;
   } catch (error) {
     console.error("Error checking VPN:", error);
-    return false; 
+    return false;
   }
 }
 
 function checkAuth(req, res, next) {
-  const token = req.cookies.authToken || req.headers['authorization'];
+  const token = req.cookies.authToken || req.headers["authorization"];
   if (!token) {
-    return res.status(401).json({ message: 'Authentication required' });
+    return res.status(401).json({ message: "Authentication required" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: "Forbidden" });
     }
     req.user = decoded;
-    next(); 
+    next();
   });
 }
 
-app.use('/dashboard', async (req, res, next) => {
-  const userIP = req.query.ip || requestIp.getClientIp(req);  
+app.use("/dashboard", async (req, res, next) => {
+  const userIP = req.query.ip || requestIp.getClientIp(req);
 
-  const isAllowed = await checkVPN(userIP); 
+  const isAllowed = await checkVPN(userIP);
 
   if (!isAllowed) {
-    return res.status(403).json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
+    return res
+      .status(403)
+      .json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
   }
 
   res.status(200).json({ message: "Access granted to the dashboard" });
 });
 
 sequelize.sync({ force: false }).then(() => {
-  console.log('Database connected and synced!');
+  console.log("Database connected and synced!");
 });
 
 app.get("/", (req, res) => {
