@@ -184,7 +184,7 @@ exports.getAllChalets = async (req, res) => {
       where: whereClause,
       include: [
         { model: Status, attributes: ["status"] },
-        { model: chaletsImages, attributes: ["id","chalet_images"] },
+        { model: chaletsImages, attributes: ["id","image"] },
         { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
         { model: ReservationsModel, attributes: ["id"] },
       ],
@@ -586,8 +586,19 @@ exports.deleteChalet = async (req, res) => {
       });
     }
 
+    
     await chalet.destroy();
 
+   
+    await RightTimeModel.destroy({ where: { chalet_id: id } });
+
+    
+    await chaletsImages.destroy({ where: { chalet_id: id } });
+
+    
+    await Reservations_Chalets.destroy({ where: { chalet_id: id } });
+
+   
     await client.del(`chalet:${id}`);
 
     return res.status(200).json({ message: "Chalet deleted successfully" });
@@ -603,6 +614,7 @@ exports.deleteChalet = async (req, res) => {
       );
   }
 };
+
 
 
 
@@ -649,6 +661,7 @@ exports.filterByCityAndArea = async (req, res) => {
 
 
 const geolib = require('geolib');
+const Reservations_Chalets = require("../Models/Reservations_Chalets");
 
 exports.filterChaletsByLocation = async (req, res) => {
   try {

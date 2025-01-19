@@ -22,6 +22,7 @@ exports.createReservation = async (req, res) => {
       right_time_id,
     } = req.body || {};
 
+    
     if (!start_date || !end_date || !lang || !chalet_id || !right_time_id) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
@@ -33,18 +34,21 @@ exports.createReservation = async (req, res) => {
     const formattedStartDate = new Date(start_date);
     const formattedEndDate = new Date(end_date);
 
+    
     if (isNaN(formattedStartDate.getTime()) || isNaN(formattedEndDate.getTime())) {
       return res.status(400).json({
         error: lang === "en" ? "Invalid date format" : "تنسيق التاريخ غير صالح",
       });
     }
 
+    
     if (!["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
       });
     }
 
+    
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
       return res.status(404).json({
@@ -52,8 +56,7 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    const reserve_price = Chalet.reserve_price;
-
+   
     const rightTime = await RightTimeModel.findByPk(right_time_id);
     if (!rightTime) {
       return res.status(404).json({
@@ -61,17 +64,19 @@ exports.createReservation = async (req, res) => {
       });
     }
 
+  
     let finalPrice;
     if (rightTime.type_of_time === "Mornning") {
-      finalPrice = reserve_price + rightTime.price;
+      finalPrice = rightTime.price;
     } else if (rightTime.type_of_time === "Evenning") {
-      finalPrice = reserve_price + rightTime.price;
+      finalPrice = rightTime.price;
     } else if (rightTime.type_of_time === "Full day") {
-      finalPrice = reserve_price + rightTime.price;
+      finalPrice = rightTime.price;
     } else {
       return res.status(400).json({ error: "Invalid time selection" });
     }
 
+   
     let additional_fee = 0;
     if (additional_visitors > 0) {
       additional_fee = additional_visitors * 10;
@@ -85,6 +90,7 @@ exports.createReservation = async (req, res) => {
     const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
 
+    
     const existingReservation = await Reservations_Chalets.findOne({
       where: {
         chalet_id,
@@ -103,13 +109,15 @@ exports.createReservation = async (req, res) => {
       });
     }
 
+   
     const reservation = await Reservations_Chalets.create({
-      reserve_price,
+      price: rightTime.price, 
       Total_Amount: total_amount,
       cashback,
       start_date: formattedStartDate,
       end_date: formattedEndDate,
-      Time: rightTime.name,
+      Time: rightTime.type_of_time, 
+      starting_price: rightTime.price,
       additional_visitors,
       number_of_days,
       lang,
@@ -118,6 +126,7 @@ exports.createReservation = async (req, res) => {
       right_time_id,
     });
 
+    
     let wallet = null;
     if (user_id) {
       wallet = await Wallet.findOne({ where: { user_id } });
@@ -136,16 +145,16 @@ exports.createReservation = async (req, res) => {
       }
     }
 
+    
     res.status(201).json({
       message: lang === "en" ? "Reservation created successfully" : "تم إنشاء الحجز بنجاح",
       reservation: {
         id: reservation.id,
-        reserve_price,
         total_amount,
         cashback,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        Time: reservation.Time,
+        Time: reservation.type_of_time, 
         additional_visitors,
         number_of_days,
         user_id,
@@ -168,6 +177,9 @@ exports.createReservation = async (req, res) => {
     );
   }
 };
+
+
+
 
 
 
@@ -204,7 +216,7 @@ exports.getAllReservations = async (req, res) => {
         {
           model: Chalet,
           as:'reservations',
-          attributes: ['id', 'title', 'image','reserve_price','intial_Amount'], 
+          attributes: ['id', 'title', 'image','starting_price','intial_Amount'], 
         },
         {
           model: User,
@@ -217,7 +229,7 @@ exports.getAllReservations = async (req, res) => {
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      attributes:["id","reserve_price","total_amount","cashback","date","status","additional_visitors","number_of_days"]
+      attributes:["id","starting_price","total_amount","cashback","date","status","additional_visitors","number_of_days"]
     });
 
     if (!reservations || reservations.length === 0) {
@@ -232,7 +244,6 @@ exports.getAllReservations = async (req, res) => {
     return res.status(200).json(
        reservations.map(reservation => ({
         id: reservation.id,
-        reserve_price: reservation.reserve_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,
         date: reservation.date,
@@ -296,7 +307,7 @@ exports.getReservationById = async (req, res) => {
         {
           model: Chalet,
           as: 'chalet',
-          attributes: ['id', 'title', 'reserve_price'], 
+          attributes: ['id', 'title', 'starting_price'], 
         },
         {
           model: User,
@@ -324,7 +335,7 @@ exports.getReservationById = async (req, res) => {
     return res.status(200).json(
       {
         id: reservation.id,
-        reserve_price: reservation.reserve_price,
+        starting_price: reservation.starting_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,
         date: reservation.date,
@@ -395,7 +406,7 @@ exports.getReservationsByChaletId = async (req, res) => {
         {
           model: Chalet,
           as: 'chalet', 
-          attributes: ['id', 'title', 'reserve_price'], 
+          attributes: ['id', 'title', 'starting_price'], 
         },
         {
           model: User,
@@ -423,7 +434,7 @@ exports.getReservationsByChaletId = async (req, res) => {
     return res.status(200).json(
        reservations.map(reservation => ({
         id: reservation.id,
-        reserve_price: reservation.reserve_price,
+        starting_price: reservation.starting_price,
         total_amount: reservation.total_amount,
         cashback: reservation.cashback,
         date: reservation.date,

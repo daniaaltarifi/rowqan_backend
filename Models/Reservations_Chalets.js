@@ -3,16 +3,13 @@ const sequelize = require('../Config/dbConnect');
 const User = require('../Models/UsersModel');
 const Chalet = require('../Models/ChaletsModel');
 const RightTime = require('../Models/RightTimeModel');
+const Status = require('./StatusModel');
 
 const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
-  },
-  reserve_price:{
-    type: DataTypes.FLOAT,
-    allowNull: false,
   },
   cashback: {
     type: DataTypes.FLOAT,
@@ -27,6 +24,10 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     allowNull: false,
   },
   Time:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  Status:{
     type: DataTypes.STRING,
     allowNull: true,
   },
