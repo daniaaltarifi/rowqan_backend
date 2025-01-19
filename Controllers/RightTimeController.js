@@ -25,30 +25,6 @@ exports.createRightTime = async (req, res) => {
 
     
     const image = req.file?.path || null; 
-
-     
-      if (!name || !type_of_time || !from_time || !to_time || !lang || !price || !chalet_id || !image) {
-          return res.status(400).json(
-              ErrorResponse("Validation failed", ["All Fields are required"])
-          );
-      }
-
-   
-    const validationErrors = validateInput({ 
-        name, 
-        type_of_time, 
-        from_time, 
-        to_time, 
-        lang, 
-        price, 
-        After_Offer, 
-        chalet_id 
-    });
-
-    if (validationErrors.length > 0) {
-        return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
-    }
-
    
     if (!['en', 'ar'].includes(lang)) {
         return res.status(400).json(new ErrorResponse('Invalid language'));
@@ -228,7 +204,7 @@ exports.getRightTimeById = async (req, res) => {
             After_Offer, 
             chalet_id 
         } = req.body;
-        const image = req.file ? req.file.filename : null;
+        const image = req.file?.path || null; 
 
         
         const validationErrors = validateInput({ 
