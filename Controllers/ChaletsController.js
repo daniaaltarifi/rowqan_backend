@@ -375,7 +375,7 @@ exports.getAllChaletsByPropsandDetails = async (req, res) => {
     const { page = 1, limit = 20 } = req.query; 
     const offset = (page - 1) * limit;
     const { lang } = req.params;
-
+client.del(`chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`)
     const cacheKey = `chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`;
 
     

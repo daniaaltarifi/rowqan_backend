@@ -32,6 +32,7 @@ const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:5173",
+      'http://localhost:5174',
       "https://rowqan.com",
       "https://rowqanbackend.rowqan.com",
     ], 
@@ -45,14 +46,7 @@ const io = socketIo(server, {
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  socket.on("send_message", (message) => {
-    console.log("Message received: ", message);
-    io.emit("receive_message", message);
-  });
-  
-  socket.on('receive_message', (data) => {
-    console.log("Message received:", data);
-  });
+
 
   socket.on("disconnect", () => {
     console.log("A user disconnected");
@@ -114,6 +108,7 @@ const AdditionalFeaturesRoutes = require('./Routes/AdditionalFaeturesRoutes')
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3001',
   'https://rowqan.com',
   'https://rowqanbackend.rowqan.com',

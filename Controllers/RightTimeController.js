@@ -9,6 +9,7 @@ const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 
 exports.createRightTime = async (req, res) => {
+
   try {
    
     const { 
@@ -25,12 +26,12 @@ exports.createRightTime = async (req, res) => {
     
     const image = req.file?.path || null; 
 
-    
-    if (!name || !type_of_time || !from_time || !to_time || !lang || !price || !chalet_id || !image) {
-        return res.status(400).json(
-            ErrorResponse("Validation failed", ["All Fields are required"])
-        );
-    }
+     
+      if (!name || !type_of_time || !from_time || !to_time || !lang || !price || !chalet_id || !image) {
+          return res.status(400).json(
+              ErrorResponse("Validation failed", ["All Fields are required"])
+          );
+      }
 
    
     const validationErrors = validateInput({ 
@@ -87,12 +88,12 @@ exports.createRightTime = async (req, res) => {
         rightTime: newRightTimeResult,
     });
   } catch (error) {
-    console.error("Error in createRightTime:", error.message);
-    return res.status(500).json(
-        ErrorResponse("Failed to create RightTime", [
-            "An internal server error occurred.",
-        ])
-    );
+      console.error("Error in createRightTime:", error.message);
+      return res.status(500).json(
+          ErrorResponse("Failed to create RightTime", [
+              "An internal server error occurred.",
+          ])
+      );
   }
 };
 

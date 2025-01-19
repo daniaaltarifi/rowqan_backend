@@ -101,7 +101,8 @@ exports.getAllBreifChalet = async (req, res) => {
 
 exports.getChaletsByLocation = async (req, res) => {
   try {
-    const { value, page = 1, limit = 200 } = req.body;
+    const {value}=req.params
+    const { page = 1, limit = 200 } = req.body;
     const { lang } = req.params;
     const offset = (page - 1) * limit;
 
