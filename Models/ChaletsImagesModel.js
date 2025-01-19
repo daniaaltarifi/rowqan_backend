@@ -7,7 +7,7 @@ const chaletsImages = sequelize.define('ChaletsImages', {
     primaryKey: true,
     autoIncrement: true,
   },
-  chalet_images: {
+  image: {
     type: DataTypes.STRING, 
     allowNull: false,
   },
