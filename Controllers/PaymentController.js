@@ -190,35 +190,34 @@ exports.createPayment = async (req, res) => {
         return res.status(400).send({ error: 'Invalid amount provided.' });
       }
   
-      let convertedAmount = amount;
+      let convertedAmount = amount; 
   
-      if (currency === 'usd') {
+      if (currency === 'jod') {
         const response = await axios.get('https://v6.exchangerate-api.com/v6/48fb1b6e8b9bab92bb9abe37/latest/USD');
         const exchangeRate = response.data.conversion_rates.JOD;  
-  
         convertedAmount = amount * exchangeRate;
       }
   
       
-      const amountInCents = Math.round(convertedAmount * 100);
-  
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: amountInCents,
-        currency: currency === 'jod' ? 'jod' : 'USD',
+        amount: convertedAmount * 100,  
+        currency: currency === 'jod' ? 'jod' : 'usd',
       });
   
-      console.log('PaymentIntent:', paymentIntent);
-  
-      if (paymentIntent.status === "succeeded") {
-        const reservation = await ReservationChalets.update(
-          { status: "confirmed" },
-          { where: { id: reservation_id } }
+     
+      if (paymentIntent.status === 'succeeded') {
+      
+        const reservationUpdate = await ReservationChalets.update(
+          { status: 'confirmed' }, 
+          { where: { id: reservation_id } } 
         );
   
-        if (reservation[0] === 0) {
-          return res.status(404).send({ error: 'Reservation not found.' });
+       
+        if (reservationUpdate[0] === 0) {
+          return res.status(404).send({ error: 'Reservation not found or already confirmed.' });
         }
   
+        
         res.send({
           message: 'Payment succeeded and reservation confirmed.',
           clientSecret: paymentIntent.client_secret,
@@ -226,7 +225,6 @@ exports.createPayment = async (req, res) => {
           phone: phone,
         });
       } else {
-        console.log('Payment failed:', paymentIntent);  
         return res.status(400).send({ error: 'Payment was not successful.' });
       }
     } catch (error) {
@@ -234,6 +232,7 @@ exports.createPayment = async (req, res) => {
       res.status(400).send({ error: error.message });
     }
   };
+  
   
   
   
