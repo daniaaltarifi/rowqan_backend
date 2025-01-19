@@ -191,26 +191,25 @@ exports.createReservation = async (req, res) => {
 
 exports.getAllReservations = async (req, res) => {
   try {
-    const { lang } = req.params; 
+    const { lang } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
     
-    if (!['ar', 'en'].includes(lang)) {
+    if (!["ar", "en"].includes(lang)) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Invalid language' : 'اللغة غير صالحة',
+        error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
       });
     }
 
-    const cacheKey = `reservations:page:${page}:limit:${limit}:lang:${lang}`;
     
-   
+    const cacheKey = `reservations:page:${page}:limit:${limit}:lang:${lang}`;
+
+    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit for reservations:", lang);
-      return res.status(200).json(
-        JSON.parse(cachedData),
-      );
+      return res.status(200).json(JSON.parse(cachedData));
     }
     console.log("Cache miss for reservations:", lang);
 
@@ -219,57 +218,89 @@ exports.getAllReservations = async (req, res) => {
       include: [
         {
           model: Chalet,
-          as:'reservations',
-          attributes: ['id', 'title', 'image','starting_price','intial_Amount'], 
+          attributes: [
+            "id",
+            "title",
+            "description",
+            "image",
+            "Rating",
+            "city",
+            "area",
+            "intial_Amount",
+            "type",
+          ],
         },
         {
           model: User,
-          attributes: ['id', 'name', 'email'], 
+          attributes: ["id", "name", "email"],
         },
         {
           model: RightTimeModel,
-          attributes: ['id', 'time'], 
-        }
+          attributes: [
+            "id",
+            "type_of_time",
+            "from_time",
+            "to_time",
+            "price",
+            "After_Offer",
+          ],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      attributes:["id","starting_price","total_amount","cashback","date","status","additional_visitors","number_of_days","Reservation_Type"]
+      attributes: [
+        "id",
+        "cashback",
+        "start_date",
+        "end_date",
+        "Time",
+        "Status",
+        "Reservation_Type",
+        "starting_price",
+        "Total_Amount",
+        "additional_visitors",
+        "number_of_days",
+      ],
     });
 
+    
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({
-        message: lang === 'en' ? 'No reservations found' : 'لا توجد حجوزات',
+        message: lang === "en" ? "No reservations found" : "لا توجد حجوزات",
       });
     }
 
+    
+    const formattedReservations = reservations.map((reservation) => ({
+      id: reservation.id,
+      cashback: reservation.cashback,
+      start_date: reservation.start_date,
+      end_date: reservation.end_date,
+      time: reservation.Time,
+      status: reservation.Status,
+      reservation_type: reservation.Reservation_Type,
+      starting_price: reservation.starting_price,
+      total_amount: reservation.Total_Amount,
+      additional_visitors: reservation.additional_visitors,
+      number_of_days: reservation.number_of_days,
+      chalet: reservation.Chalet, 
+      user: reservation.User, 
+      right_time: reservation.RightTimeModel, 
+    }));
 
-    await client.setEx(cacheKey, 3600, JSON.stringify(reservations));
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(formattedReservations));
 
-    return res.status(200).json(
-       reservations.map(reservation => ({
-        id: reservation.id,
-        total_amount: reservation.total_amount,
-        cashback: reservation.cashback,
-        date: reservation.date,
-        lang: reservation.lang,
-        status: reservation.status,
-        additional_visitors: reservation.additional_visitors,
-        number_of_days: reservation.number_of_days,
-        user_id: reservation.user_id,
-        chalet_id: reservation.chalet_id,
-        right_time_id: reservation.right_time_id,
-        chalet: reservation.chalet, 
-        user: reservation.user, 
-        right_time: reservation.rightTime, 
-      })),
-    );
+    
+    return res.status(200).json(formattedReservations);
   } catch (error) {
-    console.error('Error fetching reservations:', error);
-    return res.status(500).json(
-       'Failed to fetch reservations'
-    );
+    console.error("Error fetching reservations:", error);
+    return res.status(500).json({
+      error: lang === "en" ? "Failed to fetch reservations" : "فشل في جلب الحجوزات",
+    });
   }
 };
+
 
 
 
@@ -310,7 +341,6 @@ exports.getReservationById = async (req, res) => {
       include: [
         {
           model: Chalet,
-          as: 'chalet',
           attributes: ['id', 'title', 'starting_price'], 
         },
         {
