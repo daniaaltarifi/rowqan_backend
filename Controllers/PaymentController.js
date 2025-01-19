@@ -12,13 +12,17 @@ const paypal = require('@paypal/checkout-server-sdk');
 
 exports.createPayPalPayment = async (req, res) => {
   try {
-    const { amount, currency, reservation_id } = req.body;
+    const { amount, currency, reservation_id, name } = req.body; 
 
-  
+    
     if (!amount || isNaN(amount) || amount <= 0) {
       return res.status(400).send({ error: 'Invalid amount provided.' });
     }
-    
+
+    if (!name || name.trim() === "") { 
+      return res.status(400).send({ error: 'Name is required.' });
+    }
+
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -33,32 +37,32 @@ exports.createPayPalPayment = async (req, res) => {
       ],
     });
 
-   
     const order = await Client.execute(request);
 
-  
     if (order.result.status === 'CREATED') {
-      
       const reservation = await ReservationChalets.findOne({ where: { id: reservation_id } });
 
       if (!reservation) {
         return res.status(404).send({ error: 'Reservation not found.' });
       }
 
-      if (reservation.Status === 'confirmed') {
+      if (reservation.Status === 'Confirmed') {
         return res.status(400).send({ error: 'Reservation is already confirmed.' });
       }
 
-      
       reservation.Status = 'Confirmed';
       await reservation.save();
 
-     
+      
+      reservation.name = name;
+      await reservation.save();
+
       res.status(201).json({
         id: order.result.id,
         status: order.result.status,
         links: order.result.links, 
         message: 'Payment created and reservation confirmed.',
+        name: name,  
       });
     } else {
       return res.status(400).send({ error: 'Payment creation failed.' });
@@ -68,6 +72,7 @@ exports.createPayPalPayment = async (req, res) => {
     res.status(500).send({ error: 'Failed to create PayPal payment.' });
   }
 };
+
 
 
 
@@ -99,63 +104,73 @@ exports.capturePayPalPayment = async (req, res) => {
 
 
 exports.createPayment = async (req, res) => {
-    try {
-      const { user_id, reservation_id, status, paymentMethod,UserName,Phone_Number } = req.body;
- 
-      if (!reservation_id || !status || !paymentMethod || !UserName || !Phone_Number) {
-        return res
-          .status(400)
-          .json(
-            ErrorResponse('Validation failed', [
-              ' reservation, status, and paymentMethod are required.',
-            ])
-          );
-      }
- 
-      const validationErrors = validateInput({ status, paymentMethod,UserName,Phone_Number });
-      if (validationErrors.length > 0) {
-        return res
-          .status(400)
-          .json(ErrorResponse('Validation failed', validationErrors));
-      }
- 
-      const user = await Users.findByPk(user_id);
-      const reservation = await ReservationChalets.findByPk(reservation_id);
- 
-      if (!reservation) {
-        return res
-          .status(404)
-          .json(
-            ErrorResponse('Validation failed', [
-              ' Reservation not found.',
-            ])
-          );
-      }
- 
-      const newPayment = await Payments.create({
-        user_id,
-        reservation_id,
-        status,
-        paymentMethod,
-        UserName,
-        Phone_Number,
-      });
- 
-      res.status(201).json({
-        message: 'Payment created successfully',
-        payment: newPayment,
-      });
-    } catch (error) {
-      console.error('Error in createPayment:', error.message);
-      res
-        .status(500)
+  try {
+    const { user_id, reservation_id, status, paymentMethod, UserName, Phone_Number } = req.body;
+
+    
+    if (!reservation_id || !status || !paymentMethod || !UserName || !Phone_Number) {
+      return res
+        .status(400)
         .json(
-          ErrorResponse('Failed to create payment', [
-            'An internal server error occurred.',
+          ErrorResponse('Validation failed', [
+            'Reservation, status, paymentMethod, UserName, and Phone_Number are required.',
           ])
         );
     }
-  };
+
+    
+    const validationErrors = validateInput({ status, paymentMethod, UserName, Phone_Number });
+    if (validationErrors.length > 0) {
+      return res
+        .status(400)
+        .json(ErrorResponse('Validation failed', validationErrors));
+    }
+
+    
+    const user = await Users.findByPk(user_id);
+    if (!user) {
+      return res
+        .status(404)
+        .json(
+          ErrorResponse('Validation failed', ['User not found.'])
+        );
+    }
+
+    const reservation = await ReservationChalets.findByPk(reservation_id);
+    if (!reservation) {
+      return res
+        .status(404)
+        .json(
+          ErrorResponse('Validation failed', ['Reservation not found.'])
+        );
+    }
+
+    
+    const newPayment = await Payments.create({
+      user_id,
+      reservation_id,
+      status,
+      paymentMethod,
+      UserName,
+      Phone_Number,
+    });
+
+    res.status(201).json({
+      message: 'Payment created successfully',
+      payment: newPayment,
+    });
+  } catch (error) {
+    console.error('Error in createPayment:', error.message);
+    res
+      .status(500)
+      .json(
+        ErrorResponse('Failed to create payment', [
+          'An internal server error occurred.',
+        ])
+      );
+  }
+};
+
  
 
 

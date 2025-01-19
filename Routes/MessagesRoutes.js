@@ -19,12 +19,12 @@ router.post('/SendMessage', (req, res, next) => {
   MessagesController.createMessage(req, res, next);
 });
 
-router.get('/betweenMessage/:senderId', (req, res, next) => {
+router.get('/betweenMessage/:senderId/:receiverId', (req, res, next) => {
   MessagesController.getMessagesBetweenUsers(req, res, next);
 });
 
 
-router.get('/getMessagesByRecieverId/:receiverId', (req, res, next) => {
+router.get('/getMessagesByRecieverId/:receiverId/:chaletId', (req, res, next) => {
   MessagesController.getMessagesForRecieverId(req, res, next);
 });
 
