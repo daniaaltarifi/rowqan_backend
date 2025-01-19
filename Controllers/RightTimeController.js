@@ -228,7 +228,7 @@ exports.getRightTimeById = async (req, res) => {
             After_Offer, 
             chalet_id 
         } = req.body;
-        const image = req.file ? req.file.filename : null;
+        const image = req.file?.path || null; 
 
         
         const validationErrors = validateInput({ 
