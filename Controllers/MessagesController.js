@@ -13,31 +13,27 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId,status, message, lang } = req.body;
+    const { senderId, status,receiverId, message, lang, chaletId } = req.body; 
 
-    
-    if (!senderId || !status|| !message || !lang) {
-      return res.status(400).json({ message: 'All fields are required: senderId, message, lang and status' });
+    if (!senderId || !status || !message || !lang || !chaletId) {
+      return res.status(400).json({ message: 'All fields are required: senderId, message, lang, status, and chaletId' });
     }
 
-    
-    const receiverId = 4;
+  
 
-    
     const newMessage = await Messages.create({
       senderId,
       status,
-      receiverId,  
-       message,
+      receiverId,
+      message,
       lang,
+      chaletId, 
     });
 
-    
     emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
 
     res.status(201).json(newMessage);
 
-    
     if (req.socketIoInstance) {
       req.socketIoInstance.emit('sent_messages', message);
       console.log(`The Message is created Successfully: ${message}`);
@@ -53,13 +49,11 @@ exports.createMessage = async (req, res) => {
 
 
 
+
 exports.getMessagesBetweenUsers = async (req, res) => {
   try {
-    const { senderId } = req.params;
+    const { senderId,receiverId } = req.params;
     
-   
-    const receiverId = 4;
-
     if (!senderId) {
       return res.status(400).json({ message: 'All fields are required: senderId' });
     }
@@ -72,6 +66,7 @@ exports.getMessagesBetweenUsers = async (req, res) => {
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
         { model: Users, as: 'Receiver', attributes: ['id', 'name', 'email']},
+        { model: Chalet,as :'Chalet',attributes: ['id', 'title', 'description']},
       ],
       order: [['id', 'ASC']],
     });
@@ -104,7 +99,7 @@ exports.getMessagesBetweenUsers = async (req, res) => {
 
 exports.getMessagesForRecieverId = async (req, res) => {
   try {
-    const { receiverId } = req.params;
+    const { receiverId,chaletId } = req.params;
 
   
     if (!receiverId) {
@@ -113,7 +108,7 @@ exports.getMessagesForRecieverId = async (req, res) => {
 
    
     const messages = await Messages.findAll({
-      where: { receiverId },
+      where: { receiverId,chaletId },
       include: [
         { model: Users, as: 'Sender', attributes: ['id', 'name', 'email'] },
       ],
@@ -211,6 +206,9 @@ exports.getReceivedMessages = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+
+
 
 exports.deleteMessage = async (req, res) => {
   try {
