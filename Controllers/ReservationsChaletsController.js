@@ -7,6 +7,7 @@ const Wallet = require('../Models/WalletModel')
 const { Op } = require('sequelize');
 const {client} = require('../Utils/redisClient');
 const moment = require('moment');
+const Status = require('../Models/StatusModel');
 
 
 exports.createReservation = async (req, res) => {
@@ -124,8 +125,9 @@ exports.createReservation = async (req, res) => {
       user_id: user_id || null,
       chalet_id,
       right_time_id,
+      Status: 'Pending',
     });
-
+    
     
     let wallet = null;
     if (user_id) {
