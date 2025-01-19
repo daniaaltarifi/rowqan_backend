@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../Config/dbConnect'); 
-const ReservationModel = require('../Models/ReservationsModel')
-const UserTypes = require('../Models/UsersTypes')
+const ReservationModel = require('../Models/ReservationsModel');
+const UserTypes = require('../Models/UsersTypes');
+const Chalet = require('../Models/ChaletsModel'); 
 
 const User = sequelize.define('User', {
   id: {
@@ -45,18 +46,33 @@ const User = sequelize.define('User', {
   reset_token_expiration: {
     type: DataTypes.DATE,
     allowNull: true,
-  }
+  },
+  chalet_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: Chalet,
+      key: 'id',
+    },
+  },
+  user_type_id: { 
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: UserTypes,
+      key: 'id',
+    },
+  },
 }, {
   timestamps: false,
 });
 
+
+
 User.hasMany(ReservationModel, { foreignKey: 'User_id' });
 ReservationModel.belongsTo(User, { foreignKey: 'User_id' });
 
-
 User.belongsTo(UserTypes, { foreignKey: 'user_type_id' });
 UserTypes.hasMany(User, { foreignKey: 'user_type_id' });
-
-
 
 module.exports = User;
