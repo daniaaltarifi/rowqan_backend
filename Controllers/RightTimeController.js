@@ -69,10 +69,10 @@ exports.getRightTimeById = async (req, res) => {
 
     
     const rightTimeEntry = await RightTimeModel.findOne({
-      attributes: ["id", "time", "lang","price","name","image"],
+      attributes: ["id", "type_of_time", "from_time","to_time","price","After_Offer","image"],
       where: whereCondition,
       include: [
-        { model: Chalet, attributes: ["id", "title","reserve_price"] },
+        { model: Chalet, attributes: ["id", "title","description","image","Rating","city","area","intial_Amount"] },
       ],
     });
 
