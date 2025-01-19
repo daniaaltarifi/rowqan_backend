@@ -31,6 +31,10 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  Reservation_Type:{
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   starting_price:{
     type: DataTypes.FLOAT,
     allowNull: false,
