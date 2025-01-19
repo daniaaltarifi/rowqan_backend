@@ -7,6 +7,7 @@ const {client} = require('../Utils/redisClient')
 const Reservations_Chalets = require('../Models/Reservations_Chalets');
 
 exports.createRightTime = async (req, res) => {
+
   try {
       
       const { 
@@ -29,6 +30,28 @@ exports.createRightTime = async (req, res) => {
               ErrorResponse("Validation failed", ["All Fields are required"])
           );
       }
+
+    try {
+        const { name, time, lang, chalet_id, price } = req.body;
+        const image = req.file ? req.file.filename : null;
+
+    
+        const validationErrors = validateInput({ name, time, lang, chalet_id, price });
+        if (validationErrors.length > 0) {
+            return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
+        }
+
+      
+        if (!['en', 'ar'].includes(lang)) {
+            return res.status(400).json(ErrorResponse('Invalid language'));
+        }
+
+     
+        const chalet = await Chalet.findByPk(chalet_id);
+        if (!chalet) {
+            return res.status(404).json(ErrorResponse('Chalet not found'));
+        }
+
 
      
       const validationErrors = validateInput({ 
@@ -93,7 +116,14 @@ exports.createRightTime = async (req, res) => {
               "An internal server error occurred.",
           ])
       );
+
   }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json(ErrorResponse('Internal server error'));
+    }
+
 };
 
 
