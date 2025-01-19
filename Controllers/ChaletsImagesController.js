@@ -32,7 +32,7 @@ exports.createChaletImages = async (req, res) => {
 
     validFiles = files.map((file) => {
       const extension = file.originalname.split(".").pop().toLowerCase();
-      if (!["png", "jpeg", "mp4",'jpg','avi'].includes(extension)) {
+      if (!["png", "jpeg", "mp4",'jpg','avi','webp'].includes(extension)) {
         return null; 
       }
 
