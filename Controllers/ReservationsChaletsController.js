@@ -554,84 +554,91 @@ exports.getAvailableTimesByDate = async (req, res) => {
 
 exports.getReservationsByRightTimeName = async (req, res) => {
   const { chalet_id, name, lang } = req.params;
+  const { start_date, end_date } = req.query;
 
   console.log("Received chalet_id:", chalet_id);
   console.log("Received rightTime name:", name);
+  console.log("Received start_date:", start_date);
+  console.log("Received end_date:", end_date);
 
   try {
-    const timePeriods = name.split(' ');
-    let reservations = [];
-    let fullDayAdded = false;
-
-    for (let period of timePeriods) {
-      console.log(`Processing time period: ${period}`);
-
-      if (period === 'Full' || period === 'day') {
-        if (!fullDayAdded) {
-          const fullDayRightTime = await RightTimeModel.findOne({
-            where: {
-              type_of_time: 'Full day',
-              lang: lang,
-            },
-          });
-
-          if (fullDayRightTime) {
-            console.log("Found Full day right time:", fullDayRightTime);
-
-            const fullDayReservations = await Reservations_Chalets.findAll({
-              where: {
-                lang: lang,
-                chalet_id: chalet_id,
-                right_time_id: fullDayRightTime.id,
-              },
-            });
-
-            console.log("Found full day reservations:", fullDayReservations);
-            reservations.push(...fullDayReservations);
-            fullDayAdded = true;
-          }
-        }
-      } else {
-        const rightTime = await RightTimeModel.findOne({
-          where: {
-            type_of_time: period,
-            lang: lang,
-            chalet_id: chalet_id,
-          },
-        });
-
-        if (rightTime) {
-          console.log("Found right time:", rightTime);
-
-          const timeReservations = await Reservations_Chalets.findAll({
-            where: {
-              lang: lang,
-              chalet_id: chalet_id,
-              right_time_id: rightTime.id,
-            },
-          });
-
-          console.log("Found reservations for time period:", timeReservations);
-
-         
-          const reservationsWithTime = timeReservations.map(reservation => ({
-            ...reservation.toJSON(),
-            right_time: rightTime.time
-          }));
-
-          reservations.push(...reservationsWithTime);
-        } else {
-          console.log(`No right time found for period: ${period}`);
-        }
-      }
+  
+    if (!start_date || !moment(start_date, 'YYYY-MM-DD', true).isValid()) {
+      return res.status(400).json({ error: "start_date is required and must be a valid date in YYYY-MM-DD format" });
     }
 
-    res.status(200).json(reservations);
+    const startDate = moment(start_date).startOf('day').toDate();
+    const endDate = end_date ? moment(end_date).endOf('day').toDate() : null;
+
+   
+    const timePeriods = name.split(' ');
+
+    
+    const rightTimes = await RightTimeModel.findAll({
+      where: {
+        lang: lang,
+        type_of_time: {
+          [Op.in]: timePeriods, 
+        },
+        chalet_id: chalet_id,
+      },
+    });
+
+    if (!rightTimes || rightTimes.length === 0) {
+      return res.status(404).json({ error: "No right time found for the provided periods" });
+    }
+
+  
+    const reservations = await Reservations_Chalets.findAll({
+      where: {
+        lang: lang,
+        chalet_id: chalet_id,
+        right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) }, 
+        start_date: { [Op.gte]: startDate },
+        ...(endDate ? { end_date: { [Op.lte]: endDate } } : {}),
+      },
+    });
+
+   
+    if (!reservations || reservations.length === 0) {
+      return res.status(404).json({ error: "No reservations found" });
+    }
+
+  
+    const reservedDates = new Set();
+    reservations.forEach(reservation => {
+      const start = moment(reservation.start_date).startOf('day');
+      const end = moment(reservation.end_date).startOf('day');
+      while (start.isSameOrBefore(end)) {
+        reservedDates.add(start.format('YYYY-MM-DD'));
+        start.add(1, 'day');
+      }
+    });
+
+   
+    const reservedDaysArray = Array.from(reservedDates);
+
+   
+    const reservationsWithTime = reservations.map(reservation => {
+      const rightTime = rightTimes.find(rt => rt.id === reservation.right_time_id);
+      return {
+        ...reservation.toJSON(),
+        right_time: rightTime ? rightTime.time : 'Unknown',
+      };
+    });
+
+    res.status(200).json({
+      reservations: reservationsWithTime,
+      reserved_days: reservedDaysArray,
+    });
   } catch (error) {
     console.error("Error in getReservationsByRightTimeName:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
+
 
 
 

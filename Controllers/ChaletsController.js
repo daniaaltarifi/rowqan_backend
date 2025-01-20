@@ -232,12 +232,14 @@ exports.getChaletsWithOffer = async (req, res) => {
 };
 
 
-exports.getAllChaletsAfterOffer = async (req, res) => {
-  try {
+exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
+  const { type_of_time } = req.params; 
 
+  try {
    
-    const chaletWithOffer = await RightTimeModel.findAll({
+    const chaletsWithOfferAndTime = await RightTimeModel.findAll({
       where: {
+        type_of_time: type_of_time,
         After_Offer: { [Op.gt]: 0 }, 
       },
       include: [
@@ -252,32 +254,46 @@ exports.getAllChaletsAfterOffer = async (req, res) => {
             "city",
             "area",
             "Rating",
-          ], 
+          ],
         },
       ],
     });
 
-    
-    if (!chaletWithOffer) {
+  
+    if (!chaletsWithOfferAndTime || chaletsWithOfferAndTime.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No chalet found with id ${chalet_id} and an offer.`,
+        message: `No chalets found with type_of_time "${type_of_time}" and an offer.`,
       });
     }
 
     
+    const formattedChalets = chaletsWithOfferAndTime.map((item) => ({
+      id: item.Chalet.id,
+      title: item.Chalet.title,
+      description: item.Chalet.description,
+      image: item.Chalet.image,
+      city: item.Chalet.city,
+      area: item.Chalet.area,
+      rating: item.Chalet.Rating,
+      type_of_time: item.type_of_time,
+      after_offer: item.After_Offer,
+    }));
+
+    
     return res.status(200).json({
       success: true,
-      data: chaletWithOffer,
+      data: formattedChalets,
     });
   } catch (error) {
-    console.error("Error in getChaletAfterOfferById:", error.message);
+    console.error("Error in getChaletsByTypeOfTimeAndOffer:", error.message);
     return res.status(500).json({
       success: false,
-      error: "Failed to fetch chalet with offer.",
+      error: "Failed to fetch chalets with the specified type_of_time and offer.",
     });
   }
 };
+
 
 
 
