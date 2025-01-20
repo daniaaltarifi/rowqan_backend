@@ -4,7 +4,7 @@ const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const {client} = require('../Utils/redisClient');
 const ChaletsDetails = require('../Models/ChaletsDetails');
 const { Sequelize } = require('sequelize');
-const chalets_props = require('../Models/ChaletsProps')
+
 
 
 exports.createBreifDetailsChalet = async (req, res) => {
@@ -72,7 +72,7 @@ exports.getAllBreifChalet = async (req, res) => {
     if (cachedData) {
       return res.status(200).json(JSON.parse(cachedData));
     }
-    
+
     const whereClause = lang ? { lang } : {};
     const brief = await BreifDetailsChalets.findAll({
       where: whereClause,
@@ -129,14 +129,9 @@ exports.getChaletsByLocation = async (req, res) => {
           model: chalets_props,
           attributes: ["id", "image", "title"],
         },
-        {
-          model:ChaletsDetails,
-          attributes:["Detail_Type"]
-        }
-      
       ],
       where: lang ? { lang } : {}, 
-      attributes: ["id", "title", "reserve_price", "intial_Amount","image",],
+      attributes: ["id", "title", "description", "image","Rating","city","area","intial_Amount","type","features","Additional_features"],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),

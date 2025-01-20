@@ -1,7 +1,6 @@
 const Tags = require('../Models/TagsModel');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const { client } = require('../Utils/redisClient');
-const  ChaletProps = require('../Models/ChaletsProps')
 const Chalets = require('../Models/ChaletsModel')
 
 
