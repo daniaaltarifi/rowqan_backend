@@ -22,12 +22,17 @@ router.post(
 
 
 router.get('/getallchalets/:lang', chaletController.getAllChalets);
-router.get('/getchalets/:lang', chaletController.getAllChaletsFront);
-router.get('/getallchaletsbystatus/:status_id/:lang', chaletController.getChaletByStatus);
-router.get('/getchaletbyid/:id', chaletController.getChaletById);
-router.get('/getchaletsbydetailtype/:type/:lang', chaletController.getChaletsByDetailType);
 
-router.get('/getAllChaletProps/:lang',rateLimiter,chaletController.getAllChaletsByProps)
+router.get('/getchalets/:lang', chaletController.getAllChaletsFront);
+
+router.get('/getallchaletsbystatus/:status_id/:lang', chaletController.getChaletByStatus);
+
+router.get('/getchaletbyid/:id', chaletController.getChaletById);
+
+router.get('/getchaletsbydetailtype/:lang', chaletController.getChaletsByType);
+
+
+
 
 router.get('/getAllChaletAfterOffer/:lang',rateLimiter,chaletController.getAllChaletsAfterOffer)
 

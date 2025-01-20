@@ -36,14 +36,14 @@ exports.createService = async (req, res) => {
     });
 
     
-    const cacheDeletePromises = [client.del(`services:lang:${lang}:page:1:limit:20`)];
+    const cacheDeletePromises = [client.del(`services1:lang:${lang}:page:1:limit:20`)];
     
     
     
     await Promise.all(cacheDeletePromises);
 
     
-    await client.set(`service:${newService.id}`, JSON.stringify(newService), {
+    await client.set(`services1:${newService.id}`, JSON.stringify(newService), {
       EX: 3600,
     });
 
@@ -75,7 +75,7 @@ exports.getAllServices = async (req, res) => {
       return res.status(400).json({ error: 'Invalid language' });
     }
 
-    const cacheKey = `services:lang:${lang}:page:${page}:limit:${limit}`;
+    const cacheKey = `services1:lang:${lang}:page:${page}:limit:${limit}`;
     const cachedData = await client.get(cacheKey);
 
     if (cachedData) {
@@ -113,98 +113,134 @@ exports.getAllServices = async (req, res) => {
 
 
 
+
 exports.getServiceByStatus = async (req, res) => {
   try {
     const { status_service, lang } = req.params;
 
+    
     if (!status_service || !lang) {
-      return res.status(400).json({ error: 'status_service and lang are required' });
+      return res.status(400).json({
+        error: 'Both "status_service" and "lang" are required.',
+      });
     }
 
-    await client.del(`services:status:${status_service}:lang:${lang}`);
-    const cacheKey = `services:status:${status_service}:lang:${lang}`;
     
+    const cacheKey = `services1:status:${status_service}:lang:${lang}`;
+
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for services with status:", status_service, "and language:", lang);
-      return res.status(200).json(
-         JSON.parse(cachedData)
+      console.log(
+        "Cache hit for services with status:",
+        status_service,
+        "and language:",
+        lang
       );
+      return res.status(200).json(JSON.parse(cachedData));
     }
-    console.log("Cache miss for services with status:", status_service, "and language:", lang);
+    console.log(
+      "Cache miss for services with status:",
+      status_service,
+      "and language:",
+      lang
+    );
 
-   
+    
     const services = await Services.findAll({
       where: {
         lang,
-        status_service
-      }
+        status_service,
+      },
+      attributes: [
+        "id",
+        "title",
+        "image",
+        "status_service",
+        "url",
+      ], 
+      order: [["id", "DESC"]],
     });
 
-    if (services.length === 0) {
-      return res.status(404).json({ error: `No services found for language: ${lang} and status: ${status_service}` });
+   
+    if (!services.length) {
+      return res.status(404).json({
+        error: `No services found for language: ${lang} and status: ${status_service}.`,
+      });
     }
 
-   
+    
     await client.setEx(cacheKey, 3600, JSON.stringify(services));
 
-    res.status(200).json(
-       services
-    );
+    return res.status(200).json(services);
   } catch (error) {
     console.error("Error in getServiceByStatus:", error.message);
-    res.status(500).json({
-      error: "Failed to retrieve services",
-      details: ["An internal server error occurred."]
+    return res.status(500).json({
+      error: "Failed to retrieve services.",
+      details: ["An internal server error occurred."],
     });
   }
 };
+
+
+
+
 
 exports.getServiceByStatusOnlyLang = async (req, res) => {
   try {
     const { lang } = req.params;
 
-    if (!['en', 'ar'].includes(lang)) {
-      return res.status(400).json({ error: 'Invalid language' });
+    if (!["en", "ar"].includes(lang)) {
+      return res.status(400).json({ error: "Invalid language" });
     }
 
+    
+    const cacheKey = `services1:lang:${lang}`;
 
-    await client.del(`services:lang:${lang}`);
-    const cacheKey = `services:lang:${lang}`;
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit for services with language:", lang);
-      return res.status(200).json(
-       JSON.parse(cachedData)
-      );
+      return res.status(200).json(JSON.parse(cachedData));
     }
     console.log("Cache miss for services with language:", lang);
 
     
     const services = await Services.findAll({
-      where: { lang }
-    });
+      where: { lang },
+      attributes: [
+        "id",
+        "name",
+        "description",
+        "price",
+        "image",
+        "rating",
+        "created_at",
+      ], 
+      order: [["id", "DESC"]], 
+        });
 
-    if (services.length === 0) {
-      return res.status(404).json({ error: 'No services found for this language' });
+    
+    if (!services.length) {
+      return res
+        .status(404)
+        .json({ error: "No services found for this language" });
     }
 
-  
+    
     await client.setEx(cacheKey, 3600, JSON.stringify(services));
 
-    res.status(200).json(
-      services
-    );
+    return res.status(200).json(services);
   } catch (error) {
     console.error("Error in getServiceByStatusOnlyLang:", error.message);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to retrieve services",
-      details: ["An internal server error occurred."]
+      details: ["An internal server error occurred."],
     });
   }
 };
+
+
 
 
 exports.updateService = async (req, res) => {
@@ -247,7 +283,7 @@ exports.getServiceById = async (req, res) => {
       return res.status(400).json({ error: 'Invalid language' });
     }
 
-    const cacheKey = `service:${id}:lang:${lang}`;
+    const cacheKey = `services1:${id}:lang:${lang}`;
 
    
     const cachedData = await client.get(cacheKey);
@@ -304,7 +340,7 @@ exports.deleteService = async (req, res) => {
     }
 
     
-    await client.del(`service:${id}:lang:${lang}`);
+    await client.del(`services1:${id}:lang:${lang}`);
 
   
     await service.destroy();
