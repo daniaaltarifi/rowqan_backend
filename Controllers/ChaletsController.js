@@ -840,7 +840,6 @@ exports.getChaletsByType = async (req, res) => {
         error: "Both 'key' and 'value' query parameters are required.",
       });
     }
-
    
     const offset = (page - 1) * limit;
 
@@ -852,6 +851,12 @@ exports.getChaletsByType = async (req, res) => {
       ),
       limit: parseInt(limit),
       offset: parseInt(offset), 
+      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "additional_features"],
+      include: [
+        { model: Status, attributes: ["status"] },
+        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
+      ],
+      order: [["id", "DESC"]],
     });
 
     
@@ -863,10 +868,9 @@ exports.getChaletsByType = async (req, res) => {
     }
 
     
-    return res.status(200).json({
-      success: true,
-      data: chalets,
-    });
+    return res.status(200).json(
+       chalets,
+    );
   } catch (error) {
     console.error("Error in getChaletsByType:", error.message);
     res.status(500).json({
