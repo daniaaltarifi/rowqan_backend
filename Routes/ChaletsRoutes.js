@@ -31,6 +31,8 @@ router.get('/getchaletbyid/:id', chaletController.getChaletById);
 
 router.get('/getchaletsbydetailtype/:lang', chaletController.getChaletsByType);
 
+router.get('/getchaletsbyfeature/:feature/:lang', chaletController.getChaletByFeature);
+
 
 
 
