@@ -21,7 +21,7 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
   },
   end_date:{
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   Time:{
     type: DataTypes.STRING,

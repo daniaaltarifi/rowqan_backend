@@ -234,35 +234,52 @@ exports.getChaletsWithOffer = async (req, res) => {
 
 exports.getAllChaletsAfterOffer = async (req, res) => {
   try {
+
     
-    const chaletsWithOffer = await RightTimeModel.findAll({
+
+   
+    const chaletWithOffer = await RightTimeModel.findOne({
       where: {
         After_Offer: { [Op.gt]: 0 }, 
       },
-      order: [['id', 'DESC']], 
+      include: [
+        {
+          model: Chalet, 
+          attributes: [
+            "id",
+            "title",
+            "description",
+            "image",
+            "city",
+            "area",
+            "Rating",
+          ], 
+        },
+      ],
     });
 
-   
-    if (!chaletsWithOffer.length) {
+    
+    if (!chaletWithOffer) {
       return res.status(404).json({
         success: false,
-        message: 'No chalets found with an offer.',
+        message: `No chalet found with id ${chalet_id} and an offer.`,
       });
     }
 
-  
+    
     return res.status(200).json({
       success: true,
-      data: chaletsWithOffer,
+      data: chaletWithOffer,
     });
   } catch (error) {
-    console.error('Error in getChaletsWithOffer:', error.message);
+    console.error("Error in getChaletAfterOfferById:", error.message);
     return res.status(500).json({
       success: false,
-      error: 'Failed to fetch chalets with offer.',
+      error: "Failed to fetch chalet with offer.",
     });
   }
 };
+
 
 
 
@@ -846,6 +863,84 @@ exports.getChaletsByType = async (req, res) => {
 
 
 
+
+
+
+exports.getChaletByFeature = async (req, res) => {
+  try {
+    const { feature, lang } = req.params; 
+    const { page = 1, limit = 20, additionalFeatures } = req.query; 
+    const offset = (page - 1) * limit;
+
+    if (!feature) {
+      return res.status(400).json({ error: "Feature is required" });
+    }
+
+    if (lang && !["ar", "en"].includes(lang)) {
+      return res.status(400).json({
+        error: 'Invalid language. Supported languages are "ar" and "en".',
+      });
+    }
+
+    const cacheKey = `chalets:feature:${feature}:additionalFeatures:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
+
+  
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      console.log(`Cache hit for feature: ${feature} and additionalFeatures: ${additionalFeatures}`);
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    const whereClause = {
+      features: { [Op.like]: `%${feature}%` },
+    };
+
+    
+    if (additionalFeatures) {
+      whereClause.Additional_features = { [Op.like]: `%${additionalFeatures}%` }; 
+    }
+
+    if (lang) whereClause.lang = lang;
+
+   
+    const chalets = await Chalet.findAll({
+      where: whereClause,
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "image",
+        "Rating",
+        "city",
+        "area",
+        "intial_Amount",
+        "type",
+        "features",
+        "Additional_features",
+      ],
+      include: [
+        { model: Status, attributes: ["status"] },
+      ],
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    if (chalets.length === 0) {
+      return res.status(404).json({
+        error: `No chalets found with feature ${feature} and additional feature ${additionalFeatures || "not provided"} and language ${lang || "not provided"}.`,
+      });
+    }
+
+   
+    await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
+
+    return res.status(200).json(chalets);
+  } catch (error) {
+    console.error("Error in getChaletByFeature:", error.message);
+    return res.status(500).json({ error: "Failed to fetch chalets" });
+  }
+};
 
 
 
