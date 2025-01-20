@@ -10,18 +10,35 @@ const app = express();
 const compression = require("compression");
 app.use(compression());
 
+
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
   })
 );
+
+
+
 
 app.use((req, res, next) => {
   req.socketIoInstance = io;
   next();
 });
 
+
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -29,7 +46,11 @@ app.use(
   })
 );
 
+
+
+
 app.use(express.json());
+
 
 const server = http.createServer(app);
 const io = socketIo(server, {
