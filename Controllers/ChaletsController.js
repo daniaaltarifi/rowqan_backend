@@ -667,7 +667,15 @@ exports.filterByCityAndArea = async (req, res) => {
     }
 
     
-    const allChalets = await Chalet.findAll(); 
+    const allChalets = await Chalet.findAll({
+      include: [{ model: Status, attributes:["status"],
+        model:RightTimeModel,attributes:["type_of_time","from_time","to_time","price","After_Offer"]
+
+       },
+    ],
+      order: [["Rating", "DESC"]],
+      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features", "near_me", "status_id"],
+    }); 
 
     
     const filteredChalets = allChalets.filter(chalet => {
