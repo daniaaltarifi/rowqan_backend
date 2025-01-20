@@ -161,8 +161,8 @@ exports.getAllChalets = async (req, res) => {
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
-    client.del(`chalets:page:${page}:limit:${limit}:lang:${lang || "all"}`);
-    const cacheKey = `chalets:page:${page}:limit:${limit}:lang:${
+    client.del(`chalets1:page:${page}:limit:${limit}:lang:${lang || "all"}`);
+    const cacheKey = `chalets1:page:${page}:limit:${limit}:lang:${
       lang || "all"
     }`;
     const cachedData = await client.get(cacheKey);
@@ -360,20 +360,6 @@ exports.getChaletsByType = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 exports.getAllChaletsByPropsandDetails = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query; 
@@ -429,7 +415,7 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chalet:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalets1:${id}:lang:${lang || "all"}`;
 
    
     const cachedData = await client.get(cacheKey);
@@ -769,7 +755,7 @@ exports.getChaletByStatus = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets:status:${status_id}:lang:${
+    const cacheKey = `chalets1:status:${status_id}:lang:${
       lang || "not_provided"
     }:page:${page}:limit:${limit}`;
 
@@ -802,6 +788,7 @@ exports.getChaletByStatus = async (req, res) => {
       ],
       include: [
         { model: Status, attributes: ["status"] },
+        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
       ],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
