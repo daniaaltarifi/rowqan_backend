@@ -554,14 +554,26 @@ exports.getAvailableTimesByDate = async (req, res) => {
 
 exports.getReservationsByRightTimeName = async (req, res) => {
   const { chalet_id, name, lang } = req.params;
+  const { start_date, end_date } = req.query;
 
   console.log("Received chalet_id:", chalet_id);
   console.log("Received rightTime name:", name);
+  console.log("Received start_date:", start_date);
+  console.log("Received end_date:", end_date);
 
   try {
+    // التحقق من إدخال التواريخ
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: "start_date and end_date are required" });
+    }
+
+    const startDate = moment(start_date).startOf('day').toDate();
+    const endDate = moment(end_date).endOf('day').toDate();
+
     const timePeriods = name.split(' ');
     let reservations = [];
     let fullDayAdded = false;
+    const reservedDates = new Set();
 
     for (let period of timePeriods) {
       console.log(`Processing time period: ${period}`);
@@ -583,12 +595,24 @@ exports.getReservationsByRightTimeName = async (req, res) => {
                 lang: lang,
                 chalet_id: chalet_id,
                 right_time_id: fullDayRightTime.id,
+                start_date: { [Op.gte]: startDate },
+                end_date: { [Op.lte]: endDate },
               },
             });
 
             console.log("Found full day reservations:", fullDayReservations);
             reservations.push(...fullDayReservations);
             fullDayAdded = true;
+
+            // حساب الأيام المحجوزة
+            fullDayReservations.forEach(reservation => {
+              const start = moment(reservation.start_date).startOf('day');
+              const end = moment(reservation.end_date).startOf('day');
+              while (start.isSameOrBefore(end)) {
+                reservedDates.add(start.format('YYYY-MM-DD'));
+                start.add(1, 'day');
+              }
+            });
           }
         }
       } else {
@@ -608,30 +632,48 @@ exports.getReservationsByRightTimeName = async (req, res) => {
               lang: lang,
               chalet_id: chalet_id,
               right_time_id: rightTime.id,
+              start_date: { [Op.gte]: startDate },
+              end_date: { [Op.lte]: endDate },
             },
           });
 
           console.log("Found reservations for time period:", timeReservations);
 
-         
           const reservationsWithTime = timeReservations.map(reservation => ({
             ...reservation.toJSON(),
-            right_time: rightTime.time
+            right_time: rightTime.time,
           }));
 
           reservations.push(...reservationsWithTime);
+
+          // حساب الأيام المحجوزة
+          timeReservations.forEach(reservation => {
+            const start = moment(reservation.start_date).startOf('day');
+            const end = moment(reservation.end_date).startOf('day');
+            while (start.isSameOrBefore(end)) {
+              reservedDates.add(start.format('YYYY-MM-DD'));
+              start.add(1, 'day');
+            }
+          });
         } else {
           console.log(`No right time found for period: ${period}`);
         }
       }
     }
 
-    res.status(200).json(reservations);
+    // تحويل الأيام المحجوزة إلى مصفوفة
+    const reservedDaysArray = Array.from(reservedDates);
+
+    res.status(200).json({
+      reservations,
+      reserved_days: reservedDaysArray,
+    });
   } catch (error) {
     console.error("Error in getReservationsByRightTimeName:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
 
 
 
