@@ -119,6 +119,7 @@ exports.createChalet = async (req, res) => {
             });
           })
         );
+        
       } else {
         console.log("No rightTimesData provided or it's not an array");
       }
@@ -178,7 +179,7 @@ exports.getAllChalets = async (req, res) => {
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id","image"] },
-        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
+        { model: RightTimeModel, attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"] },
         { model: ReservationsModel, attributes: ["id"] },
       ],
       limit: parseInt(limit),
