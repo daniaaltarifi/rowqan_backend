@@ -119,7 +119,6 @@ exports.createChalet = async (req, res) => {
             });
           })
         );
-        
       } else {
         console.log("No rightTimesData provided or it's not an array");
       }
@@ -179,7 +178,7 @@ exports.getAllChalets = async (req, res) => {
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id","image"] },
-        { model: RightTimeModel, attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"] },
+        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
         { model: ReservationsModel, attributes: ["id"] },
       ],
       limit: parseInt(limit),
@@ -361,6 +360,20 @@ exports.getChaletsByType = async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 exports.getAllChaletsByPropsandDetails = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query; 
@@ -416,7 +429,7 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chalets1:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalet:${id}:lang:${lang || "all"}`;
 
    
     const cachedData = await client.get(cacheKey);
@@ -873,8 +886,8 @@ exports.getChaletsByType = async (req, res) => {
 
 exports.getChaletByFeature = async (req, res) => {
   try {
-    const { feature, lang } = req.params; 
-    const { page = 1, limit = 20, additionalFeatures } = req.query; 
+    const {  lang } = req.params; 
+    const { page = 1, limit = 20, feature,additionalFeatures } = req.query; 
     const offset = (page - 1) * limit;
 
     if (!feature) {
