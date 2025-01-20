@@ -500,48 +500,47 @@ exports.getReservationsByChaletId = async (req, res) => {
 
 
 exports.getAvailableTimesByDate = async (req, res) => {
-  const { chalet_id, date } = req.params; // The date selected by the user
-  const formattedDate = moment(date).format('YYYY-MM-DD'); // Ensure the date is in 'YYYY-MM-DD' format
+  const { chalet_id, start_date } = req.params; 
+  const formattedDate = moment(start_date).format('YYYY-MM-DD'); 
 
   try {
-    // Start and end of the selected day (handling full date range)
-    const startOfDay = moment(formattedDate).startOf('day').toDate();  // 2024-12-23 00:00:00
-    const endOfDay = moment(formattedDate).endOf('day').toDate();      // 2024-12-23 23:59:59
+   
+    const startOfDay = moment(formattedDate).startOf('day').toDate();  
+    const endOfDay = moment(formattedDate).endOf('day').toDate();     
 
-    // Find all reservations for the selected date and chalet
+    
     const reservations = await Reservations_Chalets.findAll({
       where: {
-        date: {
-          [Op.gte]: startOfDay,  // Match reservations after or at the start of the day
-          [Op.lt]: endOfDay,     // Match reservations before the end of the day
+        start_date: {
+          [Op.gte]: startOfDay,  
+          [Op.lt]: endOfDay,    
         },
         chalet_id: chalet_id,
       },
       include: [{
-        model: RightTimeModel,
-        as: 'rightTime',  // Use the alias for the rightTime relation
+        model: RightTimeModel,  
       }],
     });
 
-    // Extract the reserved time slots (Morning, Evening, Full day)
-    const reservedTimes = reservations.map(reservation => reservation.rightTime.name);
+   
+    const reservedTimes = reservations.map(reservation => reservation.rightTime.type_of_time);
 
-    // Get all time slots for this chalet (morning, evening, full day)
+    
     const allTimeSlots = await RightTimeModel.findAll({
       where: {
         chalet_id: chalet_id,
       }
     });
 
-    // Filter out the reserved time slots
-    let availableTimeSlots = allTimeSlots.filter(slot => !reservedTimes.includes(slot.name));
+    
+    let availableTimeSlots = allTimeSlots.filter(slot => !reservedTimes.includes(slot.type_of_time));
 
-    // If either Morning or Evening is reserved, exclude Full day
+  
     if (reservedTimes.includes('Morning') || reservedTimes.includes('Evening')) {
-      availableTimeSlots = availableTimeSlots.filter(slot => slot.name !== 'Full day');
+      availableTimeSlots = availableTimeSlots.filter(slot => slot.type_of_time !== 'Full day');
     }
 
-    // Return the available time slots
+    
     res.json(availableTimeSlots);
 
   } catch (error) {
@@ -571,7 +570,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         if (!fullDayAdded) {
           const fullDayRightTime = await RightTimeModel.findOne({
             where: {
-              name: 'Full day',
+              type_of_time: 'Full day',
               lang: lang,
             },
           });
@@ -595,7 +594,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       } else {
         const rightTime = await RightTimeModel.findOne({
           where: {
-            name: period,
+            type_of_time: period,
             lang: lang,
             chalet_id: chalet_id,
           },
