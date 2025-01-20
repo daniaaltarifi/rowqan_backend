@@ -61,16 +61,16 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
 });
 
 
-User.hasMany(Reservations_Chalets, { foreignKey: 'user_id', as: 'reservations' });
-Reservations_Chalets.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Reservations_Chalets, { foreignKey: 'user_id' });
+Reservations_Chalets.belongsTo(User, { foreignKey: 'user_id'});
 
 
-Chalet.hasMany(Reservations_Chalets, { foreignKey: 'chalet_id', as: 'reservations' });
-Reservations_Chalets.belongsTo(Chalet, { foreignKey: 'chalet_id', as: 'chalet' });
+Chalet.hasMany(Reservations_Chalets, { foreignKey: 'chalet_id'});
+Reservations_Chalets.belongsTo(Chalet, { foreignKey: 'chalet_id'});
 
 
-RightTime.hasMany(Reservations_Chalets, { foreignKey: 'right_time_id', as: 'reservations' });
-Reservations_Chalets.belongsTo(RightTime, { foreignKey: 'right_time_id', as: 'rightTime' });
+RightTime.hasMany(Reservations_Chalets, { foreignKey: 'right_time_id', });
+Reservations_Chalets.belongsTo(RightTime, { foreignKey: 'right_time_id'});
 
 
 
