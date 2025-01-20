@@ -21,7 +21,8 @@ router.put('/updateReservations/:id', rateLimiter, ReservationsChaletsController
 
 router.get('/reservationsByChaletId/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
 
-router.get('/reservationsByright_time_name/:chalet_id/:name/:lang', ReservationsChaletsController.getReservationsByRightTimeName);
+
+router.get('/getReservationsByRightTimeName/:chalet_id/:name/:lang', ReservationsChaletsController.getReservationsByRightTimeName);
 
 router.get('/reservationsByUserId/:user_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
 
