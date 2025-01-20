@@ -231,14 +231,16 @@ exports.getChaletsWithOffer = async (req, res) => {
 };
 
 
-exports.getAllChaletsAfterOffer = async (req, res) => {
+exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
+  const { type_of_time } = req.params; 
+
   try {
    
-    const chaletsWithOffer = await RightTimeModel.findAll({
+    const chaletsWithOfferAndTime = await RightTimeModel.findAll({
       where: {
+        type_of_time: type_of_time,
         After_Offer: { [Op.gt]: 0 }, 
       },
-      attributes: ['chalet_id'], 
       include: [
         {
           model: Chalet, 
@@ -253,26 +255,27 @@ exports.getAllChaletsAfterOffer = async (req, res) => {
           ],
         },
       ],
-      group: ['chalet_id'], 
     });
 
-   
-    if (!chaletsWithOffer || chaletsWithOffer.length === 0) {
+  
+    if (!chaletsWithOfferAndTime || chaletsWithOfferAndTime.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No chalets found with offers.",
+        message: `No chalets found with type_of_time "${type_of_time}" and an offer.`,
       });
     }
 
     
-    const formattedChalets = chaletsWithOffer.map((chalet) => ({
-      id: chalet.Chalet.id,
-      title: chalet.Chalet.title,
-      description: chalet.Chalet.description,
-      image: chalet.Chalet.image,
-      city: chalet.Chalet.city,
-      area: chalet.Chalet.area,
-      rating: chalet.Chalet.Rating,
+    const formattedChalets = chaletsWithOfferAndTime.map((item) => ({
+      id: item.Chalet.id,
+      title: item.Chalet.title,
+      description: item.Chalet.description,
+      image: item.Chalet.image,
+      city: item.Chalet.city,
+      area: item.Chalet.area,
+      rating: item.Chalet.Rating,
+      type_of_time: item.type_of_time,
+      after_offer: item.After_Offer,
     }));
 
     
@@ -281,14 +284,13 @@ exports.getAllChaletsAfterOffer = async (req, res) => {
       data: formattedChalets,
     });
   } catch (error) {
-    console.error("Error in getAllChaletsAfterOffer:", error.message);
+    console.error("Error in getChaletsByTypeOfTimeAndOffer:", error.message);
     return res.status(500).json({
       success: false,
-      error: "Failed to fetch chalets with offers.",
+      error: "Failed to fetch chalets with the specified type_of_time and offer.",
     });
   }
 };
-
 
 
 

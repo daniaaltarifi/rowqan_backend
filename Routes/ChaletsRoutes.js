@@ -36,7 +36,7 @@ router.get('/getchaletsbyfeature/:feature/:lang', chaletController.getChaletByFe
 
 
 
-router.get('/getAllChaletAfterOffer/:lang',rateLimiter,chaletController.getAllChaletsAfterOffer)
+router.get('/getChaletsByTypeOfTimeAndOffer/:type_of_time/:lang',rateLimiter,chaletController.getChaletsByTypeOfTimeAndOffer)
 
 router.get('/getAllChaletsByType/:lang',rateLimiter,chaletController.getChaletsByType)
 
