@@ -748,63 +748,64 @@ exports.filterChaletsByLocation = async (req, res) => {
 
 
 
-
-
-
 exports.getChaletByStatus = async (req, res) => {
   try {
     const { status_id, lang } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
+    // التحقق من وجود status_id
     if (!status_id) {
       return res.status(400).json({ error: "status_id is required" });
     }
 
+    // التحقق من اللغة المدعومة
     if (lang && !["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
-    client.del(
-      `chalets:status:${status_id}:lang:${
-        lang || "not_provided"
-      }:page:${page}:limit:${limit}`
-    );
+
     const cacheKey = `chalets:status:${status_id}:lang:${
       lang || "not_provided"
     }:page:${page}:limit:${limit}`;
 
+    // محاولة جلب البيانات من الكاش
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log(`Cache hit for status_id: ${status_id}`);
       return res.status(200).json(JSON.parse(cachedData));
     }
 
+    // إعداد شروط البحث
     const whereClause = { status_id };
-    if (lang) {
-      whereClause.lang = lang;
-    }
+    if (lang) whereClause.lang = lang;
 
+    // جلب البيانات من قاعدة البيانات
     const chalets = await Chalet.findAll({
       where: whereClause,
       attributes: [
         "id",
         "title",
+        "description",
         "image",
-        "reserve_price",
-        "lang",
-        "status_id",
+        "Rating",
+        "city",
+        "area",
+        "intial_Amount",
+        "type",
+        "features",
+        "Additional_features",
       ],
       include: [
         { model: Status, attributes: ["status"] },
-        { model: Chalet_props, attributes: ["id", "title", "image"] },
       ],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
 
+   
     if (chalets.length === 0) {
       return res.status(404).json({
         error: `No chalets found with status_id ${status_id} and language ${
@@ -813,6 +814,7 @@ exports.getChaletByStatus = async (req, res) => {
       });
     }
 
+   
     await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
 
     return res.status(200).json(chalets);
@@ -821,6 +823,12 @@ exports.getChaletByStatus = async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch chalets" });
   }
 };
+
+
+
+
+
+
 
 exports.getChaletsByDetailType = async (req, res) => {
   try {
