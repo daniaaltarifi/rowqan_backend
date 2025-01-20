@@ -235,10 +235,8 @@ exports.getChaletsWithOffer = async (req, res) => {
 exports.getAllChaletsAfterOffer = async (req, res) => {
   try {
 
-    
-
    
-    const chaletWithOffer = await RightTimeModel.findOne({
+    const chaletWithOffer = await RightTimeModel.findAll({
       where: {
         After_Offer: { [Op.gt]: 0 }, 
       },
@@ -250,6 +248,7 @@ exports.getAllChaletsAfterOffer = async (req, res) => {
             "title",
             "description",
             "image",
+            "type",
             "city",
             "area",
             "Rating",
