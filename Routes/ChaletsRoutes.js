@@ -29,9 +29,8 @@ router.get('/getallchaletsbystatus/:status_id/:lang', chaletController.getChalet
 
 router.get('/getchaletbyid/:id', chaletController.getChaletById);
 
-router.get('/getchaletsbydetailtype/:lang', chaletController.getChaletsByType);
 
-router.get('/getchaletsbyfeature/:feature/:lang', chaletController.getChaletByFeature);
+router.get('/getchaletsbyfeature/:lang', chaletController.getChaletByFeature);
 
 
 

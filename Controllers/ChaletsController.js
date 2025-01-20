@@ -119,7 +119,6 @@ exports.createChalet = async (req, res) => {
             });
           })
         );
-        
       } else {
         console.log("No rightTimesData provided or it's not an array");
       }
@@ -162,8 +161,8 @@ exports.getAllChalets = async (req, res) => {
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
-    client.del(`chalets:page:${page}:limit:${limit}:lang:${lang || "all"}`);
-    const cacheKey = `chalets:page:${page}:limit:${limit}:lang:${
+    client.del(`chalets1:page:${page}:limit:${limit}:lang:${lang || "all"}`);
+    const cacheKey = `chalets1:page:${page}:limit:${limit}:lang:${
       lang || "all"
     }`;
     const cachedData = await client.get(cacheKey);
@@ -179,7 +178,7 @@ exports.getAllChalets = async (req, res) => {
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id","image"] },
-        { model: RightTimeModel, attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"] },
+        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
         { model: ReservationsModel, attributes: ["id"] },
       ],
       limit: parseInt(limit),
@@ -771,7 +770,7 @@ exports.getChaletByStatus = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets:status:${status_id}:lang:${
+    const cacheKey = `chalets1:status:${status_id}:lang:${
       lang || "not_provided"
     }:page:${page}:limit:${limit}`;
 
@@ -804,6 +803,7 @@ exports.getChaletByStatus = async (req, res) => {
       ],
       include: [
         { model: Status, attributes: ["status"] },
+        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
       ],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
@@ -887,8 +887,8 @@ exports.getChaletsByType = async (req, res) => {
 
 exports.getChaletByFeature = async (req, res) => {
   try {
-    const { feature, lang } = req.params; 
-    const { page = 1, limit = 20, additionalFeatures } = req.query; 
+    const {  lang } = req.params; 
+    const { page = 1, limit = 20, feature,additionalFeatures } = req.query; 
     const offset = (page - 1) * limit;
 
     if (!feature) {
