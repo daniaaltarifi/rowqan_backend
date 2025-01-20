@@ -72,7 +72,7 @@ exports.getAllBreifChalet = async (req, res) => {
     if (cachedData) {
       return res.status(200).json(JSON.parse(cachedData));
     }
-
+    
     const whereClause = lang ? { lang } : {};
     const brief = await BreifDetailsChalets.findAll({
       where: whereClause,
