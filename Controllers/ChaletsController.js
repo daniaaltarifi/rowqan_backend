@@ -249,6 +249,7 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
             "title",
             "description",
             "image",
+            "type",
             "city",
             "area",
             "Rating",
