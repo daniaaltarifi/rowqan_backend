@@ -150,9 +150,11 @@ exports.getUserById = async (req, res) => {
 };
 
 
+
+
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, phone_number, country, password, lang, user_type_id } = req.body;
+  const { name, email, phone_number, country, password, confirm_password, lang, user_type_id } = req.body;
 
   try {
     
@@ -161,6 +163,15 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({
         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
       });
+    }
+
+    
+    if (password && confirm_password) {
+      if (password !== confirm_password) {
+        return res.status(400).json({
+          error: lang === 'en' ? 'Passwords do not match' : 'كلمتا المرور غير متطابقتين',
+        });
+      }
     }
 
     
@@ -198,7 +209,7 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   const { id, lang } = req.params;
   try {
-    // Find the user in the database
+   
     const user = await User.findOne({
       where: { id, lang },
     });
