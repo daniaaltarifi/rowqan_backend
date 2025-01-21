@@ -253,6 +253,7 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
             "city",
             "area",
             "Rating",
+            "type",
           ],
         },
       ],
@@ -277,6 +278,7 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       rating: item.Chalet.Rating,
       type_of_time: item.type_of_time,
       after_offer: item.After_Offer,
+      type: item.Chalet.type,
     }));
 
     
@@ -905,7 +907,7 @@ exports.getChaletByFeature = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets:feature:${feature || "not_provided"}:additionalFeatures:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
+    const cacheKey = `chalets1:feature1:${feature || "not_provided"}:additionalFeatures1:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
 
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
