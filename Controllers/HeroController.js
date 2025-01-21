@@ -39,14 +39,11 @@ exports.getHeroById = async (req, res) => {
 
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for hero:", id, lang);
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
-    console.log("Cache miss for hero:", id, lang);
 
-  
     const hero = await Hero.findOne({
       where: { id, lang },
     });
@@ -159,12 +156,10 @@ client.del(`heroes:lang:${lang}:page:${page}:limit:${limit}`)
     const cachedData = await client.get(cacheKey);
     
     if (cachedData) {
-      console.log("Cache hit for heroes:", lang);
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
-    console.log("Cache miss for heroes:", lang);
 
     const heroes = await Hero.findAll({
       where: { lang },
