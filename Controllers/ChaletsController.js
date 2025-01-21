@@ -943,7 +943,9 @@ exports.getChaletByFeature = async (req, res) => {
         "features",
         "Additional_features",
       ],
-      include: [{ model: Status, attributes: ["status"] }],
+      include: [{ model: Status, attributes: ["status"],
+        model:RightTimeModel,attributes:["type_of_time","from_time","to_time","price","After_Offer"]
+       }],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),
