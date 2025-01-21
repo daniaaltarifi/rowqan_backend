@@ -564,7 +564,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       where: {
         lang: lang,
         type_of_time: {
-          [Op.in]: timePeriods, 
+          [Op.in]: timePeriods,
         },
         chalet_id: chalet_id,
       },
@@ -592,9 +592,12 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
       let end = moment(reservation.end_date).startOf('day');
+
       
-      
-      if (!end.isValid()) {
+      if (reservation.Time === "Morning") {
+        reservedDates.add(start.format('YYYY-MM-DD')); 
+        reservedDates.add(start.add(1, 'day').format('YYYY-MM-DD')); 
+      } else if (!end.isValid()) {
         reservedDates.add(start.format('YYYY-MM-DD'));
       } else {
         while (start.isSameOrBefore(end)) {
@@ -602,14 +605,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
           start.add(1, 'day');
         }
       }
-    });
-
-    const reservationsWithTime = reservations.map(reservation => {
-      const rightTime = rightTimes.find(rt => rt.id === reservation.right_time_id);
-      return {
-        ...reservation.toJSON(),
-        right_time: rightTime ? rightTime.time : 'Unknown',
-      };
     });
 
     res.status(200).json({
@@ -620,6 +615,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
 
 
 
