@@ -93,12 +93,11 @@ exports.createReservation = async (req, res) => {
     const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
 
-   
+  
     const existingReservation = await Reservations_Chalets.findOne({
       where: {
         chalet_id,
-        start_date: formattedStartDate,
-        right_time_id: rightTime.id, 
+        right_time_id: rightTime.id,
       },
     });
 
@@ -110,12 +109,63 @@ exports.createReservation = async (req, res) => {
       });
     }
 
+    
+    const existingFullDayReservation = await Reservations_Chalets.findOne({
+      where: {
+        chalet_id,
+        [Op.or]: [
+          {
+            
+            [Op.and]: [
+              { start_date: { [Op.lte]: formattedStartDate } },
+              { end_date: { [Op.gte]: formattedStartDate } },
+            ],
+          },
+          {
+            
+            [Op.and]: [
+              { start_date: { [Op.lte]: formattedEndDate || formattedStartDate } },
+              { end_date: { [Op.gte]: formattedEndDate || formattedStartDate } },
+            ],
+          },
+        ],
+        right_time_id: null, 
+      },
+    });
+    
+    if (existingFullDayReservation) {
+      return res.status(400).json({
+        error: lang === "en"
+          ? "This chalet is fully booked during the selected period."
+          : "هذا الشاليه محجوز بالكامل خلال الفترة المحددة.",
+      });
+    }
+    
+    
+    const existingSpecificTimeReservation = await Reservations_Chalets.findOne({
+      where: {
+        chalet_id,
+        start_date: formattedStartDate,
+        right_time_id, 
+      },
+    });
+    
+    if (existingSpecificTimeReservation) {
+      return res.status(400).json({
+        error: lang === "en"
+          ? "This chalet is already reserved for the selected time."
+          : "هذا الشاليه محجوز بالفعل للفترة الزمنية المحددة.",
+      });
+    }
+    
+
+  
     const reservation = await Reservations_Chalets.create({
       price: rightTime.price,
       Total_Amount: total_amount,
       cashback,
       start_date: formattedStartDate,
-      end_date: formattedEndDate, 
+      end_date: formattedEndDate,
       Time: rightTime.type_of_time,
       starting_price: rightTime.price,
       additional_visitors,
@@ -153,7 +203,7 @@ exports.createReservation = async (req, res) => {
         total_amount,
         cashback,
         start_date: formattedStartDate,
-        end_date: formattedEndDate, 
+        end_date: formattedEndDate,
         Time: reservation.type_of_time,
         additional_visitors,
         number_of_days,
@@ -175,8 +225,14 @@ exports.createReservation = async (req, res) => {
         "An internal server error occurred.",
       ])
     );
-  }
+  } 
 };
+
+
+
+
+
+
 
 
 
