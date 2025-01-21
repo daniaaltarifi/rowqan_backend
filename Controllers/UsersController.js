@@ -150,13 +150,12 @@ exports.getUserById = async (req, res) => {
 };
 
 
-
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
   const { name, email, phone_number, country, password, lang, user_type_id } = req.body;
 
   try {
- 
+    
     const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({
@@ -164,20 +163,27 @@ exports.updateUser = async (req, res) => {
       });
     }
 
- 
+    
+    let hashedPassword = user.password;
+    if (password) {
+      hashedPassword = await argon2.hash(password);
+    }
+
+    
     await user.update({
       name,
       email,
       phone_number,
       country,
-      password,
+      password: hashedPassword,
       lang,
       user_type_id,
     });
 
-    res.status(200).json(
+    res.status(200).json({
+      message: lang === 'en' ? 'User updated successfully' : 'تم تحديث المستخدم بنجاح',
       user,
-    );
+    });
   } catch (error) {
     console.error('Error updating user:', error);
     res.status(500).json({
@@ -185,6 +191,8 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
+
 
 
 exports.deleteUser = async (req, res) => {
