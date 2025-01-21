@@ -79,13 +79,13 @@ exports.getAllServices = async (req, res) => {
     const cachedData = await client.get(cacheKey);
 
     if (cachedData) {
-      console.log("Cache hit for services:", lang);
+     
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
 
-    console.log("Cache miss for services:", lang);
+   
 
     const services = await Services.findAll({
       where: { lang },
@@ -131,21 +131,8 @@ exports.getServiceByStatus = async (req, res) => {
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log(
-        "Cache hit for services with status:",
-        status_service,
-        "and language:",
-        lang
-      );
       return res.status(200).json(JSON.parse(cachedData));
     }
-    console.log(
-      "Cache miss for services with status:",
-      status_service,
-      "and language:",
-      lang
-    );
-
     
     const services = await Services.findAll({
       where: {
@@ -200,10 +187,9 @@ exports.getServiceByStatusOnlyLang = async (req, res) => {
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for services with language:", lang);
       return res.status(200).json(JSON.parse(cachedData));
     }
-    console.log("Cache miss for services with language:", lang);
+
 
     
     const services = await Services.findAll({
@@ -288,12 +274,10 @@ exports.getServiceById = async (req, res) => {
    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for service with id:", id, "and language:", lang);
       return res.status(200).json(
         JSON.parse(cachedData)
       );
     }
-    console.log("Cache miss for service with id:", id, "and language:", lang);
 
     
     const service = await Services.findOne({
