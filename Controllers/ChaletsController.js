@@ -894,13 +894,9 @@ exports.getChaletsByType = async (req, res) => {
 
 exports.getChaletByFeature = async (req, res) => {
   try {
-    const {  lang } = req.params; 
-    const { page = 1, limit = 20, feature,additionalFeatures } = req.query; 
+    const { lang } = req.params;
+    const { page = 1, limit = 100, feature, additionalFeatures } = req.query;
     const offset = (page - 1) * limit;
-
-    if (!feature) {
-      return res.status(400).json({ error: "Feature is required" });
-    }
 
     if (lang && !["ar", "en"].includes(lang)) {
       return res.status(400).json({
@@ -908,27 +904,29 @@ exports.getChaletByFeature = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets:feature:${feature}:additionalFeatures:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
+    const cacheKey = `chalets:feature:${feature || "not_provided"}:additionalFeatures:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
 
-  
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log(`Cache hit for feature: ${feature} and additionalFeatures: ${additionalFeatures}`);
+      console.log(`Cache hit for feature: ${feature || "not_provided"} and additionalFeatures: ${additionalFeatures || "not_provided"}`);
       return res.status(200).json(JSON.parse(cachedData));
     }
 
-    const whereClause = {
-      features: { [Op.like]: `%${feature}%` },
-    };
+    const whereClause = {};
+
+    
+    if (feature) {
+      whereClause.features = { [Op.like]: `%${feature}%` };
+    }
 
     
     if (additionalFeatures) {
-      whereClause.Additional_features = { [Op.like]: `%${additionalFeatures}%` }; 
+      whereClause.Additional_features = { [Op.like]: `%${additionalFeatures}%` };
     }
 
+    
     if (lang) whereClause.lang = lang;
 
-   
     const chalets = await Chalet.findAll({
       where: whereClause,
       attributes: [
@@ -944,9 +942,7 @@ exports.getChaletByFeature = async (req, res) => {
         "features",
         "Additional_features",
       ],
-      include: [
-        { model: Status, attributes: ["status"] },
-      ],
+      include: [{ model: Status, attributes: ["status"] }],
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -954,11 +950,10 @@ exports.getChaletByFeature = async (req, res) => {
 
     if (chalets.length === 0) {
       return res.status(404).json({
-        error: `No chalets found with feature ${feature} and additional feature ${additionalFeatures || "not provided"} and language ${lang || "not provided"}.`,
+        error: `No chalets found with feature ${feature || "not provided"}, additional feature ${additionalFeatures || "not provided"}, and language ${lang || "not provided"}.`,
       });
     }
 
-   
     await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
 
     return res.status(200).json(chalets);
@@ -967,6 +962,7 @@ exports.getChaletByFeature = async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch chalets" });
   }
 };
+
 
 
 
