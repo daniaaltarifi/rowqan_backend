@@ -35,11 +35,9 @@ exports.createReservation = async (req, res) => {
       );
     }
 
-   
     const formattedStartDate = new Date(start_date);
     let formattedEndDate = null;
 
-    
     if (end_date) {
       formattedEndDate = new Date(end_date);
       if (isNaN(formattedEndDate.getTime())) {
@@ -95,12 +93,12 @@ exports.createReservation = async (req, res) => {
     const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
 
+   
     const existingReservation = await Reservations_Chalets.findOne({
       where: {
         chalet_id,
         start_date: formattedStartDate,
-        end_date: formattedEndDate, // استخدام null إذا لم يتم إرسال end_date
-        right_time_id: rightTime.id,
+        right_time_id: rightTime.id, 
       },
     });
 
@@ -634,7 +632,6 @@ exports.getReservationsByRightTime = async (req, res) => {
   console.log("Received chalet_id:", chalet_id);
 
   try {
-   
     const rightTimes = await RightTimeModel.findAll({
       where: {
         lang: lang,
@@ -652,7 +649,6 @@ exports.getReservationsByRightTime = async (req, res) => {
       right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
     };
 
-   
     const reservations = await Reservations_Chalets.findAll({
       where: whereClause,
     });
@@ -665,9 +661,12 @@ exports.getReservationsByRightTime = async (req, res) => {
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
       let end = moment(reservation.end_date).startOf('day');
+
       
-    
-      if (!end.isValid()) {
+      if (reservation.Time === "Morning") {
+        reservedDates.add(start.format('YYYY-MM-DD'));
+        reservedDates.add(start.add(1, 'day').format('YYYY-MM-DD')); 
+      } else if (!end.isValid()) {
         reservedDates.add(start.format('YYYY-MM-DD'));
       } else {
         while (start.isSameOrBefore(end)) {
@@ -685,6 +684,7 @@ exports.getReservationsByRightTime = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
 
 
 
