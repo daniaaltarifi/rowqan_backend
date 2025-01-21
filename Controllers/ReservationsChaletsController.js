@@ -15,7 +15,7 @@ exports.createReservation = async (req, res) => {
   try {
     const {
       start_date,
-      end_date = null, // إذا لم يتم إرسال end_date سيتم تعيينه null
+      end_date = null, 
       lang,
       additional_visitors,
       number_of_days,
@@ -35,11 +35,11 @@ exports.createReservation = async (req, res) => {
       );
     }
 
-    // تحويل start_date إلى نوع Date
+   
     const formattedStartDate = new Date(start_date);
     let formattedEndDate = null;
 
-    // إذا كان هناك end_date تم إرساله، يتم تحويله إلى تاريخ
+    
     if (end_date) {
       formattedEndDate = new Date(end_date);
       if (isNaN(formattedEndDate.getTime())) {
@@ -76,7 +76,7 @@ exports.createReservation = async (req, res) => {
     }
 
     let finalPrice;
-    if (rightTime.type_of_time === "Mornning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "Full day") {
+    if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "Full day") {
       finalPrice = rightTime.price;
     } else {
       return res.status(400).json({ error: "Invalid time selection" });
@@ -626,6 +626,65 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 
 
+
+
+exports.getReservationsByRightTime = async (req, res) => {
+  const { chalet_id, lang } = req.params;
+
+  console.log("Received chalet_id:", chalet_id);
+
+  try {
+   
+    const rightTimes = await RightTimeModel.findAll({
+      where: {
+        lang: lang,
+        chalet_id: chalet_id,
+      },
+    });
+
+    if (!rightTimes || rightTimes.length === 0) {
+      return res.status(404).json({ error: "No right time found for the provided chalet_id and lang" });
+    }
+
+    const whereClause = {
+      lang: lang,
+      chalet_id: chalet_id,
+      right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
+    };
+
+   
+    const reservations = await Reservations_Chalets.findAll({
+      where: whereClause,
+    });
+
+    if (!reservations || reservations.length === 0) {
+      return res.status(404).json({ error: "No reservations found" });
+    }
+
+    const reservedDates = new Set();
+    reservations.forEach(reservation => {
+      const start = moment(reservation.start_date).startOf('day');
+      let end = moment(reservation.end_date).startOf('day');
+      
+    
+      if (!end.isValid()) {
+        reservedDates.add(start.format('YYYY-MM-DD'));
+      } else {
+        while (start.isSameOrBefore(end)) {
+          reservedDates.add(start.format('YYYY-MM-DD'));
+          start.add(1, 'day');
+        }
+      }
+    });
+
+    res.status(200).json({
+      reserved_days: Array.from(reservedDates),
+    });
+  } catch (error) {
+    console.error("Error in getReservationsByRightTimeName:", error);
+    res.status(500).json({ error: "Failed to fetch reservations" });
+  }
+};
 
 
 
