@@ -39,14 +39,11 @@ exports.getHeroById = async (req, res) => {
 
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for hero:", id, lang);
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
-    console.log("Cache miss for hero:", id, lang);
 
-  
     const hero = await Hero.findOne({
       where: { id, lang },
     });
@@ -113,10 +110,11 @@ exports.updateHero = async (req, res) => {
   }
 };
 
+
+
 exports.deleteHero = async (req, res) => {
   try {
     const { id, lang } = req.params;
-
     const [hero, _] = await Promise.all([
       Hero.findOne({ where: { id, lang } }),
       client.del(`hero:${id}:${lang}`), 
@@ -129,7 +127,6 @@ exports.deleteHero = async (req, res) => {
         ])
       );
     }
-
    
     await hero.destroy();
 
@@ -153,18 +150,17 @@ exports.getHeroesByLang = async (req, res) => {
     const { lang } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-client.del(`heroes:lang:${lang}:page:${page}:limit:${limit}`)
+
+    client.del(`heroes:lang:${lang}:page:${page}:limit:${limit}`)
     const cacheKey = `heroes:lang:${lang}:page:${page}:limit:${limit}`;
     
     const cachedData = await client.get(cacheKey);
     
     if (cachedData) {
-      console.log("Cache hit for heroes:", lang);
       return res.status(200).json(
         JSON.parse(cachedData),
       );
     }
-    console.log("Cache miss for heroes:", lang);
 
     const heroes = await Hero.findAll({
       where: { lang },
