@@ -14,7 +14,7 @@ router.post('/createrighttime', rateLimiter, multer.single('image'), rightTimeCo
 router.get('/getallrighttimes/:lang', rightTimeController.get);
 
 
-router.get('/getallrighttimes/:lang/:chalet_id', rightTimeController.getAllRightTimesByChaletId);
+router.get('/getallrighttimesbyChaletId/:chalet_id/:lang', rightTimeController.getAllRightTimesByChaletId);
 
 
 router.get('/getrighttimebyid/:id/:lang', rightTimeController.getRightTimeById);
