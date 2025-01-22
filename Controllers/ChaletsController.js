@@ -254,6 +254,7 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
             "area",
             "Rating",
             "type",
+            "intial_Amount"
           ],
         },
       ],
@@ -275,10 +276,11 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       image: item.Chalet.image,
       city: item.Chalet.city,
       area: item.Chalet.area,
-      rating: item.Chalet.Rating,
+      Rating: item.Chalet.Rating,
       type_of_time: item.type_of_time,
       after_offer: item.After_Offer,
       type: item.Chalet.type,
+      intial_Amount: item.Chalet.intial_Amount,
     }));
 
     

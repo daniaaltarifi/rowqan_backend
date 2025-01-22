@@ -141,17 +141,16 @@ exports.getRightTimeById = async (req, res) => {
   exports.getAllRightTimesByChaletId = async (req, res) => {
     try {
       const { chalet_id, lang } = req.params;
-      const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
+      const cacheKey = `rightTimesByChaletId:chalet:${chalet_id}:${lang}`;
   
       
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
-        console.log("Cache hit for RightTimes by Chalet:", chalet_id);
         return res.status(200).json(
           JSON.parse(cachedData),
       );
       }
-      console.log("Cache miss for RightTimes by Chalet:", chalet_id);
+      
   
       
       const chalet = await Chalet.findByPk(chalet_id);
@@ -163,9 +162,6 @@ exports.getRightTimeById = async (req, res) => {
   
       const rightTimes = await RightTimeModel.findAll({
         where: { chalet_id, lang },
-        include: [
-          { model: ReservationDate }
-        ]
       });
   
       if (rightTimes.length === 0) {
