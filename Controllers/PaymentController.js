@@ -9,7 +9,6 @@ const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qN
 
 const  {Client}  = require('../Config/PayPalClient');
 const paypal = require('@paypal/checkout-server-sdk'); 
-
 exports.createPayPalPayment = async (req, res) => {
   try {
     const { amount, currency, reservation_id, name } = req.body; 
@@ -72,6 +71,68 @@ exports.createPayPalPayment = async (req, res) => {
     res.status(500).send({ error: 'Failed to create PayPal payment.' });
   }
 };
+// exports.createPayPalPayment = async (req, res) => {
+//   try {
+//     const { amount, currency, reservation_id, name } = req.body; 
+
+    
+//     if (!amount || isNaN(amount) || amount <= 0) {
+//       return res.status(400).send({ error: 'Invalid amount provided.' });
+//     }
+
+//     if (!name || name.trim() === "") { 
+//       return res.status(400).send({ error: 'Name is required.' });
+//     }
+
+//     const request = new paypal.orders.OrdersCreateRequest();
+//     request.prefer("return=representation");
+//     request.requestBody({
+//       intent: "CAPTURE",  
+//       purchase_units: [
+//         {
+//           amount: {
+//             currency_code: currency || "USD", 
+//             value: amount.toFixed(2),  
+//           },
+//         },
+//       ],
+//     });
+
+//     const order = await Client.execute(request);
+
+//     if (order.result.status === 'CREATED') {
+//       const reservation = await ReservationChalets.findOne({ where: { id: reservation_id } });
+
+//       if (!reservation) {
+//         return res.status(404).send({ error: 'Reservation not found.' });
+//       }
+
+//       if (reservation.Status === 'Confirmed') {
+//         return res.status(400).send({ error: 'Reservation is already confirmed.' });
+//       }
+
+//       reservation.Status = 'Confirmed';
+//       await reservation.save();
+
+      
+//       reservation.name = name;
+//       await reservation.save();
+
+//       res.status(201).json({
+//         id: order.result.id,
+//         status: order.result.status,
+//         links: order.result.links, 
+//         message: 'Payment created and reservation confirmed.',
+//         name: name,  
+//       });
+//     } else {
+//       return res.status(400).send({ error: 'Payment creation failed.' });
+//     }
+//   } catch (error) {
+//     console.error('PayPal Error:', error.message);
+//     res.status(500).send({ error: 'Failed to create PayPal payment.' });
+//   }
+// };
 
 
 
