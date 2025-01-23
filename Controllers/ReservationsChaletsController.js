@@ -73,16 +73,21 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    let finalPrice;
-    let startingPrice = rightTime.price;
 
+    const right_time = await RightTimeModel.findByPk(right_time_id)
+
+
+    let finalPrice;
+    let startingPrice = right_time.After_Offer;
+
+    console.log(`he Fater Offer price is :${startingPrice}`)
     
-    if (rightTime.After_Offer > 0) {
-      startingPrice = rightTime.After_Offer; 
+    if (right_time.After_Offer > 0) {
+      startingPrice = right_time.After_Offer; 
     }
 
-    if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "FullDay") {
-      finalPrice = rightTime.price;
+    if (right_time.type_of_time === "Morning" || right_time.type_of_time === "Evening" || right_time.type_of_time === "FullDay") {
+      finalPrice = right_time.After_Offer;
     } else {
       return res.status(400).json({ error: "Invalid time selection" });
     }
@@ -156,13 +161,13 @@ exports.createReservation = async (req, res) => {
 
   
     const reservation = await Reservations_Chalets.create({
-      price: rightTime.price,
+      price: rightTime.After_Offer,
       Total_Amount: total_amount,
       cashback,
       start_date: formattedStartDate,
       end_date: formattedEndDate,
       Time: rightTime.type_of_time,
-      starting_price: rightTime.price,
+      starting_price: rightTime.After_Offer,
       additional_visitors,
       number_of_days,
       Reservation_Type,
