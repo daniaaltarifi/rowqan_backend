@@ -226,10 +226,6 @@ exports.createReservation = async (req, res) => {
 
 
 
-
-
-
-
 exports.getAllReservations = async (req, res) => {
   try {
     const { lang } = req.params;
@@ -612,6 +608,8 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       },
     });
 
+    console.log("Fetched rightTimes:", rightTimes);
+
     if (!rightTimes || rightTimes.length === 0) {
       return res.status(404).json({ error: "No right time found for the provided periods" });
     }
@@ -619,44 +617,45 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     const whereClause = {
       lang: lang,
       chalet_id: chalet_id,
-      right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
+      Time: ["FullDay", "Morning", "Evening"],
     };
+
+    console.log("Where clause for Reservations_Chalets:", whereClause);
 
     const reservations = await Reservations_Chalets.findAll({
       where: whereClause,
     });
+
+    console.log("Reservations fetched from DB:", reservations);
 
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No reservations found" });
     }
 
     const reservedDates = new Set();
+
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
-      let end = moment(reservation.end_date).startOf('day');
+      const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
       
-      if (reservation.Time === "Morning") {
-        reservedDates.add(start.format('YYYY-MM-DD')); 
-        reservedDates.add(start.add(1, 'day').format('YYYY-MM-DD')); 
-      } else if (!end.isValid()) {
-        reservedDates.add(start.format('YYYY-MM-DD'));
-      } else {
-        while (start.isSameOrBefore(end)) {
-          reservedDates.add(start.format('YYYY-MM-DD'));
-          start.add(1, 'day');
-        }
+      let current = start.clone();
+      while (current.isSameOrBefore(end)) {
+        reservedDates.add(current.format('YYYY-MM-DD'));
+        current.add(1, 'day');
       }
     });
 
     res.status(200).json({
-      reserved_days: Array.from(reservedDates),
+      reserved_days: Array.from(reservedDates).sort(),
     });
   } catch (error) {
     console.error("Error in getReservationsByRightTimeName:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
 
 
 
