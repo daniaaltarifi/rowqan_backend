@@ -18,7 +18,7 @@ exports.createReservation = async (req, res) => {
       end_date = null, 
       lang,
       additional_visitors,
-      number_of_days,
+      number_of_days = null,
       Reservation_Type,
       user_id,
       chalet_id,
@@ -84,16 +84,18 @@ exports.createReservation = async (req, res) => {
     if (additional_visitors > 0) {
       additional_fee = additional_visitors * 10;
     }
-
+    
     let days_fee = 0;
-    if (number_of_days > 0) {
-      days_fee = number_of_days * 20;
+    if (formattedEndDate) {
+      const totalDays = Math.ceil(
+        (formattedEndDate.getTime() - formattedStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      days_fee = totalDays * 20; 
     }
-
+    
     const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
-
-
+    
 
     
     const existingFullDayReservation = await Reservations_Chalets.findOne({
