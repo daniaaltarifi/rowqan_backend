@@ -98,7 +98,7 @@ exports.createReservation = async (req, res) => {
     if (formattedEndDate) {
       const totalDays = Math.ceil(
         (formattedEndDate.getTime() - formattedStartDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      )+1;
       days_fee = totalDays * 20; 
     }
     
