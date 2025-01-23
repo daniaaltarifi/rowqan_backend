@@ -142,6 +142,44 @@ exports.getAllUserTypes = async (req, res) => {
 
 
 
+  exports.getAdmins = async (req, res) => {
+    const { lang } = req.params;
+  
+    try {
+      if (!['ar', 'en'].includes(lang)) {
+        return res.status(400).json({
+          error: lang === 'en' ? 'Invalid language. Please use "ar" or "en".' : 'اللغة غير صالحة. استخدم "ar" أو "en".',
+        });
+      }
+  
+
+      const user = await User.findAll({
+        include: [
+          {
+            model: Users_Types,
+            where: { type: 'admin', lang },
+          },
+        ],
+      });
+  
+      if (!user) {
+        return res.status(404).json({
+          error: lang === 'en' ? 'Chalet owner not found' : 'مالك الشاليه غير موجود',
+        });
+      }
+  
+      res.status(200).json(
+        user,
+      );
+    } catch (error) {
+      console.error('Error fetching chalet owner by ID:', error);
+      res.status(500).json({
+        error: lang === 'en' ? 'Failed to fetch chalet owner' : 'فشل في جلب مالك الشاليه',
+      });
+    }
+  };
+
+
   exports.getEventOwnerById = async (req, res) => {
     const { id, lang } = req.params;
   
