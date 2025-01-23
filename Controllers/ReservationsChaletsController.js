@@ -74,7 +74,7 @@ exports.createReservation = async (req, res) => {
     }
 
     let finalPrice;
-    if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "Full day") {
+    if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "FullDay") {
       finalPrice = rightTime.price;
     } else {
       return res.status(400).json({ error: "Invalid time selection" });
@@ -676,8 +676,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 exports.getReservationsByRightTime = async (req, res) => {
   const { chalet_id, lang } = req.params;
-
-  console.log("Received chalet_id:", chalet_id);
 
   try {
     const rightTimes = await RightTimeModel.findAll({
