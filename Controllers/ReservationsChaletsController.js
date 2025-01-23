@@ -706,32 +706,34 @@ exports.getReservationsByRightTime = async (req, res) => {
     }
 
     const reservedDates = new Set();
+
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
-      let end = moment(reservation.end_date).startOf('day');
+      let end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
       
-      if (reservation.Time === "Morning") {
+      let current = start.clone();
+      while (current.isSameOrBefore(end)) {
+        reservedDates.add(current.format('YYYY-MM-DD'));
+        current.add(1, 'day');
+      }
+      
+      
+      if (reservation.Time === "Morning" || reservation.Time === "Evening") {
         reservedDates.add(start.format('YYYY-MM-DD'));
-        reservedDates.add(start.add(1, 'day').format('YYYY-MM-DD')); 
-      } else if (!end.isValid()) {
-        reservedDates.add(start.format('YYYY-MM-DD'));
-      } else {
-        while (start.isSameOrBefore(end)) {
-          reservedDates.add(start.format('YYYY-MM-DD'));
-          start.add(1, 'day');
-        }
       }
     });
 
     res.status(200).json({
-      reserved_days: Array.from(reservedDates),
+      reserved_days: Array.from(reservedDates).sort(),
     });
   } catch (error) {
-    console.error("Error in getReservationsByRightTimeName:", error);
+    console.error("Error in getReservationsByRightTime:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
 
 
 
