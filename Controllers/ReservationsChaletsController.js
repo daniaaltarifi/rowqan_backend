@@ -74,6 +74,13 @@ exports.createReservation = async (req, res) => {
     }
 
     let finalPrice;
+    let startingPrice = rightTime.price;
+
+    
+    if (rightTime.After_Offer > 0) {
+      startingPrice = rightTime.After_Offer; 
+    }
+
     if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "FullDay") {
       finalPrice = rightTime.price;
     } else {
