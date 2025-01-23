@@ -189,13 +189,6 @@ exports.createPayment = async (req, res) => {
 
     
     const user = await Users.findByPk(user_id);
-    if (!user) {
-      return res
-        .status(404)
-        .json(
-          ErrorResponse('Validation failed', ['User not found.'])
-        );
-    }
 
     const reservation = await ReservationChalets.findByPk(reservation_id);
     if (!reservation) {
