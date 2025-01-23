@@ -27,13 +27,13 @@ exports.createRightTime = async (req, res) => {
     const image = req.file?.path || null; 
    
     if (!['en', 'ar'].includes(lang)) {
-        return res.status(400).json(new ErrorResponse('Invalid language'));
+        return res.status(400).json( ErrorResponse('Invalid language'));
     }
 
   
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
-        return res.status(404).json(new ErrorResponse('Chalet not found'));
+        return res.status(404).json( ErrorResponse('Chalet not found'));
     }
 
   

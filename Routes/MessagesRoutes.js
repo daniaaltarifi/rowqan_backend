@@ -29,6 +29,11 @@ router.get('/getMessagesByRecieverId/:receiverId/:chaletId', (req, res, next) =>
 });
 
 
+router.get('/getMessagesBySenderIdRecieverId/:senderId/:receiverId/:chaletId', (req, res, next) => {
+  MessagesController.getMessagesBySenderIdRecieverIdChaletId(req, res, next);
+});
+
+
 router.get('/sent/:senderId', (req, res, next) => {
   MessagesController.getSentMessages(req, res, next);
 });
