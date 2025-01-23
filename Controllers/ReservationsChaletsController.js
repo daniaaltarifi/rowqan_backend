@@ -598,11 +598,17 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   try {
     const timePeriods = name.split(' ');
 
+   
+    const timeCondition = name === "FullDay" 
+      ? ["Morning", "Evening", "FullDay"] 
+      : timePeriods;
+
+    
     const rightTimes = await RightTimeModel.findAll({
       where: {
         lang: lang,
         type_of_time: {
-          [Op.in]: timePeriods,
+          [Op.in]: timeCondition,
         },
         chalet_id: chalet_id,
       },
@@ -614,10 +620,13 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       return res.status(404).json({ error: "No right time found for the provided periods" });
     }
 
+    
     const whereClause = {
       lang: lang,
       chalet_id: chalet_id,
-      Time: ["FullDay", "Morning", "Evening"],
+      Time: {
+        [Op.in]: timeCondition, 
+      },
     };
 
     console.log("Where clause for Reservations_Chalets:", whereClause);
@@ -654,6 +663,8 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
 
 
 
