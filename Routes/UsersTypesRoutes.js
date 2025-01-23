@@ -11,6 +11,9 @@ router.get('/getAllEventsOwners/:lang', rateLimiter, userTypesController.getEven
 router.get('/getAllLandsOwners/:lang', rateLimiter, userTypesController.getLandOwners);
 router.get('/getUsersTypesById/:id/:lang', rateLimiter, userTypesController.getUserTypeById);
 router.get('/getChaletOwnerById/:id/:lang', rateLimiter, userTypesController.getChaletOwnerById);
+
+router.get('/getAdmins/:lang', rateLimiter, userTypesController.getAdmins);
+
 router.get('/getEventOwnerById/:id/:lang', rateLimiter, userTypesController.getEventOwnerById);
 router.get('/getLandOwnerById/:id/:lang', rateLimiter, userTypesController.getLandOwnerById);
 router.post('/createUserType', rateLimiter, userTypesController.createUserType);
