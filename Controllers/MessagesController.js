@@ -138,6 +138,53 @@ exports.getMessagesBySenderIdRecieverIdChaletId = async (req, res) => {
 
 
 
+exports.getMessagesByChalets = async (req, res) => {
+  try {
+    const { lang } = req.params;
+
+    if (!lang) {
+      return res.status(400).json({ message: 'lang is required' });
+    }
+
+    const messages = await Messages.findAll({
+      include: [
+        {
+          model: Chalet,
+          as: 'Chalet',
+          attributes: [
+            'id',
+            lang === 'ar' ? 'title_ar' : 'title',
+            lang === 'ar' ? 'description_ar' : 'description',
+          ],
+        },
+      ],
+      order: [['id', 'ASC']],
+      group: ['Chalet.id'], 
+    });
+
+    if (messages.length === 0) {
+      return res.status(404).json({ message: 'No messages found for this sender' });
+    }
+
+    res.status(200).json(messages);
+
+    if (req.socketIoInstance) {
+      req.socketIoInstance.emit('received_messages', messages);
+      console.log('Messages retrieved successfully and emitted via Socket.IO');
+    } else {
+      console.error('Socket.IO instance is undefined');
+    }
+  } catch (error) {
+    console.error('Error retrieving messages:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+
+
+
+
+
 
 
 exports.getMessagesForRecieverId = async (req, res) => {
