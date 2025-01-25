@@ -153,8 +153,16 @@ exports.getMessagesByChalets = async (req, res) => {
           as: 'Chalet',
           attributes: [
             'id',
-            lang === 'ar' ? 'title_ar' : 'title',
-            lang === 'ar' ? 'description_ar' : 'description',
+            'title',
+            'description',
+            'image',
+            'Rating',
+            'city',
+            'area',
+            'intial_Amount',
+            'type',
+            'features',
+            'Additional_features'
           ],
         },
       ],

@@ -16,11 +16,13 @@ router.put('/updatePayment/:id', rateLimiter, paymentsController.updatePayment);
 
 router.get('/getPayments/:userId',rateLimiter, paymentsController.getPayments);
 
+router.get('/getAllPayments',rateLimiter, paymentsController.getAllPayments);
+
 router.get('/getcapturePayPalPayment',rateLimiter, paymentsController.capturePayPalPayment);
 
 router.get('/getPaymentById/:id', rateLimiter, paymentsController.getPaymentById);
 
-router.delete('/deletePayment', rateLimiter, paymentsController.deletePayment);
+router.delete('/deletePayment/:id', rateLimiter, paymentsController.deletePayment);
 
 
 module.exports = router;

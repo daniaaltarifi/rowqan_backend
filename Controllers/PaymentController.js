@@ -388,6 +388,70 @@ exports.createPayment = async (req, res) => {
 
 
 
+  exports.getAllPayments = async (req, res) => {
+    try {
+      const { page = 1, limit = 20 } = req.query;
+      const offset = (page - 1) * limit;
+  
+  
+      const cacheKey = `payment:page:${page}:limit:${limit}`;
+  
+     
+      const cachedData = await client.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(JSON.parse(cachedData));
+      }
+  
+    
+      const payments = await Payments.findAll({
+        include: [
+          {
+            model: Users,
+            attributes: ['id', 'name', 'email'],
+          },
+          {
+            model: ReservationChalets,
+            attributes: [
+              'id',
+              'cashback',
+              'start_date',
+              'end_date',
+              'Time',
+              'Status',
+              'Reservation_Type',
+              'starting_price',
+              'Total_Amount',
+              'additional_visitors',
+              'number_of_days'
+            ],
+          },
+        ],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+  
+      
+      if (payments.length === 0) {
+        return res.status(404).json(
+          ErrorResponse("No payments found", ["No payments found for the given user ID."])
+        );
+      }
+  
+      
+      await client.setEx(cacheKey, 3600, JSON.stringify(payments));
+  
+      
+      res.status(200).json(payments);
+    } catch (error) {
+      console.error('Error in getPayments:', error.message);
+      res.status(500).json(
+        ErrorResponse('Failed to fetch payments', [
+          'An internal server error occurred.',
+        ])
+      );
+    }
+  };
+
 
 exports.getPaymentById = async (req, res) => {
   try {
