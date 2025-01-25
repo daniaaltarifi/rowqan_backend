@@ -6,7 +6,6 @@ const RightTimeModel = require('../Models/RightTimeModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const Status = require('../Models/StatusModel');
 const ChaletsDetails = require('../Models/ChaletsDetails')
-const ReservationsModel = require('../Models/ReservationsModel')
 
 
 const Chalet = sequelize.define('Chalet', {
@@ -94,10 +93,6 @@ Status.hasOne(Chalet, { foreignKey: 'status_id'});
 Chalet.hasMany(ChaletsDetails, { foreignKey: 'chalet_id', onDelete: 'CASCADE' });
 ChaletsDetails.belongsTo(Chalet, { foreignKey: 'chalet_id' });
 
-
-
-Chalet.hasMany(ReservationsModel, { foreignKey: 'Chalet_id' });
-ReservationsModel.belongsTo(Chalet, { foreignKey: 'Chalet_id' });
 
 
 
