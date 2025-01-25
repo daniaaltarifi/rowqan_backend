@@ -8,6 +8,7 @@ require('dotenv').config();
 const argon2 = require("argon2");
 const Chalet = require('../Models/ChaletsModel');
 const { client } = require('../Utils/redisClient');
+const Wallet = require('../Models/WalletModel');
 
 
 exports.createUser = async (req, res) => {
@@ -207,11 +208,13 @@ exports.updateUser = async (req, res) => {
 
 
 exports.deleteUser = async (req, res) => {
-  const { id, lang } = req.params;
+  const { id } = req.params;
+  const { lang } = req.query; 
+  
   try {
-   
+    
     const user = await User.findOne({
-      where: { id, lang },
+      where: { id },
     });
 
     if (!user) {
@@ -220,24 +223,30 @@ exports.deleteUser = async (req, res) => {
       });
     }
 
-    // Delete all associated wallets
+    
     await Wallet.destroy({
       where: { user_id: id },
     });
 
-    // Now delete the user
-    await user.destroy();
+    
+    await User.destroy({
+      where: { id },
+    });
 
     res.status(200).json({
       message: lang === 'en' ? 'User deleted successfully' : 'تم حذف المستخدم بنجاح',
     });
   } catch (error) {
     console.error('Error deleting user:', error);
+
     res.status(500).json({
       error: lang === 'en' ? 'Failed to delete user' : 'فشل في حذف المستخدم',
     });
   }
 };
+
+
+
 
 
 const secretKey = process.env.JWT_SECRET;
