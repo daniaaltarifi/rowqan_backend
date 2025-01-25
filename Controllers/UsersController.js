@@ -208,8 +208,8 @@ exports.updateUser = async (req, res) => {
 
 
 exports.deleteUser = async (req, res) => {
-  const { id } = req.params;
-  const { lang } = req.query; 
+  const { id,lang } = req.params;
+
   
   try {
     
