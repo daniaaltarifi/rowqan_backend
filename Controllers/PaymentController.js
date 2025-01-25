@@ -199,12 +199,10 @@ exports.createPayment = async (req, res) => {
         );
     }
 
-    if (reservation.Status === 'Pending') {
-      return res.status(400).send({ error: 'Reservation is already confirmed.' });
-    }
-
-    reservation.Status = 'Pending';
+    if (paymentMethod === 'Cliq') {
+      reservation.Status = 'Pending';
     await reservation.save();
+    }
 
     
 

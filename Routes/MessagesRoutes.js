@@ -29,6 +29,10 @@ router.get('/getMessagesByRecieverId/:receiverId/:chaletId', (req, res, next) =>
 });
 
 
+router.get('/getMessagesByChalet/:lang', (req, res, next) => {
+  MessagesController.getMessagesByChalets(req, res, next);
+});
+
 router.get('/getMessagesBySenderIdRecieverId/:senderId/:receiverId/:chaletId', (req, res, next) => {
   MessagesController.getMessagesBySenderIdRecieverIdChaletId(req, res, next);
 });
