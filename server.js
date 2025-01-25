@@ -108,6 +108,7 @@ const PrpertyLandsRoutes = require('./Routes/PropertiesLandsRoutes');
 const ImagesLandsRoutes = require('./Routes/CategoriesImagesRoutes');
 const BreifLandsRoutes = require('./Routes/BriefLandsRoutes');
 const ReservationeLandsRoutes = require('./Routes/ReservationsLandsRoutes');
+
 const ReservationsRoutes = require('./Routes/ReservationsRoutes');
 const UsersTypesRoutes = require('./Routes/UsersTypesRoutes');
 const ReservationsChaletsRoutes = require('./Routes/ReservationsChaletsRoutes');

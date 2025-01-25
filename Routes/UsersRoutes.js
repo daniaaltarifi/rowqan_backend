@@ -57,7 +57,7 @@ router.get('/verifytoken',userController.verifyToken, (req, res) => {
   });
 
 
-router.delete('/DeleteUser/:id/:lang',  rateLimiter, userController.deleteUser);
+router.delete('/DeleteUser/:id',  rateLimiter, userController.deleteUser);
 
 router.post('/login', rateLimiter,login);
 
