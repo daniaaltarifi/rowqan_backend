@@ -26,7 +26,7 @@ router.get('/getReservationsByRightTimeName/:chalet_id/:name/:lang', Reservation
 
 router.get('/getReservationsByRightTime/:chalet_id/:lang', ReservationsChaletsController.getReservationsByRightTime);
 
-router.get('/reservationsByUserId/:user_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
+router.get('/reservationsByUserId/:user_id/:lang', ReservationsChaletsController.getReservationsByUserId);
 
 router.get('/available-times/:chalet_id/:date/:lang',ReservationsChaletsController.getAvailableTimesByDate)
 

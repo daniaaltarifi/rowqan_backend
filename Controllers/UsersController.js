@@ -94,25 +94,21 @@ exports.getAllUsers = async (req, res) => {
 };
 
 
+
 exports.getUserById = async (req, res) => {
   const { id } = req.params;
   const { lang } = req.query;
-
+  
   try {
-    
     const cacheKey = `user:${id}:lang:${lang || 'all'}`;
-    client.del(cacheKey);  
-
-    
+   
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-    
-      return res.status(200).json(JSON.parse(cachedData));
+      return res.status(200).json(JSON.parse(cachedData));  
     }
 
     
     const whereCondition = lang ? { id, lang } : { id };
-
     
     const user = await User.findOne({
       where: whereCondition,
@@ -122,7 +118,8 @@ exports.getUserById = async (req, res) => {
           attributes: ['id', 'type'],
         },
       ],
-      attributes: ['id', 'name', 'email', 'phone_number', 'country', 'password'],
+      attributes: ['id', 'name', 'email', 'phone_number', 'country'],  
+      raw: true,  
     });
 
     
@@ -134,7 +131,7 @@ exports.getUserById = async (req, res) => {
 
     
     await client.setEx(cacheKey, 3600, JSON.stringify(user));
-
+    
     
     res.status(200).json(user);
   } catch (error) {
@@ -144,6 +141,7 @@ exports.getUserById = async (req, res) => {
     });
   }
 };
+
 
 
 
