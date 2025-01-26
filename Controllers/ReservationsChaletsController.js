@@ -595,9 +595,14 @@ exports.getAvailableTimesByDate = async (req, res) => {
 
 
 exports.getReservationsByRightTimeName = async (req, res) => {
-  const { chalet_id, lang } = req.params;
+  const { chalet_id, name, lang } = req.params;
+
+  console.log("Chalet ID:", chalet_id);
+  console.log("Time:", name);  
+  console.log("Lang:", lang);
 
   try {
+  
     const rightTimes = await RightTimeModel.findAll({
       where: {
         lang: lang,
@@ -605,19 +610,35 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       },
     });
 
+    console.log("Right Times:", rightTimes);  
+
     if (!rightTimes || rightTimes.length === 0) {
       return res.status(404).json({ error: "No right time found for the provided chalet_id and lang" });
     }
 
+   
+    const rightTime = rightTimes.find(rt => rt.type_of_time === name); 
+    console.log("Right Time Type:", rightTime ? rightTime.type_of_time : "Not found");
+    console.log("Input Name:", name);
+
+    if (!rightTime) {
+      return res.status(404).json({ error: `No right time found for the provided time: ${name}` });
+    }
+
+    const rightTimeId = rightTime.id;
+
     const whereClause = {
       lang: lang,
       chalet_id: chalet_id,
-      right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
+      right_time_id: rightTimeId,
+      status: 'Confirmed',  
     };
 
     const reservations = await Reservations_Chalets.findAll({
       where: whereClause,
     });
+
+    console.log("Reservations Found:", reservations);  
 
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No reservations found" });
@@ -629,16 +650,10 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       const start = moment(reservation.start_date).startOf('day');
       let end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
-      
       let current = start.clone();
       while (current.isSameOrBefore(end)) {
         reservedDates.add(current.format('YYYY-MM-DD'));
         current.add(1, 'day');
-      }
-      
-      
-      if (reservation.Time === "Morning" || reservation.Time === "Evening") {
-        reservedDates.add(start.format('YYYY-MM-DD'));
       }
     });
 
@@ -650,10 +665,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
-
-
-
-
 
 
 
