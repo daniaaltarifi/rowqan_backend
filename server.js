@@ -66,9 +66,6 @@ const io = socketIo(server, {
   },
 });
 
-
-
-
 io.on("connection", (socket) => {
   console.log("A user connected");
 
@@ -96,8 +93,6 @@ const ContactUsRoutes = require('./Routes/ContactUsRoutes');
 const RightTimeRoutes = require('./Routes/RightTimeRoutes');
 const StatusRoutes = require('./Routes/StatusRoutes');
 const ChaletsDetailsRoutes = require('./Routes/ChaletsDetailsRoutes');
-
-
 const UsersTypesRoutes = require('./Routes/UsersTypesRoutes');
 const ReservationsChaletsRoutes = require('./Routes/ReservationsChaletsRoutes');
 const WalletRoutes = require('./Routes/WalletRoutes');
@@ -125,6 +120,8 @@ const allowedOrigins = [
   "https://rowqanbackend.rowqan.com",
 ];
 
+
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -136,9 +133,11 @@ const corsOptions = {
   credentials: true,
 };
 
+
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+
 
 app.use('/users', UsersRoutes);
 app.use('/logos', LogoRoutes);
@@ -157,7 +156,6 @@ app.use('/ContactUs', ContactUsRoutes);
 app.use('/RightTimes', RightTimeRoutes);
 app.use('/status', StatusRoutes);
 app.use('/chaletsdetails', ChaletsDetailsRoutes);
-
 app.use('/userstypes', UsersTypesRoutes);
 app.use('/ReservationsChalets', ReservationsChaletsRoutes);
 app.use('/Wallet', WalletRoutes);
@@ -174,7 +172,10 @@ app.use('/AdditionalFeatures',AdditionalFeaturesRoutes)
 
 
 
+
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
+
+
 
 
 async function checkVPN(userIP) {

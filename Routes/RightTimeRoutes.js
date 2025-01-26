@@ -8,7 +8,7 @@ const rateLimiter = require('../MiddleWares/rateLimiter');
 
 
 
-router.post('/createrighttime', rateLimiter, multer.single('image'), rightTimeController.createRightTime);
+router.post('/createrighttime', rateLimiter, rightTimeController.createRightTime);
 
 
 router.get('/getallrighttimes/:lang', rightTimeController.get);
@@ -20,7 +20,7 @@ router.get('/getallrighttimesbyChaletId/:chalet_id/:lang', rightTimeController.g
 router.get('/getrighttimebyid/:id/:lang', rightTimeController.getRightTimeById);
 
 
-router.put('/updaterighttime/:id', rateLimiter, multer.single('image'), rightTimeController.updateRightTime);
+router.put('/updaterighttime/:id', rateLimiter,rightTimeController.updateRightTime);
 
 
 router.delete('/deleterighttime/:id/:lang', rightTimeController.deleteRightTime);

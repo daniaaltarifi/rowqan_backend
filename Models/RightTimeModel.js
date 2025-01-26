@@ -8,10 +8,6 @@ const RightTimeModel = sequelize.define('RightTimeModel', {
     primaryKey: true,
     autoIncrement: true,
   },
-  image: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   type_of_time: {
     type: DataTypes.STRING,
     allowNull: false,

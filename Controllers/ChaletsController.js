@@ -16,9 +16,6 @@ const axios = require('axios');
 
 exports.createChalet = async (req, res) => {
   try {
-    console.log("Request body:", req.body);
-    console.log("Request files:", req.files);
-
     const { 
       title, 
       description, 
@@ -46,7 +43,6 @@ exports.createChalet = async (req, res) => {
       );
     }
 
-   
     const parsedType = type ? JSON.parse(type) : null; 
 
     if (!status_id) {
@@ -97,17 +93,8 @@ exports.createChalet = async (req, res) => {
       if (Array.isArray(rightTimesData) && rightTimesData.length > 0) {
         await Promise.all(
           rightTimesData.map(async (rightTime, index) => {
-            const rightTimesImage = req.files?.[`rightTimesData[${index}][image]`]?.[0]?.path || null;
-            if (!rightTimesImage) {
-              return res.status(400).json(
-                ErrorResponse("Validation failed", [
-                  `Image for right time data at index ${index} is required`
-                ])
-              );
-            }
-
+            
             await RightTimeModel.create({
-              image: rightTimesImage,
               type_of_time: rightTime.type_of_time,
               from_time: rightTime.from_time,
               to_time: rightTime.to_time,
@@ -134,8 +121,9 @@ exports.createChalet = async (req, res) => {
   } catch (error) {
     console.error("Error in createChalet:", error);
     res.status(500).json(ErrorResponse("Error creating chalet"));
-  }
+  } 
 };
+
 
 
 
@@ -297,8 +285,6 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
 
 
 
-
-
 exports.getChaletsByType = async (req, res) => {
   try {
     const { page = 1, limit = 80, key, value } = req.query;
@@ -309,10 +295,6 @@ exports.getChaletsByType = async (req, res) => {
         error: "Both 'key' and 'value' query parameters are required.",
       });
     }
-
-    console.log("Request key:", key);
-    console.log("Request value:", value);
-
     const chalets = await Chalet.findAll({
       where: Sequelize.where(
         Sequelize.fn('JSON_UNQUOTE', Sequelize.fn('JSON_EXTRACT', Sequelize.col('type'), `$."${key}"`)),
@@ -323,7 +305,6 @@ exports.getChaletsByType = async (req, res) => {
       order: [["id", "DESC"]],
     });
 
-    console.log("Matching Chalets:", chalets);
 
     if (!chalets.length) {
       return res.status(404).json({
@@ -343,22 +324,6 @@ exports.getChaletsByType = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -428,15 +393,14 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chalet:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalets1:${id}:lang:${lang || "all"}`;
 
    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit for chalet:", id);
       return res.status(200).json(JSON.parse(cachedData));
     }
-    console.log("Cache miss for chalet:", id);
+  
 
     
     const whereClause = { id };
@@ -522,7 +486,7 @@ exports.updateChalet = async (req, res) => {
       status_id 
     } = req.body || {};
 
-    console.log("Received lang:", lang);
+  
     
     const image = req.files?.image?.[0]?.path || null;
     const validationErrors = [];
@@ -626,13 +590,8 @@ exports.deleteChalet = async (req, res) => {
 
    
     await RightTimeModel.destroy({ where: { chalet_id: id } });
-
-    
-    await chaletsImages.destroy({ where: { chalet_id: id } });
-
-    
+    await chaletsImages.destroy({ where: { chalet_id: id } });    
     await Reservations_Chalets.destroy({ where: { chalet_id: id } });
-
    
     await client.del(`chalet:${id}`);
 
