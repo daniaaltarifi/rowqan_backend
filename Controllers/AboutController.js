@@ -6,7 +6,9 @@ const { client } = require("../Utils/redisClient");
 exports.createAbout = async (req, res) => {
   try {
     const { title, description,lang } = req.body || {};
+    
     const image = req.file?.filename || null;
+
     if (!title || !description || !lang || !image) {
       return res
         .status(400)

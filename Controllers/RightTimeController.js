@@ -4,7 +4,7 @@ const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const {client} = require('../Utils/redisClient')
 
-const Reservations_Chalets = require('../Models/Reservations_Chalets');
+
 
 
 
@@ -24,7 +24,7 @@ exports.createRightTime = async (req, res) => {
     } = req.body || {};
 
     
-    const image = req.file?.path || null; 
+   
    
     if (!['en', 'ar'].includes(lang)) {
         return res.status(400).json( ErrorResponse('Invalid language'));
@@ -46,7 +46,6 @@ exports.createRightTime = async (req, res) => {
         price, 
         After_Offer, 
         chalet_id,
-        image
     });
 
    
@@ -77,12 +76,9 @@ exports.createRightTime = async (req, res) => {
 
 
 exports.getRightTimeById = async (req, res) => {
- 
   try {
     const { id } = req.params;
     const { lang } = req.query;
-
-    client.del(`rightTime:${id}:${lang || "all"}`)
     const cacheKey = `rightTime:${id}:${lang || "all"}`;
 
     
@@ -96,25 +92,24 @@ exports.getRightTimeById = async (req, res) => {
 
     
     const rightTimeEntry = await RightTimeModel.findOne({
-      attributes: ["id", "type_of_time", "from_time","to_time","price","After_Offer","image"],
+      attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer"],
       where: whereCondition,
       include: [
-        { model: Chalet, attributes: ["id", "title","description","image","Rating","city","area","intial_Amount"] },
+        {
+          model: Chalet,
+          attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount"],
+        },
       ],
     });
 
-   
+    
     if (!rightTimeEntry) {
-      return res
-        .status(404)
-        .json(
-          ErrorResponse(
-            lang === "ar"
-              ? "لم يتم العثور على الوقت المناسب"
-              : "RightTime not found",
-            ["No RightTime entry found with the given ID and language."]
-          )
-        );
+      return res.status(404).json(
+        ErrorResponse(
+          lang === "ar" ? "لم يتم العثور على الوقت المناسب" : "RightTime not found",
+          ["No RightTime entry found with the given ID and language."]
+        )
+      );
     }
 
     
@@ -125,15 +120,14 @@ exports.getRightTimeById = async (req, res) => {
   } catch (error) {
     console.error("Error in getRightTimeById:", error);
 
-    return res
-      .status(500)
-      .json(
-        ErrorResponse("Failed to fetch RightTime entry", [
-          "An internal server error occurred. Please try again later.",
-        ])
-      );
+    return res.status(500).json(
+      ErrorResponse("Failed to fetch RightTime entry", [
+        "An internal server error occurred. Please try again later.",
+      ])
+    );
   }
 };
+
 
 
 
@@ -141,7 +135,7 @@ exports.getRightTimeById = async (req, res) => {
   exports.getAllRightTimesByChaletId = async (req, res) => {
     try {
       const { chalet_id, lang } = req.params;
-      const cacheKey = `rightTimesByChaletId:chalet:${chalet_id}:${lang}`;
+      const cacheKey = `rightTimeByChaletId:chalet:${chalet_id}:${lang}`;
   
       
       const cachedData = await client.get(cacheKey);
@@ -200,8 +194,6 @@ exports.getRightTimeById = async (req, res) => {
             After_Offer, 
             chalet_id 
         } = req.body;
-        const image = req.file?.path || null; 
-
         
         const validationErrors = validateInput({ 
             name, 
@@ -232,7 +224,6 @@ exports.getRightTimeById = async (req, res) => {
         rightTime.price = price || rightTime.price;
         rightTime.After_Offer = After_Offer || rightTime.After_Offer;
         rightTime.chalet_id = chalet_id !== undefined ? chalet_id : rightTime.chalet_id;
-        rightTime.image = image || rightTime.image;
 
         
         await rightTime.save();
@@ -289,8 +280,8 @@ exports.get = async (req, res) => {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
   
-client.del(`rightTimes:lang:${lang}:page:${page}:limit:${limit}`)      
-      const cacheKey = `rightTimes:lang:${lang}:page:${page}:limit:${limit}`;
+client.del(`rightTime:lang:${lang}:page:${page}:limit:${limit}`)      
+      const cacheKey = `rightTime:lang:${lang}:page:${page}:limit:${limit}`;
       const cachedData = await client.get(cacheKey);
   
       if (cachedData) {
