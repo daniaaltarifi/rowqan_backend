@@ -595,59 +595,70 @@ exports.getAvailableTimesByDate = async (req, res) => {
 
 
 exports.getReservationsByRightTimeName = async (req, res) => {
-  const { chalet_id, name, lang } = req.params;
+  const { chalet_id, lang } = req.params;
 
   try {
-    
-    const timePeriods = name === "FullDay" ? ["Morning", "Evening", "FullDay"] : name.split(' ');
-
-    const reservations = await Reservations_Chalets.findAll({
+   
+    const rightTimes = await RightTimeModel.findAll({
       where: {
         lang: lang,
         chalet_id: chalet_id,
-        Time: {
-          [Op.in]: timePeriods,
-        },
       },
-      include: [{
-        model: RightTimeModel,
-        where: {
-          lang: lang,
-          type_of_time: {
-            [Op.in]: timePeriods,
-          },
-          chalet_id: chalet_id,
-        },
-        required: true,  
-      }],
     });
 
-    
-    if (!reservations || reservations.length === 0) {
-      return res.status(404).json({ error: "No reservations found" });
+   
+    if (!rightTimes || rightTimes.length === 0) {
+      return res.status(404).json({ error: "No right time found for the provided chalet_id and lang" });
     }
 
     
+    const whereClause = {
+      lang: lang,
+      chalet_id: chalet_id,
+      right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
+      Status: "Confirmed", 
+    };
+
+   
+    const reservations = await Reservations_Chalets.findAll({
+      where: whereClause,
+    });
+
+   
+    if (!reservations || reservations.length === 0) {
+      return res.status(404).json({ error: "No confirmed reservations found" });
+    }
+
+  
     const reservedDates = new Set();
 
     reservations.forEach(reservation => {
-      const start = new Date(reservation.start_date).setHours(0, 0, 0, 0);
-      const end = reservation.end_date ? new Date(reservation.end_date).setHours(0, 0, 0, 0) : start;
+      const start = moment(reservation.start_date).startOf('day');
+      let end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
       
-      for (let current = start; current <= end; current = new Date(current).setDate(new Date(current).getDate() + 1)) {
-        reservedDates.add(new Date(current).toISOString().split('T')[0]);  
+      let current = start.clone();
+      while (current.isSameOrBefore(end)) {
+        reservedDates.add(current.format('YYYY-MM-DD'));
+        current.add(1, 'day');
+      }
+
+      
+      if (reservation.Time === "Morning" || reservation.Time === "Evening") {
+        reservedDates.add(start.format('YYYY-MM-DD'));
       }
     });
 
-    res.status(200).json({
+   
+    return res.status(200).json({
       reserved_days: Array.from(reservedDates).sort(),
     });
   } catch (error) {
-    console.error("Error in getReservationsByRightTimeName:", error);
-    res.status(500).json({ error: "Failed to fetch reservations" });
+    console.error("Error in getReservationsByRightTime:", error);
+    return res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
 
 
 
@@ -674,6 +685,7 @@ exports.getReservationsByRightTime = async (req, res) => {
       lang: lang,
       chalet_id: chalet_id,
       right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
+      
     };
 
     const reservations = await Reservations_Chalets.findAll({
