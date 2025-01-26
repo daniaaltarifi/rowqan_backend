@@ -9,11 +9,10 @@ const {client} = require('../Utils/redisClient')
 
 
 exports.createRightTime = async (req, res) => {
-
   try {
-   
+    console.log("Request Body:", req.body);  
+    
     const { 
-        name, 
         type_of_time, 
         from_time, 
         to_time, 
@@ -23,22 +22,18 @@ exports.createRightTime = async (req, res) => {
         chalet_id 
     } = req.body || {};
 
-    
-   
-   
+    console.log("Received lang:", lang);  
+
     if (!['en', 'ar'].includes(lang)) {
         return res.status(400).json( ErrorResponse('Invalid language'));
     }
 
-  
     const chalet = await Chalet.findByPk(chalet_id);
     if (!chalet) {
         return res.status(404).json( ErrorResponse('Chalet not found'));
     }
 
-  
     const newRightTime = await RightTimeModel.create({
-        name, 
         type_of_time, 
         from_time, 
         to_time, 
@@ -48,16 +43,14 @@ exports.createRightTime = async (req, res) => {
         chalet_id,
     });
 
-   
     const cacheDeletePromises = [client.del(`righttime:page:1:limit:20`)];
+
     const [newRightTimeResult] = await Promise.all([newRightTime, ...cacheDeletePromises]);
 
-    
     await client.set(`righttime:${newRightTimeResult.id}`, JSON.stringify(newRightTimeResult), {
         EX: 3600,
     });
 
-   
     return res.status(201).json({
         message: "RightTime created successfully",
         rightTime: newRightTimeResult,
@@ -71,6 +64,7 @@ exports.createRightTime = async (req, res) => {
       );
   }
 };
+
 
 
 
