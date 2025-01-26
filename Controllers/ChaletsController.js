@@ -7,7 +7,6 @@ const chaletsImages = require("../Models/ChaletsImagesModel");
 const BreifDetailsChalets = require("../Models/BreifDetailsChalets");
 const RightTimeModel = require("../Models/RightTimeModel");
 const ReservationDate = require("../Models/ReservationDatesModel");
-const ReservationsModel = require("../Models/ReservationsModel");
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
 const  {Sequelize,Op}  = require('sequelize');
@@ -179,7 +178,6 @@ exports.getAllChalets = async (req, res) => {
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id","image"] },
         { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
-        { model: ReservationsModel, attributes: ["id"] },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),

@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../Config/dbConnect'); 
-const ReservationModel = require('../Models/ReservationsModel');
 const UserTypes = require('../Models/UsersTypes');
 const Chalet = require('../Models/ChaletsModel'); 
 
@@ -68,9 +67,6 @@ const User = sequelize.define('User', {
 });
 
 
-
-User.hasMany(ReservationModel, { foreignKey: 'User_id' });
-ReservationModel.belongsTo(User, { foreignKey: 'User_id' });
 
 User.belongsTo(UserTypes, { foreignKey: 'user_type_id' });
 UserTypes.hasMany(User, { foreignKey: 'user_type_id' });
