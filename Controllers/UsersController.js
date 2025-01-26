@@ -118,10 +118,6 @@ exports.getUserById = async (req, res) => {
       where: whereCondition,
       include: [
         {
-          model: ReservationModel,
-          attributes: ['id', 'total_amount', 'cashback_amount'],
-        },
-        {
           model: UserTypes,
           attributes: ['id', 'type'],
         },
