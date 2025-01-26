@@ -184,7 +184,6 @@ exports.updateContact = async (req, res) => {
         updatedFields.action = action;
       }
   
-      
       if (title && title !== contact.title) updatedFields.title = title;
       if (lang && lang !== contact.lang) updatedFields.lang = lang;
       if (image) updatedFields.image = image;
