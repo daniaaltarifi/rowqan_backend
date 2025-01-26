@@ -598,7 +598,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   const { chalet_id, lang } = req.params;
 
   try {
-   
     const rightTimes = await RightTimeModel.findAll({
       where: {
         lang: lang,
@@ -606,30 +605,24 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       },
     });
 
-   
     if (!rightTimes || rightTimes.length === 0) {
       return res.status(404).json({ error: "No right time found for the provided chalet_id and lang" });
     }
 
-    
     const whereClause = {
       lang: lang,
       chalet_id: chalet_id,
       right_time_id: { [Op.in]: rightTimes.map(rt => rt.id) },
-      Status: "Confirmed", 
     };
 
-   
     const reservations = await Reservations_Chalets.findAll({
       where: whereClause,
     });
 
-   
     if (!reservations || reservations.length === 0) {
-      return res.status(404).json({ error: "No confirmed reservations found" });
+      return res.status(404).json({ error: "No reservations found" });
     }
 
-  
     const reservedDates = new Set();
 
     reservations.forEach(reservation => {
@@ -642,22 +635,28 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         reservedDates.add(current.format('YYYY-MM-DD'));
         current.add(1, 'day');
       }
-
+      
       
       if (reservation.Time === "Morning" || reservation.Time === "Evening") {
         reservedDates.add(start.format('YYYY-MM-DD'));
       }
     });
 
-   
-    return res.status(200).json({
+    res.status(200).json({
       reserved_days: Array.from(reservedDates).sort(),
     });
   } catch (error) {
     console.error("Error in getReservationsByRightTime:", error);
-    return res.status(500).json({ error: "Failed to fetch reservations" });
+    res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
+
+
+
+
+
 
 
 
