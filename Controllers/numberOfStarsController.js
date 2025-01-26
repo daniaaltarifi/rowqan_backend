@@ -88,109 +88,91 @@ exports.getNumberOfStarsbyChaletId = async (req, res) => {
 };
 
 
-exports.getNumberOfStars = async (req, res) => {
-    try {
-      const { page = 1, limit = 20 } = req.query;  
+
   
-      const offset = (page - 1) * limit;  
-  
-      
-      const cacheKey = `stars:page:${page}:limit:${limit}`;
-  
-   
-      client.del(cacheKey);
-  
+
+
+
+
+exports.getHighRatedChalets = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, lang } = req.query;
     
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) {
-        return res.status(200).json(JSON.parse(cachedData));
-      }
-  
-      
-      const stars = await number_stars.findAll({
-        order: [['createdAt', 'DESC']],  
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
-  
-      if (stars.length === 0) {
-        return res.status(404).json(
-          ErrorResponse("Stars not found", [
-            "No stars found"
-          ])
-        );
-      }
-  
-     
-      await client.setEx(cacheKey, 3600, JSON.stringify(stars));  
-  
-      
-      res.status(200).json(stars);
-    } catch (error) {
-      console.error("Error in getNumberOfStars:", error.message);
-      res.status(500).json(
-        ErrorResponse("Failed to fetch stars", [
-          "An internal server error occurred."
-        ])
-      );
+    const offset = (page - 1) * limit;
+
+    
+    const cacheKey = `stars:page:${page}:limit:${limit}:lang:${lang}`;
+
+    
+    await client.del(cacheKey);
+
+    
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(JSON.parse(cachedData));
     }
-  };
-  
 
-
-
-
-  exports.getNumberOfStarsGreaterThanFour = async (req, res) => {
-    try {
-      const { page = 1, limit = 20, lang } = req.query;
-  
-      const offset = (page - 1) * limit;
-  
-      
-      const cacheKey = `no_stars:page:${page}:limit:${limit}:lang:${lang}`;
-  
-      
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) {
-        return res.status(200).json(JSON.parse(cachedData)); 
-           }
-  
-      
-      const stars = await number_stars.findAll({
-        where: {
-          no_start: {
-            [Sequelize.Op.gte]: 4, 
-          },
-          lang: lang, 
+    
+    const stars = await number_stars.findAll({
+      where: {
+        no_start: {  
+          [Sequelize.Op.gt]: 4,  
         },
-        attributes: ['id', 'no_start', 'lang', 'createdAt'], 
-        order: [['createdAt', 'DESC']], 
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+      },
+      include: [
+        {
+          model: Chalet,
+          as: "Chalet",
+          attributes: [
+            "id", "title", "description", "image", "Rating", "city", "area", 
+            "intial_Amount", "type", "features", "Additional_features", "near_me",
+          ],
+        },
+      ],
+      attributes: ["id", "no_start", "createdAt", "chalet_id"],
+      order: [["createdAt", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    
+    if (stars.length === 0) {
+      return res.status(404).json({
+        error: "No stars found",
+        message: `No stars found with no_start > 4 and lang: ${lang}`,
       });
-  
-      if (stars.length === 0) {
-        return res.status(404).json(
-          ErrorResponse("Stars not found", [
-            `No stars found with no_start >= 4 and lang: ${lang}`
-          ])
-        );
-      }
-  
-      
-      await client.setEx(cacheKey, 3600, JSON.stringify(stars));
-  
-      
-      res.status(200).json(stars);
-    } catch (error) {
-      console.error("Error in getNumberOfStars:", error.message);
-      res.status(500).json(
-        ErrorResponse("Failed to fetch stars", [
-          "An internal server error occurred."
-        ])
-      );
     }
-  };
+
+   
+    await client.setEx(cacheKey, 3600, JSON.stringify(stars));
+
+  
+    const response = stars.map((star) => ({
+      id: star.id,
+      no_start: star.no_start,  
+      chalet_id: star.chalet_id,  
+      chalet: star.Chalet, 
+    }));
+
+    
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error in getHighRatedChalets:", error.message);
+    res.status(500).json({
+      error: "Failed to fetch high rated chalets",
+      message: "An internal server error occurred.",
+    });
+  }
+};
+
+
+
+
+
+
+  
+  
+  
   
   
 
