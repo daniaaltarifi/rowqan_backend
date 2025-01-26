@@ -1,11 +1,10 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../Config/dbConnect');
 const chaletsImages = require('../Models/ChaletsImagesModel');
-const BreifDetailsChalets = require('../Models/BreifDetailsChalets');
 const RightTimeModel = require('../Models/RightTimeModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const Status = require('../Models/StatusModel');
-const ChaletsDetails = require('../Models/ChaletsDetails')
+
 
 
 const Chalet = sequelize.define('Chalet', {
@@ -75,8 +74,6 @@ const Chalet = sequelize.define('Chalet', {
 Chalet.hasMany(chaletsImages, { foreignKey: 'chalet_id', onDelete: 'CASCADE' });
 chaletsImages.belongsTo(Chalet, { foreignKey: 'chalet_id' });
 
-Chalet.hasMany(BreifDetailsChalets, { foreignKey: 'chalet_id', onDelete: 'CASCADE' });
-BreifDetailsChalets.belongsTo(Chalet, { foreignKey: 'chalet_id' });
 
 Chalet.hasMany(RightTimeModel, { foreignKey: 'chalet_id', onDelete: 'CASCADE' });
 RightTimeModel.belongsTo(Chalet, { foreignKey: 'chalet_id' });
@@ -87,11 +84,6 @@ ReservationDate.belongsTo(Chalet, { foreignKey: 'chalet_id' });
 
 Chalet.belongsTo(Status, { foreignKey: 'status_id' });
 Status.hasOne(Chalet, { foreignKey: 'status_id'});
-
-
-
-Chalet.hasMany(ChaletsDetails, { foreignKey: 'chalet_id', onDelete: 'CASCADE' });
-ChaletsDetails.belongsTo(Chalet, { foreignKey: 'chalet_id' });
 
 
 

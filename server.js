@@ -85,14 +85,11 @@ const FooterRoutes = require('./Routes/FooterRoutes');
 const FooterIconRoutes = require('./Routes/FooterIconsRoutes');
 const HeroChaletsRoutes = require('./Routes/ChaletsHeroRoutes');
 const ChaletsRoutes = require('./Routes/ChaletsRoutes');
-const statusChaletRoutes = require('./Routes/StatusChaletsRoutes');
 const ChaletImagesRoutes = require('./Routes/ChaletsImagesRoutes');
-const BreifDetailsChaletsRoutes = require('./Routes/BreifDetailsChaletsRoutes');
 const ReservatioDatesRoutes = require('./Routes/ReservationsDateRoutes');
 const ContactUsRoutes = require('./Routes/ContactUsRoutes');
 const RightTimeRoutes = require('./Routes/RightTimeRoutes');
 const StatusRoutes = require('./Routes/StatusRoutes');
-const ChaletsDetailsRoutes = require('./Routes/ChaletsDetailsRoutes');
 const UsersTypesRoutes = require('./Routes/UsersTypesRoutes');
 const ReservationsChaletsRoutes = require('./Routes/ReservationsChaletsRoutes');
 const WalletRoutes = require('./Routes/WalletRoutes');
@@ -105,8 +102,7 @@ const geoip = require('geoip-lite');
 const ContactsRoutes = require('./Routes/ContactsRoutes')
 const TagRoutes = require('./Routes/TagRoutes')
 const number_Of_Stars = require('./Routes/numberOfStarsRoutes')
-const ChaletsFeatures = require('./Routes/FeaturesChaletsRoutes')
-const AdditionalFeaturesRoutes = require('./Routes/AdditionalFaeturesRoutes')
+
 
 
 
@@ -148,14 +144,11 @@ app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
 app.use('/chalets', ChaletsRoutes);
-app.use('/statuschalets', statusChaletRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
-app.use('/BreifDetailsChalets', BreifDetailsChaletsRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
 app.use('/ContactUs', ContactUsRoutes);
 app.use('/RightTimes', RightTimeRoutes);
 app.use('/status', StatusRoutes);
-app.use('/chaletsdetails', ChaletsDetailsRoutes);
 app.use('/userstypes', UsersTypesRoutes);
 app.use('/ReservationsChalets', ReservationsChaletsRoutes);
 app.use('/Wallet', WalletRoutes);
@@ -166,8 +159,6 @@ app.use('/Blogs',BlogRoutes)
 app.use('/Contacts',ContactsRoutes)
 app.use('/Tags',TagRoutes)
 app.use('/NOstars',number_Of_Stars)
-app.use('/features',ChaletsFeatures)
-app.use('/AdditionalFeatures',AdditionalFeaturesRoutes)
 
 
 

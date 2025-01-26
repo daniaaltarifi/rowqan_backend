@@ -8,9 +8,9 @@ router.post('/createstars', rateLimiter, numberOfStarsController.createNumberOfS
 
 router.get('/getNumberOfstarsByChaletId/:chalet_id',rateLimiter, numberOfStarsController.getNumberOfStarsbyChaletId);
 
-router.get('/getNumberOfstars/:lang',rateLimiter, numberOfStarsController.getNumberOfStars);
+// router.get('/getNumberOfstars/:lang',rateLimiter, numberOfStarsController.getNumberOfStars);
 
-router.get('/getNumberOfstarsGreaterThanFour/:lang',rateLimiter, numberOfStarsController.getNumberOfStars);
+router.get('/getNumberOfstarsGreaterThanFour/:lang',rateLimiter, numberOfStarsController.getHighRatedChalets);
 
 
 router.get('/getAvergaestars/:chalet_id',rateLimiter, numberOfStarsController.getAverageStars);

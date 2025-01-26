@@ -1,12 +1,8 @@
 const Chalet = require("../Models/ChaletsModel");
 const Status = require("../Models/StatusModel");
-const multer = require("../Config/Multer");
-const path = require("path");
-const ChaletsDetails = require("../Models/ChaletsDetails");
 const chaletsImages = require("../Models/ChaletsImagesModel");
-const BreifDetailsChalets = require("../Models/BreifDetailsChalets");
 const RightTimeModel = require("../Models/RightTimeModel");
-const ReservationDate = require("../Models/ReservationDatesModel");
+
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
 const  {Sequelize,Op}  = require('sequelize');
