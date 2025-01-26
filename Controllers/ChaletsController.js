@@ -165,7 +165,7 @@ exports.getAllChalets = async (req, res) => {
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id","image"] },
-        { model: RightTimeModel, attributes: ["type_of_time","from_time","to_time","price","After_Offer"] },
+        { model: RightTimeModel, attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"] },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
