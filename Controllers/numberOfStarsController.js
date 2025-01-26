@@ -136,10 +136,63 @@ exports.getNumberOfStars = async (req, res) => {
     }
   };
   
-  
-  
 
 
+
+
+  exports.getNumberOfStarsGreaterThanFour = async (req, res) => {
+    try {
+      const { page = 1, limit = 20, lang } = req.query;
+  
+      const offset = (page - 1) * limit;
+  
+      
+      const cacheKey = `no_stars:page:${page}:limit:${limit}:lang:${lang}`;
+  
+      
+      const cachedData = await client.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(JSON.parse(cachedData)); 
+           }
+  
+      
+      const stars = await number_stars.findAll({
+        where: {
+          no_start: {
+            [Sequelize.Op.gte]: 4, 
+          },
+          lang: lang, 
+        },
+        attributes: ['id', 'no_start', 'lang', 'createdAt'], 
+        order: [['createdAt', 'DESC']], 
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+  
+      if (stars.length === 0) {
+        return res.status(404).json(
+          ErrorResponse("Stars not found", [
+            `No stars found with no_start >= 4 and lang: ${lang}`
+          ])
+        );
+      }
+  
+      
+      await client.setEx(cacheKey, 3600, JSON.stringify(stars));
+  
+      
+      res.status(200).json(stars);
+    } catch (error) {
+      console.error("Error in getNumberOfStars:", error.message);
+      res.status(500).json(
+        ErrorResponse("Failed to fetch stars", [
+          "An internal server error occurred."
+        ])
+      );
+    }
+  };
+  
+  
 
 
 exports.getAverageStars = async (req, res) => {

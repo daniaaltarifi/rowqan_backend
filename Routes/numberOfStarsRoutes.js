@@ -10,6 +10,8 @@ router.get('/getNumberOfstarsByChaletId/:chalet_id',rateLimiter, numberOfStarsCo
 
 router.get('/getNumberOfstars/:lang',rateLimiter, numberOfStarsController.getNumberOfStars);
 
+router.get('/getNumberOfstarsGreaterThanFour/:lang',rateLimiter, numberOfStarsController.getNumberOfStars);
+
 
 router.get('/getAvergaestars/:chalet_id',rateLimiter, numberOfStarsController.getAverageStars);
 

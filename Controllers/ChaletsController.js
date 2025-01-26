@@ -130,16 +130,9 @@ exports.createChalet = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
 exports.getAllChalets = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 100 } = req.query;
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
@@ -148,7 +141,7 @@ exports.getAllChalets = async (req, res) => {
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
-    client.del(`chalets1:page:${page}:limit:${limit}:lang:${lang || "all"}`);
+  
     const cacheKey = `chalets1:page:${page}:limit:${limit}:lang:${
       lang || "all"
     }`;
@@ -182,6 +175,8 @@ exports.getAllChalets = async (req, res) => {
     });
   }
 };
+
+
 
 
 exports.getChaletsWithOffer = async (req, res) => {
@@ -950,7 +945,7 @@ exports.createCategoryLand = async (req, res) => {
 exports.getAllChaletsFront = async (req, res) => {
   try {
     const { lang } = req.params;
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 100 } = req.query;
     const offset = (page - 1) * limit;
 
     if (!lang) {
