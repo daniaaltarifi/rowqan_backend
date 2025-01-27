@@ -186,7 +186,7 @@ exports.getAverageStars = async (req, res) => {
     });
 
     if (stars.length === 0) {
-      return res.status(404).json({ message: "No ratings found for this chalet" });
+      return res.status(200).json({ message: "No ratings found for this chalet" });
     }
 
     
