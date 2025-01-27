@@ -131,7 +131,6 @@ exports.getAllChalets = async (req, res) => {
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
-    
     if (lang && !["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language. Supported languages are "ar" and "en".',
@@ -140,16 +139,16 @@ exports.getAllChalets = async (req, res) => {
 
     const cacheKey = `chalets4:page:${page}:limit:${limit}:lang:${lang || "all"}`;
    
+    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit");
       return res.status(200).json(JSON.parse(cachedData)); 
     }
 
-  
     const whereClause = lang ? { lang } : {};
 
-  
+    
     const chalets = await Chalet.findAll({
       where: whereClause,
       attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount","type","features","Additional_features"], 
@@ -167,9 +166,16 @@ exports.getAllChalets = async (req, res) => {
     });
 
     
+    if (chalets.length === 0) {
+      return res.status(404).json({
+        error: "No chalets found",
+      });
+    }
+
+    
     await client.setEx(cacheKey, 300, JSON.stringify(chalets));
 
-   
+    
     res.status(200).json(chalets);
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
@@ -178,6 +184,7 @@ exports.getAllChalets = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -590,12 +597,13 @@ exports.deleteChalet = async (req, res) => {
     
     await chalet.destroy();
 
-   
+    
+    await client.del(`chalets4:page:1:limit:100:lang:${lang || "all"}`);
+
+    
     await RightTimeModel.destroy({ where: { chalet_id: id } });
-    await chaletsImages.destroy({ where: { chalet_id: id } });    
+    await chaletsImages.destroy({ where: { chalet_id: id } });
     await Reservations_Chalets.destroy({ where: { chalet_id: id } });
-   
-    await client.del(`chalet4:${id}`);
 
     return res.status(200).json({ message: "Chalet deleted successfully" });
   } catch (error) {
@@ -610,6 +618,8 @@ exports.deleteChalet = async (req, res) => {
       );
   }
 };
+
+
 
 
 
