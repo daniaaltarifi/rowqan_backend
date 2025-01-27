@@ -450,11 +450,11 @@ exports.createPayment = async (req, res) => {
     try {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
-  
-  
+
+      
       const cacheKey = `payment:page:${page}:limit:${limit}`;
   
-     
+      await client.del(cacheKey);
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         return res.status(200).json(JSON.parse(cachedData));
@@ -495,8 +495,8 @@ exports.createPayment = async (req, res) => {
         );
       }
   
-      
-      await client.setEx(cacheKey, 3600, JSON.stringify(payments));
+    
+      await client.setEx(cacheKey, 300, JSON.stringify(payments));
   
       
       res.status(200).json(payments);
