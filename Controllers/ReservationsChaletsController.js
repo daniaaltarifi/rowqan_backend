@@ -681,28 +681,29 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   const { chalet_id, name, lang } = req.params;
 
   console.log("Chalet ID:", chalet_id);
-  console.log("Time:", name);  
+  console.log("Time:", name);
   console.log("Lang:", lang);
+
+  const cacheKey = `reservations:${chalet_id}:${name}:${lang}`;
 
   try {
   
-    const rightTimes = await RightTimeModel.findAll({
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      console.log("Cache hit for reservations");
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log("Cache miss for reservations");
+
+    
+    const rightTime = await RightTimeModel.findOne({
       where: {
         lang: lang,
         chalet_id: chalet_id,
+        type_of_time: name,
       },
+      attributes: ['id'], 
     });
-
-    console.log("Right Times:", rightTimes);  
-
-    if (!rightTimes || rightTimes.length === 0) {
-      return res.status(404).json({ error: "No right time found for the provided chalet_id and lang" });
-    }
-
-   
-    const rightTime = rightTimes.find(rt => rt.type_of_time === name); 
-    console.log("Right Time Type:", rightTime ? rightTime.type_of_time : "Not found");
-    console.log("Input Name:", name);
 
     if (!rightTime) {
       return res.status(404).json({ error: `No right time found for the provided time: ${name}` });
@@ -710,28 +711,26 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
     const rightTimeId = rightTime.id;
 
-    const whereClause = {
-      lang: lang,
-      chalet_id: chalet_id,
-      right_time_id: rightTimeId,
-      status: 'Confirmed',  
-    };
-
+    
     const reservations = await Reservations_Chalets.findAll({
-      where: whereClause,
+      where: {
+        lang: lang,
+        chalet_id: chalet_id,
+        right_time_id: rightTimeId,
+        status: 'Confirmed',
+      },
+      attributes: ['start_date', 'end_date'], 
     });
-
-    console.log("Reservations Found:", reservations);  
 
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No reservations found" });
     }
 
+  
     const reservedDates = new Set();
-
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
-      let end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+      const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
       let current = start.clone();
       while (current.isSameOrBefore(end)) {
@@ -740,9 +739,14 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       }
     });
 
-    res.status(200).json({
+    const response = {
       reserved_days: Array.from(reservedDates).sort(),
-    });
+    };
+
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(response));
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error in getReservationsByRightTime:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
@@ -816,12 +820,6 @@ exports.getReservationsByRightTime = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
-
-
-
-
-
-
 
 
 

@@ -19,9 +19,7 @@ const number_stars = sequelize.define('number_stars', {
 });
 
 
-number_stars.belongsTo(Chalets, { foreignKey: 'chalet_id', targetKey: 'id' });
-
-
-Chalets.hasMany(number_stars, { foreignKey: 'chalet_id', sourceKey: 'id' });
+number_stars.belongsTo(Chalets, { foreignKey: 'chalet_id'});
+Chalets.hasMany(number_stars, { foreignKey: 'chalet_id'});
 
 module.exports = number_stars;
