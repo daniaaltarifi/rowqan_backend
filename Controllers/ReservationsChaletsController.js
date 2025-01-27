@@ -825,11 +825,10 @@ exports.getReservationsByRightTime = async (req, res) => {
 
 
 
-
 exports.updateReservation = async (req, res) => {
   try {
     const { id } = req.params; 
-    const { status, lang } = req.body; 
+    const { Status, lang } = req.body; 
 
     
     if (lang && !['ar', 'en'].includes(lang)) {
@@ -846,14 +845,14 @@ exports.updateReservation = async (req, res) => {
     }
 
    
-    if (status === undefined) {
+    if (Status === undefined) {
       return res.status(400).json({
         error: lang === 'en' ? 'Status is required' : 'الحالة مطلوبة',
       });
     }
 
   
-    reservation.status = status;
+    reservation.Status = Status;
     await reservation.save();
 
 
