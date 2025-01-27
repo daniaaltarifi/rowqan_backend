@@ -10,6 +10,7 @@ const  {Sequelize,Op}  = require('sequelize');
 
 const axios = require('axios');
 
+
 exports.createChalet = async (req, res) => {
   try {
     const {
@@ -47,7 +48,7 @@ exports.createChalet = async (req, res) => {
         .json(ErrorResponse('Invalid language, it should be "en" or "ar"'));
     }
 
-    
+   
     const geoApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
     const geoResponse = await axios.get(geoApiUrl);
 
@@ -75,7 +76,7 @@ exports.createChalet = async (req, res) => {
         status_id,
       });
 
-      
+     
       if (Array.isArray(rightTimesData)) {
         await Promise.all(
           rightTimesData.map((rightTime) =>
@@ -93,15 +94,11 @@ exports.createChalet = async (req, res) => {
       }
 
      
-      const cacheKeyPattern = `chalets3:page:*:limit:*:lang:*`;
-      const keysToDelete = await client.keys(cacheKeyPattern);
-      if (keysToDelete.length > 0) {
-        await Promise.all(keysToDelete.map((key) => client.del(key)));
-      }
-
-      
-      const chaletCacheKey = `chalet:${newChalet.id}`;
-      await client.setEx(chaletCacheKey, 3600, JSON.stringify(newChalet));
+      const cacheKey = `chalets4:page:1:limit:100:lang:${lang || "all"}`;
+      const updatedChaletData = JSON.stringify(newChalet);
+      client.setEx(cacheKey, 3600, updatedChaletData).catch((error) => {
+        console.error("Error updating cache:", error);
+      });
 
       res.status(201).json({
         message: lang === "en" ? "Chalet created successfully" : "تم إنشاء الشاليه بنجاح",
@@ -128,7 +125,6 @@ exports.createChalet = async (req, res) => {
 
 
 
-
 exports.getAllChalets = async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query; 
@@ -142,7 +138,7 @@ exports.getAllChalets = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets3:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+    const cacheKey = `chalets4:page:${page}:limit:${limit}:lang:${lang || "all"}`;
    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
@@ -151,14 +147,12 @@ exports.getAllChalets = async (req, res) => {
     }
 
   
-
-  
     const whereClause = lang ? { lang } : {};
 
   
     const chalets = await Chalet.findAll({
       where: whereClause,
-      attributes: ["id", "title", "description", "image", "city", "area", "intial_Amount", "Rating"], 
+      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount","type","features","Additional_features"], 
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id", "image"] },
@@ -173,7 +167,7 @@ exports.getAllChalets = async (req, res) => {
     });
 
     
-    await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
+    await client.setEx(cacheKey, 300, JSON.stringify(chalets));
 
    
     res.status(200).json(chalets);
@@ -401,7 +395,7 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chalets3:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalets4:${id}:lang:${lang || "all"}`;
 
    
     const cachedData = await client.get(cacheKey);
@@ -549,7 +543,7 @@ exports.updateChalet = async (req, res) => {
     const updatedData = chalet.toJSON();
 
     
-    const cacheKey = `chalet3:${id}`;
+    const cacheKey = `chalet4:${id}`;
     await client.setEx(cacheKey, 3600, JSON.stringify(updatedData));
 
     res.status(200).json({
@@ -601,7 +595,7 @@ exports.deleteChalet = async (req, res) => {
     await chaletsImages.destroy({ where: { chalet_id: id } });    
     await Reservations_Chalets.destroy({ where: { chalet_id: id } });
    
-    await client.del(`chalet3:${id}`);
+    await client.del(`chalet4:${id}`);
 
     return res.status(200).json({ message: "Chalet deleted successfully" });
   } catch (error) {
