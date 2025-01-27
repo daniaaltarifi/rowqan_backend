@@ -7,6 +7,7 @@ const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
 const  {Sequelize,Op}  = require('sequelize');
 
+const { sequelize } = require('../Config/dbConnect')
 
 const axios = require('axios');
 
@@ -603,15 +604,27 @@ exports.deleteChalet = async (req, res) => {
     }
 
     
+    await RightTimeModel.destroy({ where: { chalet_id: id } });
+    await chaletsImages.destroy({ where: { chalet_id: id } });
+
+    
+    await Payments.destroy({
+      where: {
+        reservation_id: {
+          [Op.in]: Sequelize.literal(`(SELECT id FROM Reservations_Chalets WHERE chalet_id = ${id})`)
+        }
+      }
+    });
+    
+
+    
+    await Reservations_Chalets.destroy({ where: { chalet_id: id } });
+
+    
     await chalet.destroy();
 
     
-    await client.del(`chalets4:page:1:limit:100:lang:${lang || "all"}`);
-
-    
-    await RightTimeModel.destroy({ where: { chalet_id: id } });
-    await chaletsImages.destroy({ where: { chalet_id: id } });
-    await Reservations_Chalets.destroy({ where: { chalet_id: id } });
+    await client.del(`chalets5:page:1:limit:100:lang:${lang || "all"}`);
 
     return res.status(200).json({ message: "Chalet deleted successfully" });
   } catch (error) {
@@ -626,6 +639,7 @@ exports.deleteChalet = async (req, res) => {
       );
   }
 };
+
 
 
 
@@ -684,6 +698,7 @@ exports.filterByCityAndArea = async (req, res) => {
 
 const geolib = require('geolib');
 const Reservations_Chalets = require("../Models/Reservations_Chalets");
+const Payments = require("../Models/PaymentModel");
 
 exports.filterChaletsByLocation = async (req, res) => {
   try {
