@@ -149,9 +149,9 @@ const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit");
-      return res.status(200).json({
-        data: JSON.parse(cachedData),  
-      });
+      return res.status(200).json(
+       JSON.parse(cachedData),  
+      );
     }
 
     
@@ -185,9 +185,9 @@ const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
     await client.setEx(cacheKey, 300, JSON.stringify(chalets));
 
     
-    res.status(200).json({
-      data: chalets,  
-    });
+    res.status(200).json(
+      chalets,  
+    );
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
     res.status(500).json({
