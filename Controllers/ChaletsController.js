@@ -486,6 +486,8 @@ exports.getChaletById = async (req, res) => {
 
 
 
+
+
 exports.updateChalet = async (req, res) => {
   try {
     const { id } = req.params;
@@ -504,12 +506,19 @@ exports.updateChalet = async (req, res) => {
       status_id 
     } = req.body || {};
 
-  
     
-    const image = req.files?.image?.[0]?.path || null;
+    console.log(req.file); 
+    const image = req.file?.path || null;
+
+
+    if (!image) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: ["Image is required"],
+      });
+    }
     const validationErrors = [];
 
-  
     if (!status_id) {
       validationErrors.push('status_id is required');
     }
@@ -522,13 +531,13 @@ exports.updateChalet = async (req, res) => {
       return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
     }
 
-   
+    
     const chalet = await Chalet.findByPk(id);
     if (!chalet) {
       return res.status(404).json(ErrorResponse(`Chalet with id ${id} not found`));
     }
 
-   
+    
     if (status_id) {
       const status = await Status.findByPk(status_id);
       if (!status) {
@@ -536,31 +545,27 @@ exports.updateChalet = async (req, res) => {
       }
     }
 
-    
-    const updatedFields = {};
-    if (title && title !== chalet.title) updatedFields.title = title;
-    if (description && description !== chalet.description) updatedFields.description = description;
-    if (Rating && Rating !== chalet.Rating) updatedFields.Rating = Rating;
-    if (city && city !== chalet.city) updatedFields.city = city;
-    if (area && area !== chalet.area) updatedFields.area = area;
-    if (intial_Amount && intial_Amount !== chalet.intial_Amount) updatedFields.intial_Amount = intial_Amount;
-    if (type && type !== chalet.type) updatedFields.type = type;
-    if (features && features !== chalet.features) updatedFields.features = features;
-    if (Additional_features && Additional_features !== chalet.Additional_features) updatedFields.Additional_features = Additional_features;
-    if (near_me && near_me !== chalet.near_me) updatedFields.near_me = near_me;
-    if (lang && lang !== chalet.lang) updatedFields.lang = lang;
-    if (status_id && status_id !== chalet.status_id) updatedFields.status_id = status_id;
-    if (image && image !== chalet.image) updatedFields.image = image;
+   
+    const updatedFields = {
+      title,
+      description,
+      Rating,
+      city,
+      area,
+      intial_Amount,
+      type: type ? JSON.parse(type) : null,
+      features,
+      Additional_features,
+      near_me,
+      lang,
+      status_id,
+      image,
+    };
 
-    if (Object.keys(updatedFields).length > 0) {
-      await chalet.update(updatedFields);
-    }
+   
+    await chalet.update(updatedFields);
 
     const updatedData = chalet.toJSON();
-
-    
-    const cacheKey = `chalet4:${id}`;
-    await client.setEx(cacheKey, 3600, JSON.stringify(updatedData));
 
     res.status(200).json({
       message: lang === "en" ? "Chalet updated successfully" : "تم تحديث الشاليه بنجاح",
@@ -572,6 +577,18 @@ exports.updateChalet = async (req, res) => {
     res.status(500).json(ErrorResponse("Failed to update chalet"));
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
