@@ -143,9 +143,6 @@ exports.createPayment = async (req, res) => {
     await reservation.save();
     }
 
-    
-
-    
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
@@ -451,6 +448,52 @@ exports.createPayment = async (req, res) => {
       );
     }
   };
+
+
+
+  exports.updatePaymentStatus = async (req, res) => {
+    try {
+      const { id } = req.params; 
+      const { status, lang } = req.body; 
+  
+      
+      if (lang && !['ar', 'en'].includes(lang)) {
+        return res.status(400).json({
+          error: 'Invalid language',
+        });
+      }
+  
+      const payment = await Payments.findByPk(id);
+      if (!payment) {
+        return res.status(404).json({
+          error: lang === 'en' ? 'payment not found' : 'الدفع غير موجود',
+        });
+      }
+  
+     
+      if (status === undefined) {
+        return res.status(400).json({
+          error: lang === 'en' ? 'Status is required' : 'الحالة مطلوبة',
+        });
+      }
+  
+    
+      payment.status = status;
+      await payment.save();
+  
+  
+      res.status(200).json({
+        message: lang === 'en' ? 'Payment status updated successfully' : 'تم تحديث حالة الحجز بنجاح',
+        payment,
+      });
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      res.status(500).json({
+        error: lang === 'en' ? 'Failed to update payment status' : 'فشل في تحديث حالة الحجز',
+      });
+    }
+  };
+
 
 
 exports.getPaymentById = async (req, res) => {

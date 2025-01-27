@@ -14,6 +14,8 @@ router.post('/createPaymentIntent',rateLimiter, paymentsController.createPayment
 
 router.put('/updatePayment/:id', rateLimiter, paymentsController.updatePayment);
 
+router.put('/updatePaymentStatus/:id', rateLimiter, paymentsController.updatePaymentStatus);
+
 router.get('/getPayments/:userId',rateLimiter, paymentsController.getPayments);
 
 router.get('/getAllPayments',rateLimiter, paymentsController.getAllPayments);
