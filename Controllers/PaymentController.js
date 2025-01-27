@@ -490,7 +490,7 @@ exports.createPayment = async (req, res) => {
   
       
       if (payments.length === 0) {
-        return res.status(404).json(
+        return res.status(200).json(
           ErrorResponse("No payments found", ["No payments found for the given user ID."])
         );
       }
