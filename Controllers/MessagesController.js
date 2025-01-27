@@ -140,13 +140,16 @@ exports.getMessagesBySenderIdRecieverIdChaletId = async (req, res) => {
 
 exports.getMessagesByChalets = async (req, res) => {
   try {
-    const { lang } = req.params;
+    const { receiverId ,lang } = req.params;
 
     if (!lang) {
       return res.status(400).json({ message: 'lang is required' });
     }
 
     const messages = await Messages.findAll({
+      where:{
+        receiverId,
+      },
       include: [
         {
           model: Chalet,
