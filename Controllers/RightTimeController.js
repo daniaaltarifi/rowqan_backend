@@ -129,7 +129,7 @@ exports.getRightTimeById = async (req, res) => {
   exports.getAllRightTimesByChaletId = async (req, res) => {
     try {
       const { chalet_id, lang } = req.params;
-      const cacheKey = `rightTimeByChaletId:chalet:${chalet_id}:${lang}`;
+      const cacheKey = `rightTime:chalet:${chalet_id}:${lang}`;
   
       
       const cachedData = await client.get(cacheKey);
