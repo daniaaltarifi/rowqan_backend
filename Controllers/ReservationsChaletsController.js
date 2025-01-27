@@ -331,7 +331,7 @@ exports.getAllReservations = async (req, res) => {
     }));
 
     
-    await client.setEx(cacheKey, 3600, JSON.stringify(formattedReservations));
+    await client.setEx(cacheKey, 300, JSON.stringify(formattedReservations));
 
     
     return res.status(200).json(formattedReservations);
