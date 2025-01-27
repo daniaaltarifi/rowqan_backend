@@ -67,9 +67,7 @@ exports.createAbout = async (req, res) => {
       
       const cacheKey = `about:page:${page}:limit:${limit}:lang:${lang || 'all'}`;
   
-     
       client.del(cacheKey);
-  
       
       const cachedData = await client.get(cacheKey);
   
