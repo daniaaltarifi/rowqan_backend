@@ -454,9 +454,8 @@ exports.createPayment = async (req, res) => {
   exports.updatePaymentStatus = async (req, res) => {
     try {
       const { id } = req.params; 
-      const { status, lang } = req.body; 
+      const { status, lang } = req.body;
   
-      
       if (lang && !['ar', 'en'].includes(lang)) {
         return res.status(400).json({
           error: 'Invalid language',
@@ -466,21 +465,25 @@ exports.createPayment = async (req, res) => {
       const payment = await Payments.findByPk(id);
       if (!payment) {
         return res.status(404).json({
-          error: lang === 'en' ? 'payment not found' : 'الدفع غير موجود',
+          error: lang === 'en' ? 'Payment not found' : 'الدفع غير موجود',
         });
       }
   
-     
       if (status === undefined) {
         return res.status(400).json({
           error: lang === 'en' ? 'Status is required' : 'الحالة مطلوبة',
         });
       }
   
-    
       payment.status = status;
       await payment.save();
   
+    
+      const cacheKey = `payment:page:*:limit:*`;
+      const keysToDelete = await client.keys(cacheKey);
+      if (keysToDelete.length > 0) {
+        await Promise.all(keysToDelete.map((key) => client.del(key))); 
+      }
   
       res.status(200).json({
         message: lang === 'en' ? 'Payment status updated successfully' : 'تم تحديث حالة الحجز بنجاح',
@@ -493,6 +496,7 @@ exports.createPayment = async (req, res) => {
       });
     }
   };
+  
 
 
 
