@@ -181,7 +181,6 @@ exports.getAverageStars = async (req, res) => {
   try {
     const { chalet_id } = req.params;  
 
-    
     const stars = await number_stars.findAll({
       where: { chalet_id },  
     });

@@ -267,7 +267,7 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
 
   
     if (!chaletsWithOfferAndTime || chaletsWithOfferAndTime.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: `No chalets found with type_of_time "${type_of_time}" and an offer.`,
       });
