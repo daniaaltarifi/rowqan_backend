@@ -12,49 +12,43 @@ const axios = require('axios');
 
 exports.createChalet = async (req, res) => {
   try {
-    const { 
-      title, 
-      description, 
-      Rating, 
-      city,  
-      area, 
-      intial_Amount, 
-      type, 
-      features, 
+    const {
+      title,
+      description,
+      Rating,
+      city,
+      area,
+      intial_Amount,
+      type,
+      features,
       Additional_features,
       near_me,
-      lang, 
-      rightTimesData, 
-      status_id 
+      lang,
+      rightTimesData,
+      status_id,
     } = req.body || {};
 
-    console.log("Received lang:", lang);
- 
-    const image = req.files?.image?.[0]?.path || null; 
+    const image = req.files?.image?.[0]?.path || null;
     if (!image) {
       return res.status(400).json(
-        ErrorResponse("Validation failed", [
-          "Image is required"
-        ])
+        ErrorResponse("Validation failed", ["Image is required"])
       );
     }
 
-    const parsedType = type ? JSON.parse(type) : null; 
-
     if (!status_id) {
       return res.status(400).json(
-        ErrorResponse('Validation failed', ['status_id is required'])
+        ErrorResponse("Validation failed", ["status_id is required"])
       );
     }
 
     if (!["en", "ar"].includes(lang)) {
-      return res.status(400).json(
-        ErrorResponse('Invalid language, it should be "en" or "ar"')
-      );
+      return res
+        .status(400)
+        .json(ErrorResponse('Invalid language, it should be "en" or "ar"'));
     }
 
+    
     const geoApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
-
     const geoResponse = await axios.get(geoApiUrl);
 
     if (geoResponse.data.length > 0) {
@@ -62,63 +56,73 @@ exports.createChalet = async (req, res) => {
       const latitude = location.lat;
       const longitude = location.lon;
 
-      console.log("Latitude:", latitude, "Longitude:", longitude);
+      const nearMeData = JSON.stringify({ latitude, longitude });
 
-      const nearMeData = near_me 
-        ? JSON.stringify({ latitude, longitude }) 
-        : JSON.stringify({ latitude, longitude });
-
+     
       const newChalet = await Chalet.create({
         title,
         description,
-        image, 
+        image,
         Rating,
         city,
         area,
         intial_Amount,
-        type: parsedType, 
+        type: type ? JSON.parse(type) : null,
         features,
         Additional_features,
-        near_me: nearMeData, 
-        lang,  
-        status_id
+        near_me: nearMeData,
+        lang,
+        status_id,
       });
 
-      console.log("Chalet created:", newChalet);
-
-      if (Array.isArray(rightTimesData) && rightTimesData.length > 0) {
+      
+      if (Array.isArray(rightTimesData)) {
         await Promise.all(
-          rightTimesData.map(async (rightTime, index) => {
-            
-            await RightTimeModel.create({
+          rightTimesData.map((rightTime) =>
+            RightTimeModel.create({
               type_of_time: rightTime.type_of_time,
               from_time: rightTime.from_time,
               to_time: rightTime.to_time,
-              lang: rightTime.lang, 
+              lang: rightTime.lang,
               price: rightTime.price,
               After_Offer: rightTime.After_Offer,
-              chalet_id: newChalet.id, 
-            });
-          })
+              chalet_id: newChalet.id,
+            })
+          )
         );
-      } else {
-        console.log("No rightTimesData provided or it's not an array");
       }
+
+     
+      const cacheKeyPattern = `chalets2:page:*:limit:*:lang:*`;
+      const keysToDelete = await client.keys(cacheKeyPattern);
+      if (keysToDelete.length > 0) {
+        await Promise.all(keysToDelete.map((key) => client.del(key)));
+      }
+
+      
+      const chaletCacheKey = `chalet:${newChalet.id}`;
+      await client.setEx(chaletCacheKey, 3600, JSON.stringify(newChalet));
 
       res.status(201).json({
         message: lang === "en" ? "Chalet created successfully" : "تم إنشاء الشاليه بنجاح",
         chalet: newChalet,
       });
-
     } else {
-      return res.status(400).json({ error: "Failed to fetch geolocation for the given city." });
+      return res
+        .status(400)
+        .json({ error: "Failed to fetch geolocation for the given city." });
     }
-
   } catch (error) {
     console.error("Error in createChalet:", error);
-    res.status(500).json(ErrorResponse("Error creating chalet"));
-  } 
+    res.status(500).json(
+      ErrorResponse("Error creating chalet", [
+        "An internal server error occurred.",
+      ])
+    );
+  }
 };
+
+
 
 
 
@@ -128,41 +132,51 @@ exports.createChalet = async (req, res) => {
 
 exports.getAllChalets = async (req, res) => {
   try {
-    const { page = 1, limit = 100 } = req.query;
+    const { page = 1, limit = 100 } = req.query; 
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
+    
     if (lang && !["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
-  
-    const cacheKey = `chalets1:page:${page}:limit:${limit}:lang:${
-      lang || "all"
-    }`;
-    const cachedData = await client.get(cacheKey);
 
+    const cacheKey = `chalets2:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+   
+    const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));
+      console.log("Cache hit");
+      return res.status(200).json(JSON.parse(cachedData)); 
     }
 
+  
+
+  
     const whereClause = lang ? { lang } : {};
 
+  
     const chalets = await Chalet.findAll({
       where: whereClause,
+      attributes: ["id", "title", "description", "image", "city", "area", "intial_Amount", "Rating"], 
       include: [
         { model: Status, attributes: ["status"] },
-        { model: chaletsImages, attributes: ["id","image"] },
-        { model: RightTimeModel, attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"] },
+        { model: chaletsImages, attributes: ["id", "image"] },
+        {
+          model: RightTimeModel,
+          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer"],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [["id", "DESC"]],
     });
 
+    
     await client.setEx(cacheKey, 3600, JSON.stringify(chalets));
 
+   
     res.status(200).json(chalets);
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
