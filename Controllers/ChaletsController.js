@@ -131,27 +131,36 @@ exports.getAllChalets = async (req, res) => {
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
+    
     if (lang && !["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
 
-    const cacheKey = `chalets4:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+    
+await client.del(`chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`);
+
+    
+const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+
    
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit");
-      return res.status(200).json(JSON.parse(cachedData)); 
+      return res.status(200).json({
+        data: JSON.parse(cachedData),  
+      });
     }
 
+    
     const whereClause = lang ? { lang } : {};
 
     
     const chalets = await Chalet.findAll({
       where: whereClause,
-      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount","type","features","Additional_features"], 
+      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"], 
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id", "image"] },
@@ -162,7 +171,7 @@ exports.getAllChalets = async (req, res) => {
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [["id", "DESC"]],
+      order: [["id", "DESC"]], 
     });
 
     
@@ -176,7 +185,9 @@ exports.getAllChalets = async (req, res) => {
     await client.setEx(cacheKey, 300, JSON.stringify(chalets));
 
     
-    res.status(200).json(chalets);
+    res.status(200).json({
+      data: chalets,  
+    });
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
     res.status(500).json({
@@ -184,6 +195,8 @@ exports.getAllChalets = async (req, res) => {
     });
   }
 };
+
+
 
 
 
