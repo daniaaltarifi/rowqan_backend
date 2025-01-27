@@ -161,7 +161,7 @@ exports.getRightTimeById = async (req, res) => {
      
       await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
   
-      return res.status(200).json({ rightTimes });
+      return res.status(200).json(rightTimes);
     } catch (error) {
       console.error("Error in getAllRightTimesByChaletId:", error);
   
