@@ -93,7 +93,7 @@ exports.createChalet = async (req, res) => {
       }
 
      
-      const cacheKeyPattern = `chalets2:page:*:limit:*:lang:*`;
+      const cacheKeyPattern = `chalets3:page:*:limit:*:lang:*`;
       const keysToDelete = await client.keys(cacheKeyPattern);
       if (keysToDelete.length > 0) {
         await Promise.all(keysToDelete.map((key) => client.del(key)));
@@ -129,7 +129,6 @@ exports.createChalet = async (req, res) => {
 
 
 
-
 exports.getAllChalets = async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query; 
@@ -143,7 +142,7 @@ exports.getAllChalets = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets2:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+    const cacheKey = `chalets3:page:${page}:limit:${limit}:lang:${lang || "all"}`;
    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
@@ -402,7 +401,7 @@ exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
     const { lang } = req.query;
-    const cacheKey = `chalets1:${id}:lang:${lang || "all"}`;
+    const cacheKey = `chalets3:${id}:lang:${lang || "all"}`;
 
    
     const cachedData = await client.get(cacheKey);
@@ -550,7 +549,7 @@ exports.updateChalet = async (req, res) => {
     const updatedData = chalet.toJSON();
 
     
-    const cacheKey = `chalet:${id}`;
+    const cacheKey = `chalet3:${id}`;
     await client.setEx(cacheKey, 3600, JSON.stringify(updatedData));
 
     res.status(200).json({
@@ -602,7 +601,7 @@ exports.deleteChalet = async (req, res) => {
     await chaletsImages.destroy({ where: { chalet_id: id } });    
     await Reservations_Chalets.destroy({ where: { chalet_id: id } });
    
-    await client.del(`chalet:${id}`);
+    await client.del(`chalet3:${id}`);
 
     return res.status(200).json({ message: "Chalet deleted successfully" });
   } catch (error) {
