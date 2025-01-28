@@ -103,23 +103,24 @@ exports.capturePayPalPayment = async (req, res) => {
 };
 
 
+
 exports.createPayment = async (req, res) => {
   try {
-    const { user_id, reservation_id, status, paymentMethod, UserName, Phone_Number } = req.body;
+    const { user_id, reservation_id, paymentMethod, UserName, Phone_Number } = req.body;
 
-    
-    if (!reservation_id || !status || !paymentMethod || !UserName || !Phone_Number) {
+  
+    if (!reservation_id || !paymentMethod || !UserName || !Phone_Number) {
       return res
         .status(400)
         .json(
           ErrorResponse('Validation failed', [
-            'Reservation, status, paymentMethod, UserName, and Phone_Number are required.',
+            'Reservation, paymentMethod, UserName, and Phone_Number are required.',
           ])
         );
     }
 
-    
-    const validationErrors = validateInput({ status, paymentMethod, UserName, Phone_Number });
+   
+    const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
       return res
         .status(400)
@@ -129,6 +130,7 @@ exports.createPayment = async (req, res) => {
     
     const user = await Users.findByPk(user_id);
 
+   
     const reservation = await ReservationChalets.findByPk(reservation_id);
     if (!reservation) {
       return res
@@ -138,15 +140,25 @@ exports.createPayment = async (req, res) => {
         );
     }
 
-    if (paymentMethod === 'Cliq') {
-      reservation.Status = 'Pending';
-    await reservation.save();
+   
+    if (reservation.Status === 'Confirmed') {
+      return res.status(400).send({ error: 'Reservation is already confirmed.' });
     }
 
+   
+    if (paymentMethod === 'Cliq') {
+      reservation.Status = 'Pending';
+      await reservation.save();
+    } else if (paymentMethod === 'credit_card') {
+      reservation.Status = 'Confirmed';
+      await reservation.save();
+    }
+
+    
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
-      status,
+      status: paymentMethod === 'credit_card' ? 'Confirmed' : 'Pending', 
       paymentMethod,
       UserName,
       Phone_Number,
@@ -167,6 +179,7 @@ exports.createPayment = async (req, res) => {
       );
   }
 };
+
 
  
 
