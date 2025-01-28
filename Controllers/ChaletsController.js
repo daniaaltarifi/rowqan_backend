@@ -496,81 +496,100 @@ exports.getChaletById = async (req, res) => {
 exports.updateChalet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title,description, lang, status_id, reserve_price, intial_Amount } = req.body;
-    
-    
-    const image = req.file ? req.file.path : null;
 
-    const validationErrors = validateInput({
+   
+    const {
       title,
+      description,
+      Rating,
+      city,
+      area,
+      intial_Amount,
+      type,
+      features,
+      Additional_features,
+      near_me,
       lang,
       status_id,
-      reserve_price,
-      intial_Amount
-    });
+    } = req.body;
 
-    if (validationErrors.length > 0) {
-      return res
-        .status(400)
-        .json(ErrorResponse("Validation failed", validationErrors));
-    }
+    const image = req.file ? req.file.path : null;
 
-   
+    
     const chalet = await Chalet.findByPk(id);
     if (!chalet) {
-      return res
-        .status(404)
-        .json(ErrorResponse(`Chalet with id ${id} not found`));
+      return res.status(404).json({
+        success: false,
+        message: `Chalet with id ${id} not found`,
+      });
     }
 
-   
+    
     if (lang && !["ar", "en"].includes(lang)) {
-      return res
-        .status(400)
-        .json(
-          ErrorResponse(
-            'Invalid language. Supported languages are "ar" and "en".'
-          )
-        );
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid language. Supported languages are "ar" and "en".',
+      });
     }
 
-   
+ 
     if (status_id) {
       const status = await Status.findByPk(status_id);
       if (!status) {
-        return res.status(404).json(ErrorResponse("Status not found"));
+        return res.status(404).json({
+          success: false,
+          message: "Status not found",
+        });
       }
     }
 
-    
+   
     const updatedFields = {};
     if (title && title !== chalet.title) updatedFields.title = title;
-    if (description && description !== chalet.description) updatedFields.description = description;
+    if (description && description !== chalet.description)
+      updatedFields.description = description;
+    if (image && image !== chalet.image) updatedFields.image = image;
+    if (Rating && Rating !== chalet.Rating) updatedFields.Rating = Rating;
+    if (city && city !== chalet.city) updatedFields.city = city;
+    if (area && area !== chalet.area) updatedFields.area = area;
+    if (intial_Amount && intial_Amount !== chalet.intial_Amount)
+      updatedFields.intial_Amount = intial_Amount;
+    if (type && type !== chalet.type) updatedFields.type = type;
+    if (features && features !== chalet.features) updatedFields.features = features;
+    if (
+      Additional_features &&
+      Additional_features !== chalet.Additional_features
+    )
+      updatedFields.Additional_features = Additional_features;
+    if (near_me && near_me !== chalet.near_me) updatedFields.near_me = near_me;
     if (lang && lang !== chalet.lang) updatedFields.lang = lang;
     if (status_id && status_id !== chalet.status_id)
       updatedFields.status_id = status_id;
-    if (reserve_price && reserve_price !== chalet.reserve_price)
-      updatedFields.reserve_price = reserve_price;
-    if (intial_Amount && intial_Amount !== chalet.intial_Amount)
-      updatedFields.intial_Amount = intial_Amount;
-    if (image && image !== chalet.image) updatedFields.image = image;
 
    
     if (Object.keys(updatedFields).length > 0) {
       await chalet.update(updatedFields);
     }
 
-  
     const updatedData = chalet.toJSON();
     const cacheKey = `chalet:${id}`;
     await client.setEx(cacheKey, 3600, JSON.stringify(updatedData));
 
-    return res.status(200).json(updatedData);
+   
+    return res.status(200).json({
+      success: true,
+      message: "Chalet updated successfully",
+      data: updatedData,
+    });
   } catch (error) {
     console.error("Error in updateChalet:", error);
-    return res.status(500).json(ErrorResponse("Failed to update chalet"));
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update chalet",
+    });
   }
 };
+
 
 
 
