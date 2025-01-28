@@ -496,7 +496,7 @@ exports.getChaletById = async (req, res) => {
 exports.updateChalet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, lang, status_id, reserve_price, intial_Amount } = req.body;
+    const { title,description, lang, status_id, reserve_price, intial_Amount } = req.body;
     
     
     const image = req.file ? req.file.path : null;
@@ -545,6 +545,7 @@ exports.updateChalet = async (req, res) => {
     
     const updatedFields = {};
     if (title && title !== chalet.title) updatedFields.title = title;
+    if (description && description !== chalet.description) updatedFields.description = description;
     if (lang && lang !== chalet.lang) updatedFields.lang = lang;
     if (status_id && status_id !== chalet.status_id)
       updatedFields.status_id = status_id;
