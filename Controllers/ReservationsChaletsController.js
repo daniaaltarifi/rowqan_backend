@@ -234,7 +234,7 @@ exports.createReservation = async (req, res) => {
 exports.getAllReservations = async (req, res) => {
   try {
     const { lang } = req.params;
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 40 } = req.query;
     const offset = (page - 1) * limit;
 
     
@@ -331,7 +331,7 @@ exports.getAllReservations = async (req, res) => {
     }));
 
     
-    await client.setEx(cacheKey, 300, JSON.stringify(formattedReservations));
+    await client.setEx(cacheKey, 3600, JSON.stringify(formattedReservations));
 
     
     return res.status(200).json(formattedReservations);
