@@ -153,12 +153,16 @@ exports.createPayment = async (req, res) => {
       reservation.Status = 'Confirmed';
       await reservation.save();
     }
+    else if(paymentMethod === 'cash'){
+      reservation.Status = 'Confirmed';
+      await reservation.save();
+    }
 
     
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
-      status: paymentMethod === 'credit_card' ? 'Confirmed' : 'Pending', 
+      status: paymentMethod === 'credit_card' || 'cash'? 'Confirmed' : 'Pending', 
       paymentMethod,
       UserName,
       Phone_Number,
