@@ -26,6 +26,18 @@ const Payments = sequelize.define('Payments', {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    initialAmount:{
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    RemainningAmount :{
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    Method:{
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     user_id: {  
       type: DataTypes.INTEGER,
       allowNull: true,  
