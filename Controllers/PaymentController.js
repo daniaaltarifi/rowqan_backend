@@ -4,7 +4,7 @@ const  ReservationChalets  = require('../Models/Reservations_Chalets');
 const { client } = require('../Utils/redisClient');
 const { validateInput, ErrorResponse } = require('../Utils/validateInput');
 const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qNoqUPr65tG7t1OhQ4KVqbj0G7hT2NdJwmtzXlEj9zY2DCVXSNIKE00NeWBobTi');
-
+const dotenv = require("dotenv");
 
 
 const  {Client}  = require('../Config/PayPalClient');
@@ -165,87 +165,157 @@ exports.capturePayPalPayment = async (req, res) => {
 
 
 
+const nodemailer = require('nodemailer');
+
+
+
 exports.createPayment = async (req, res) => {
   try {
-    const { user_id, reservation_id, paymentMethod, UserName, Phone_Number } = req.body;
+    const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
-  
-    if (!reservation_id || !paymentMethod || !UserName || !Phone_Number) {
-      return res
-        .status(400)
-        .json(
-          ErrorResponse('Validation failed', [
-            'Reservation, paymentMethod, UserName, and Phone_Number are required.',
-          ])
-        );
+    if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
+      return res.status(400).json(
+        ErrorResponse('Validation failed', [
+          'Reservation, paymentMethod, UserName, Phone_Number, and initialAmount are required.',
+        ])
+      );
     }
 
-   
     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
-      return res
-        .status(400)
-        .json(ErrorResponse('Validation failed', validationErrors));
+      return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
     }
 
     
-    const user = await Users.findByPk(user_id);
+    let user = null;
+    if (user_id) {
+      user = await Users.findByPk(user_id);
+      if (!user) {
+        return res.status(404).json(ErrorResponse('Validation failed', ['User not found.']));
+      }
+    }
 
-   
-    const reservation = await ReservationChalets.findByPk(reservation_id);
+    const reservation = await ReservationChalets.findByPk(reservation_id, {
+      include: [
+        {
+          model: Chalet,
+          attributes: ['title', 'description', 'Rating', 'city', 'area', 'intial_Amount', 'type', 'features', 'Additional_features']
+        },
+      ],
+    });
+
     if (!reservation) {
-      return res
-        .status(404)
-        .json(
-          ErrorResponse('Validation failed', ['Reservation not found.'])
-        );
+      return res.status(404).json(ErrorResponse('Validation failed', ['Reservation not found.']));
     }
 
-   
     if (reservation.Status === 'Confirmed') {
-      return res.status(400).send({ error: 'Reservation is already confirmed.' });
+      return res.status(400).json({ error: 'Reservation is already confirmed.' });
     }
 
-   
-    if (paymentMethod === 'Cliq') {
-      reservation.Status = 'Pending';
-      await reservation.save();
-    } else if (paymentMethod === 'credit_card') {
-      reservation.Status = 'Confirmed';
-      await reservation.save();
-    }
-    else if(paymentMethod === 'cash'){
-      reservation.Status = 'Confirmed';
-      await reservation.save();
+    const totalAmount = reservation.Total_Amount;
+
+    if (initialAmount > totalAmount) {
+      return res.status(400).json(ErrorResponse('Validation failed', ['Initial amount cannot exceed total amount.']));
     }
 
+    const remainingAmount = totalAmount - initialAmount;
 
-    
+    const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
+
+    reservation.Status = 'Confirmed';
+    reservation.Total_Amount = remainingAmount;
+    await reservation.save();
+
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
-      status: (paymentMethod === 'credit_card' || paymentMethod === 'cash') ? 'Confirmed' : 'Pending',
-
+      status: reservation.Status,
       paymentMethod,
       UserName,
       Phone_Number,
+      initialAmount,
+      RemainningAmount: remainingAmount,
+      Method: paymentMethodType,
     });
 
+   
+    if (user) {
+      const email = user.email;
+      const insuranceValue = getInsuranceValue(reservation.Chalet.description);
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      const mailOptions = {
+        from: 'your-email@gmail.com',
+        to: email,
+        subject: 'Payment and Reservation Details',
+        html: `
+          <h3>Your Payment and Reservation Details</h3>
+          <p><strong>Reservation ID:</strong> ${reservation.id}</p>
+          <p><strong>Status:</strong> ${reservation.Status}</p>
+          <p><strong>CashBack:</strong> ${reservation.cashback}</p>
+          <p><strong>start_date:</strong> ${reservation.start_date}</p>
+          <p><strong>end_date:</strong> ${reservation.end_date}</p>
+          <p><strong>Time:</strong> ${reservation.Time}</p>
+          <p><strong>Reservation_Type:</strong> ${reservation.Reservation_Type}</p>
+          <p><strong>starting_price:</strong> ${reservation.starting_price}</p>
+          <p><strong>Total_Amount:</strong> ${reservation.Total_Amount}</p>
+          <p><strong>additional_visitors:</strong> ${reservation.additional_visitors}</p>
+          <p><strong>number_of_days:</strong> ${reservation.number_of_days}</p>
+          <p><strong>Initial Payment:</strong> ${initialAmount}</p>
+          <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
+          <h4>Payment Method: ${paymentMethod}</h4>
+          <p><strong>User Name:</strong> ${UserName}</p>
+          <p><strong>Phone Number:</strong> ${Phone_Number}</p>
+          <h3>Reservation Details</h3>
+          <p><strong>Chalet Name:</strong> ${reservation.Chalet.title || 'Not available'}</p>
+          <p><strong>Chalet Description:</strong> ${reservation.Chalet.description || 'Not available'}</p>
+          <p><strong>Chalet Rating:</strong> ${reservation.Chalet.Rating || 'Not available'}</p>
+          <p><strong>Chalet City:</strong> ${reservation.Chalet.city || 'Not available'}</p>
+          <p><strong>Chalet area:</strong> ${reservation.Chalet.area || 'Not available'}</p>
+          <p><strong>Chalet initial_Amount:</strong> ${reservation.Chalet.intial_Amount || 'Not available'}</p>
+          <p><strong>Chalet Features:</strong> ${reservation.Chalet.features || 'Not available'}</p>
+          ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ''}
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+
     res.status(201).json({
-      message: 'Payment created successfully',
+      message: 'Payment created successfully, and email sent if logged in!',
       payment: newPayment,
+      reservation: reservation,
     });
+
   } catch (error) {
     console.error('Error in createPayment:', error.message);
-    res
-      .status(500)
-      .json(
-        ErrorResponse('Failed to create payment', [
-          'An internal server error occurred.',
-        ])
-      );
+    res.status(500).json(
+      ErrorResponse('Failed to create payment', [
+        'An internal server error occurred.',
+      ])
+    );
   }
 };
+
+
+
+
+const getInsuranceValue = (description) => {
+  const match = description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
+  return match ? parseInt(match[1]) : null;
+};
+
+
+
+
+
 
 
  
@@ -278,6 +348,7 @@ exports.createPayment = async (req, res) => {
 
 
   const axios = require('axios');
+const Chalet = require('../Models/ChaletsModel');
 
   exports.createPaymentIntent = async (req, res) => {
     try {
@@ -464,70 +535,84 @@ exports.createPayment = async (req, res) => {
 
 
 
-
   exports.getAllPayments = async (req, res) => {
     try {
       const { page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
-
-      
       const cacheKey = `payment:page:${page}:limit:${limit}`;
   
-      await client.del(cacheKey);
+      
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         return res.status(200).json(JSON.parse(cachedData));
       }
   
-    
-      const payments = await Payments.findAll({
-        include: [
-          {
-            model: Users,
-            attributes: ['id', 'name', 'email'],
-          },
-          {
-            model: ReservationChalets,
-            attributes: [
-              'id',
-              'cashback',
-              'start_date',
-              'end_date',
-              'Time',
-              'Status',
-              'Reservation_Type',
-              'starting_price',
-              'Total_Amount',
-              'additional_visitors',
-              'number_of_days'
-            ],
-          },
-        ],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
+      
+      client.del(cacheKey);
   
       
-      if (payments.length === 0) {
+      const [payments, chalets] = await Promise.all([
+        Payments.findAll({
+          include: [
+            {
+              model: Users,
+              attributes: ['id', 'name', 'email'],
+            },
+            {
+              model: ReservationChalets,
+              attributes: [
+                'id', 'cashback', 'start_date', 'end_date', 'Time', 'Status',
+                'Reservation_Type', 'starting_price', 'Total_Amount',
+                'additional_visitors', 'number_of_days', 'chalet_id',
+              ],
+            },
+          ],
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+        }),
+        Chalet.findAll({
+          where: { id: payments.map(p => p.Reservations_Chalet.chalet_id) },
+          attributes: ['id', 'title', 'description'],
+        }),
+      ]);
+  
+      if (!payments.length) {
         return res.status(200).json(
-          ErrorResponse("No payments found", ["No payments found for the given user ID."])
+          ErrorResponse("No payments found", ["No payments found for the given query."])
         );
       }
   
-    
-      await client.setEx(cacheKey, 300, JSON.stringify(payments));
+      
+      const chaletMap = new Map(chalets.map(chalet => {
+        let insuranceValue = null;
+        const match = chalet.description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
+        if (match) {
+          insuranceValue = parseInt(match[1]);
+        }
+        return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
+      }));
   
       
-      res.status(200).json(payments);
+      const paymentsWithChaletInfo = payments.map(payment => ({
+        ...payment.toJSON(),
+        Chalet: chaletMap.get(payment.Reservations_Chalet.chalet_id) || null,
+      }));
+  
+      
+      client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
+  
+      res.status(200).json(paymentsWithChaletInfo);
     } catch (error) {
-      console.error('Error in getPayments:', error.message);
+      console.error('Error in getAllPayments:', error.message);
       res.status(500).json(
-        ErrorResponse('Failed to fetch payments', [
-          'An internal server error occurred.',
-        ])
+        ErrorResponse('Failed to fetch payments', ['An internal server error occurred.'])
       );
     }
   };
+  
+  
+  
+  
 
 
 
