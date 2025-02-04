@@ -223,7 +223,6 @@ exports.createPayment = async (req, res) => {
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
     reservation.Status = 'Confirmed';
-    reservation.Total_Amount = remainingAmount;
     await reservation.save();
 
     const newPayment = await Payments.create({
@@ -264,7 +263,6 @@ exports.createPayment = async (req, res) => {
           <p><strong>end_date:</strong> ${reservation.end_date}</p>
           <p><strong>Time:</strong> ${reservation.Time}</p>
           <p><strong>Reservation_Type:</strong> ${reservation.Reservation_Type}</p>
-
           <p><strong>additional_visitors:</strong> ${reservation.additional_visitors}</p>
           <p><strong>number_of_days:</strong> ${reservation.number_of_days}</p>
           <p><strong>Initial Payment:</strong> ${initialAmount}</p>
@@ -571,12 +569,8 @@ const Chalet = require('../Models/ChaletsModel');
         );
       }
   
-
-    
       const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
 
-      const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
-  
 
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
@@ -595,7 +589,7 @@ const Chalet = require('../Models/ChaletsModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
-
+      
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
         Chalet: chaletMap.get(payment.Reservations_Chalet?.chalet_id) || null,
