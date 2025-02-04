@@ -264,8 +264,7 @@ exports.createPayment = async (req, res) => {
           <p><strong>end_date:</strong> ${reservation.end_date}</p>
           <p><strong>Time:</strong> ${reservation.Time}</p>
           <p><strong>Reservation_Type:</strong> ${reservation.Reservation_Type}</p>
-          <p><strong>starting_price:</strong> ${reservation.starting_price}</p>
-          <p><strong>Total_Amount:</strong> ${reservation.Total_Amount}</p>
+
           <p><strong>additional_visitors:</strong> ${reservation.additional_visitors}</p>
           <p><strong>number_of_days:</strong> ${reservation.number_of_days}</p>
           <p><strong>Initial Payment:</strong> ${initialAmount}</p>
@@ -537,15 +536,16 @@ const Chalet = require('../Models/ChaletsModel');
 
   exports.getAllPayments = async (req, res) => {
     try {
-      const { page = 1, limit = 20 } = req.query;
+      const { page = 1, limit = 100 } = req.query;
       const offset = (page - 1) * limit;
-      const cacheKey = `payment:page:${page}:limit:${limit}`;
+      const cacheKey = `paymen:page:${page}:limit:${limit}`;
   
+
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         return res.status(200).json(JSON.parse(cachedData));
       }
-  
+
       const payments = await Payments.findAll({
         include: [
           {
@@ -571,13 +571,21 @@ const Chalet = require('../Models/ChaletsModel');
         );
       }
   
+
+    
+      const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
+
       const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
   
+
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
         attributes: ['id', 'title', 'description'],
       });
   
+
+   
+
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;
         const match = chalet.description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
@@ -587,12 +595,18 @@ const Chalet = require('../Models/ChaletsModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
+
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
-        Chalet: chaletMap.get(payment.Reservations_Chalet.chalet_id) || null,
+        Chalet: chaletMap.get(payment.Reservations_Chalet?.chalet_id) || null,
       }));
   
+
+     
+      await client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
+
       client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
+
   
       res.status(200).json(paymentsWithChaletInfo);
     } catch (error) {

@@ -18,7 +18,7 @@ const crypto = require("crypto");
 const argon2 = require("argon2");
 const UAParser = require("ua-parser-js");
 let currentPassword = generatePassword();
-
+const otpService = require("../Services/otpService.js");
 function generatePassword() {
   return crypto.randomBytes(6).toString("hex");
 }
@@ -69,34 +69,39 @@ exports.register = asyncHandler(async (req, res) => {
     user_type_id,
   } = req.body;
 
-  
-  const validationErrors = validateInput({
-    name,
-    email,
-    password,
-    confirmPassword,
-    user_type_id,
-  });
-  if (validationErrors.length > 0) {
-    return res.status(400).json({ errors: validationErrors });
+  if (!email && !phone_number) {
+    return res.status(400).json({ message: "Either email or phone number is required" });
   }
 
- 
   if (password !== confirmPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
 
   try {
-  
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already in use" });
+    let existingUser = null;
+
+    if (email) {
+      existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
     }
 
-  
+
     const hashedPassword = await argon2.hash(password);
 
-    
+    if (phone_number) {
+      const otpSent = await otpService.sendOtp(phone_number);
+      if (!otpSent.success) {
+        return res.status(500).json({ message: "Failed to send OTP" });
+      }
+
+      return res.status(200).json({
+        message: "OTP sent to phone number. Please verify to complete registration.",
+        phone_number,
+      });
+    }
+
     const newUser = await User.create({
       name,
       email,
@@ -105,21 +110,48 @@ exports.register = asyncHandler(async (req, res) => {
       password: hashedPassword,
       lang,
       user_type_id,
-     
     });
 
-  
     res.status(201).json({
       message: "User registered successfully.",
       id: newUser.id,
     });
+
   } catch (err) {
     console.error("Registration error:", err);
-    return res.status(500).json(ErrorResponse("Server error", err.message));
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
 
+exports.verifyOtp = asyncHandler(async (req, res) => {
+  const { phone_number, otp, name, password, country, lang, user_type_id } = req.body;
+
+  if (!phone_number || !otp) {
+    return res.status(400).json({ message: "Phone number and OTP are required" });
+  }
+
+  const isValidOtp = await otpService.verifyOtp(phone_number, otp);
+  if (!isValidOtp) {
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
+
+  const hashedPassword = await argon2.hash(password);
+
+  const newUser = await User.create({
+    name,
+    phone_number,
+    country,
+    password: hashedPassword,
+    lang,
+    user_type_id,
+  });
+
+  res.status(201).json({
+    message: "User registered successfully after OTP verification.",
+    id: newUser.id,
+  });
+});
 
 
 const SECRET_KEY = process.env.JWT_SECRET;
