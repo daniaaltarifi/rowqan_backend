@@ -16,7 +16,7 @@ exports.createReservation = async (req, res) => {
   try {
     const {
       start_date,
-      end_date = null, 
+      end_date = null,
       lang,
       additional_visitors,
       number_of_days = null,
@@ -24,15 +24,15 @@ exports.createReservation = async (req, res) => {
       user_id,
       chalet_id,
       right_time_id,
-      total_amount, 
+      total_amount,
     } = req.body || {};
 
-    if (!start_date || !lang || !chalet_id || !right_time_id || !total_amount) {
+    if (!start_date || !lang || !chalet_id || !right_time_id) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
           lang === "en"
-            ? "Start date, lang, chalet_id, right_time_id, and total_amount are required"
-            : "التاريخ المبدئي، اللغة، chalet_id، right_time_id و total_amount مطلوبة",
+            ? "Start date, lang, chalet_id, and right_time_id are required"
+            : "التاريخ المبدئي، اللغة، chalet_id و right_time_id مطلوبة",
         ])
       );
     }
@@ -61,13 +61,6 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    const chalet = await Chalet.findByPk(chalet_id);
-    if (!chalet) {
-      return res.status(404).json({
-        error: lang === "en" ? "Chalet not found" : "الشاليه غير موجود",
-      });
-    }
-
     const rightTime = await RightTimeModel.findByPk(right_time_id);
     if (!rightTime) {
       return res.status(404).json({
@@ -75,10 +68,19 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    const cashback = total_amount * 0.05;
+    const starting_price = rightTime.price; 
+
+    if (!starting_price) {
+      return res.status(400).json({
+        error: lang === "en" ? "Starting price not found for this right time" : "السعر الابتدائي غير موجود لهذا الوقت",
+      });
+    }
+
+    const final_total_amount = total_amount || starting_price; // استخدام starting_price في حالة عدم توفر total_amount
+    const cashback = final_total_amount * 0.05;
 
     const reservation = await Reservations_Chalets.create({
-      Total_Amount: total_amount,
+      Total_Amount: final_total_amount,
       cashback,
       start_date: formattedStartDate,
       end_date: formattedEndDate,
@@ -86,6 +88,7 @@ exports.createReservation = async (req, res) => {
       additional_visitors,
       number_of_days,
       Reservation_Type,
+      starting_price,
       lang,
       user_id: user_id || null,
       chalet_id,
@@ -98,13 +101,13 @@ exports.createReservation = async (req, res) => {
       wallet = await Wallet.findOne({ where: { user_id } });
 
       if (wallet) {
-        wallet.total_balance += total_amount;
+        wallet.total_balance += final_total_amount;
         wallet.cashback_balance += cashback;
         await wallet.save();
       } else {
         wallet = await Wallet.create({
           user_id,
-          total_balance: total_amount,
+          total_balance: final_total_amount,
           cashback_balance: cashback,
           lang,
         });
@@ -115,11 +118,11 @@ exports.createReservation = async (req, res) => {
       message: lang === "en" ? "Reservation created successfully" : "تم إنشاء الحجز بنجاح",
       reservation: {
         id: reservation.id,
-        total_amount,
+        total_amount: final_total_amount,
         cashback,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        Time: reservation.type_of_time,
+        Time: reservation.Time,
         additional_visitors,
         number_of_days,
         user_id,
@@ -140,7 +143,7 @@ exports.createReservation = async (req, res) => {
         "An internal server error occurred.",
       ])
     );
-  }  
+  }
 };
 
 
