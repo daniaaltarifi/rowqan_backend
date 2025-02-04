@@ -36,7 +36,7 @@ function sendPasswordEmail(password) {
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "lwrnsalkhtyb9@gmail.com", 
+    to: "", 
     subject: "Dashboard Password Update",
     text: `The new dashboard password is: ${password}\nExpires in 20 minutes.`,
   };

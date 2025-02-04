@@ -252,7 +252,7 @@ exports.createPayment = async (req, res) => {
       });
 
       const mailOptions = {
-        from: 'your-email@gmail.com',
+        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Payment and Reservation Details',
         html: `
@@ -541,40 +541,29 @@ const Chalet = require('../Models/ChaletsModel');
       const offset = (page - 1) * limit;
       const cacheKey = `payment:page:${page}:limit:${limit}`;
   
-      
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         return res.status(200).json(JSON.parse(cachedData));
       }
   
-      
-      client.del(cacheKey);
-  
-      
-      const [payments, chalets] = await Promise.all([
-        Payments.findAll({
-          include: [
-            {
-              model: Users,
-              attributes: ['id', 'name', 'email'],
-            },
-            {
-              model: ReservationChalets,
-              attributes: [
-                'id', 'cashback', 'start_date', 'end_date', 'Time', 'Status',
-                'Reservation_Type', 'starting_price', 'Total_Amount',
-                'additional_visitors', 'number_of_days', 'chalet_id',
-              ],
-            },
-          ],
-          limit: parseInt(limit),
-          offset: parseInt(offset),
-        }),
-        Chalet.findAll({
-          where: { id: payments.map(p => p.Reservations_Chalet.chalet_id) },
-          attributes: ['id', 'title', 'description'],
-        }),
-      ]);
+      const payments = await Payments.findAll({
+        include: [
+          {
+            model: Users,
+            attributes: ['id', 'name', 'email'],
+          },
+          {
+            model: ReservationChalets,
+            attributes: [
+              'id', 'cashback', 'start_date', 'end_date', 'Time', 'Status',
+              'Reservation_Type', 'starting_price', 'Total_Amount',
+              'additional_visitors', 'number_of_days', 'chalet_id',
+            ],
+          },
+        ],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
   
       if (!payments.length) {
         return res.status(200).json(
@@ -582,7 +571,13 @@ const Chalet = require('../Models/ChaletsModel');
         );
       }
   
-      
+      const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
+  
+      const chalets = await Chalet.findAll({
+        where: { id: chaletIds },
+        attributes: ['id', 'title', 'description'],
+      });
+  
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;
         const match = chalet.description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
@@ -592,13 +587,11 @@ const Chalet = require('../Models/ChaletsModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
-      
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
         Chalet: chaletMap.get(payment.Reservations_Chalet.chalet_id) || null,
       }));
   
-      
       client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
   
       res.status(200).json(paymentsWithChaletInfo);
@@ -609,6 +602,7 @@ const Chalet = require('../Models/ChaletsModel');
       );
     }
   };
+  
   
   
   
