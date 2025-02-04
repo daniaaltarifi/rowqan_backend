@@ -39,7 +39,7 @@ router.get('/getChaletsByTypeOfTimeAndOffer/:type_of_time/:lang',rateLimiter,cha
 
 router.get('/getAllChaletsByType/:lang',rateLimiter,chaletController.getChaletsByType)
 
-router.get('/filterByAreaOrCity/:lang',rateLimiter,chaletController.filterByCityAndArea)
+router.post('/filterByAreaOrCity/:lang',rateLimiter,chaletController.filterByCityAndArea)
 
 router.get('/filterByChaletLocation/:lang',rateLimiter,chaletController.filterChaletsByLocation)
 

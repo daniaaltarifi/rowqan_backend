@@ -9,7 +9,6 @@ const dotenv = require("dotenv");
 
 const  {Client}  = require('../Config/PayPalClient');
 const paypal = require('@paypal/checkout-server-sdk'); 
-
 exports.createPayPalPayment = async (req, res) => {
   try {
     const { amount, currency, reservation_id, name } = req.body; 
@@ -72,6 +71,68 @@ exports.createPayPalPayment = async (req, res) => {
     res.status(500).send({ error: 'Failed to create PayPal payment.' });
   }
 };
+// exports.createPayPalPayment = async (req, res) => {
+//   try {
+//     const { amount, currency, reservation_id, name } = req.body; 
+
+    
+//     if (!amount || isNaN(amount) || amount <= 0) {
+//       return res.status(400).send({ error: 'Invalid amount provided.' });
+//     }
+
+//     if (!name || name.trim() === "") { 
+//       return res.status(400).send({ error: 'Name is required.' });
+//     }
+
+//     const request = new paypal.orders.OrdersCreateRequest();
+//     request.prefer("return=representation");
+//     request.requestBody({
+//       intent: "CAPTURE",  
+//       purchase_units: [
+//         {
+//           amount: {
+//             currency_code: currency || "USD", 
+//             value: amount.toFixed(2),  
+//           },
+//         },
+//       ],
+//     });
+
+//     const order = await Client.execute(request);
+
+//     if (order.result.status === 'CREATED') {
+//       const reservation = await ReservationChalets.findOne({ where: { id: reservation_id } });
+
+//       if (!reservation) {
+//         return res.status(404).send({ error: 'Reservation not found.' });
+//       }
+
+//       if (reservation.Status === 'Confirmed') {
+//         return res.status(400).send({ error: 'Reservation is already confirmed.' });
+//       }
+
+//       reservation.Status = 'Confirmed';
+//       await reservation.save();
+
+      
+//       reservation.name = name;
+//       await reservation.save();
+
+//       res.status(201).json({
+//         id: order.result.id,
+//         status: order.result.status,
+//         links: order.result.links, 
+//         message: 'Payment created and reservation confirmed.',
+//         name: name,  
+//       });
+//     } else {
+//       return res.status(400).send({ error: 'Payment creation failed.' });
+//     }
+//   } catch (error) {
+//     console.error('PayPal Error:', error.message);
+//     res.status(500).send({ error: 'Failed to create PayPal payment.' });
+//   }
+// };
 
 
 
@@ -191,7 +252,7 @@ exports.createPayment = async (req, res) => {
       });
 
       const mailOptions = {
-        from: 'your-email@gmail.com',
+        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Payment and Reservation Details',
         html: `
@@ -479,13 +540,12 @@ const Chalet = require('../Models/ChaletsModel');
       const offset = (page - 1) * limit;
       const cacheKey = `paymen:page:${page}:limit:${limit}`;
   
-    
+
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         return res.status(200).json(JSON.parse(cachedData));
       }
-  
-     
+
       const payments = await Payments.findAll({
         include: [
           {
@@ -511,14 +571,21 @@ const Chalet = require('../Models/ChaletsModel');
         );
       }
   
-      // جلب بيانات الشاليهات المتعلقة فقط بالمدفوعات المسترجعة
+
+    
       const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
+
+      const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
+  
+
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
         attributes: ['id', 'title', 'description'],
       });
   
+
    
+
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;
         const match = chalet.description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
@@ -528,14 +595,18 @@ const Chalet = require('../Models/ChaletsModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
-      // إضافة بيانات الشاليه إلى المدفوعات
+
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
         Chalet: chaletMap.get(payment.Reservations_Chalet?.chalet_id) || null,
       }));
   
+
      
       await client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
+
+      client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
+
   
       res.status(200).json(paymentsWithChaletInfo);
     } catch (error) {
