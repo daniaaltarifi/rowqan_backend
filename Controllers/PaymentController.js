@@ -569,11 +569,8 @@ const Chalet = require('../Models/ChaletsModel');
         );
       }
   
-      // جلب بيانات الشاليهات المتعلقة فقط بالمدفوعات المسترجعة
       const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
 
-      const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
-  
 
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
@@ -592,7 +589,7 @@ const Chalet = require('../Models/ChaletsModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
-      // إضافة بيانات الشاليه إلى المدفوعات
+      
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
         Chalet: chaletMap.get(payment.Reservations_Chalet?.chalet_id) || null,
