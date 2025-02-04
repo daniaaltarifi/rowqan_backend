@@ -11,6 +11,7 @@ const Status = require('../Models/StatusModel');
 
 
 
+
 exports.createReservation = async (req, res) => {
   try {
     const {
@@ -23,14 +24,15 @@ exports.createReservation = async (req, res) => {
       user_id,
       chalet_id,
       right_time_id,
+      total_amount, 
     } = req.body || {};
 
-    if (!start_date || !lang || !chalet_id || !right_time_id) {
+    if (!start_date || !lang || !chalet_id || !right_time_id || !total_amount) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
           lang === "en"
-            ? "Start date, lang, chalet_id, and right_time_id are required"
-            : "التاريخ المبدئي، اللغة، chalet_id و right_time_id مطلوبة",
+            ? "Start date, lang, chalet_id, right_time_id, and total_amount are required"
+            : "التاريخ المبدئي، اللغة، chalet_id، right_time_id و total_amount مطلوبة",
         ])
       );
     }
@@ -73,91 +75,14 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    let startingPrice = 0;
-    if (rightTime.After_Offer > 0) {
-      startingPrice = rightTime.After_Offer;
-    } else {
-      startingPrice = rightTime.price;
-    }
-
-    console.log(`Starting Price: ${startingPrice}`);
-
-    let finalPrice;
-    if (rightTime.type_of_time === "Morning" || rightTime.type_of_time === "Evening" || rightTime.type_of_time === "FullDay") {
-      finalPrice = startingPrice;
-    } else {
-      return res.status(400).json({ error: "Invalid time selection" });
-    }
-
-    let additional_fee = 0;
-    if (additional_visitors > 0) {
-      additional_fee = additional_visitors * 10;
-    }
-    
-    let days_fee = 0;
-    if (formattedEndDate) {
-      const totalDays = Math.ceil(
-        (formattedEndDate.getTime() - formattedStartDate.getTime()) / (1000 * 60 * 60 * 24)
-      )+1;
-      days_fee = totalDays * 20; 
-    }
-    
-    const total_amount = finalPrice + additional_fee + days_fee;
     const cashback = total_amount * 0.05;
 
-    const existingFullDayReservation = await Reservations_Chalets.findOne({
-      where: {
-        chalet_id,
-        [Op.or]: [
-          {
-            [Op.and]: [
-              { start_date: { [Op.lte]: formattedStartDate } },
-              { end_date: { [Op.gte]: formattedStartDate } },
-            ],
-          },
-          {
-            [Op.and]: [
-              { start_date: { [Op.lte]: formattedEndDate || formattedStartDate } },
-              { end_date: { [Op.gte]: formattedEndDate || formattedStartDate } },
-            ],
-          },
-        ],
-        right_time_id: null, 
-      },
-    });
-    
-    if (existingFullDayReservation) {
-      return res.status(400).json({
-        error: lang === "en"
-          ? "This chalet is fully booked during the selected period."
-          : "هذا الشاليه محجوز بالكامل خلال الفترة المحددة.",
-      });
-    }
-
-    const existingSpecificTimeReservation = await Reservations_Chalets.findOne({
-      where: {
-        chalet_id,
-        start_date: formattedStartDate,
-        right_time_id, 
-      },
-    });
-    
-    if (existingSpecificTimeReservation) {
-      return res.status(400).json({
-        error: lang === "en"
-          ? "This chalet is already reserved for the selected time."
-          : "هذا الشاليه محجوز بالفعل للفترة الزمنية المحددة.",
-      });
-    }
-
     const reservation = await Reservations_Chalets.create({
-      price: finalPrice,
       Total_Amount: total_amount,
       cashback,
       start_date: formattedStartDate,
       end_date: formattedEndDate,
       Time: rightTime.type_of_time,
-      starting_price: startingPrice,
       additional_visitors,
       number_of_days,
       Reservation_Type,
@@ -217,9 +142,6 @@ exports.createReservation = async (req, res) => {
     );
   }  
 };
-
-
-
 
 
 
