@@ -254,9 +254,12 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
             "title",
             "description",
             "image",
+            "type",
             "city",
             "area",
             "Rating",
+            "type",
+            "intial_Amount"
           ],
         },
       ],
@@ -278,9 +281,11 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       image: item.Chalet.image,
       city: item.Chalet.city,
       area: item.Chalet.area,
-      rating: item.Chalet.Rating,
+      Rating: item.Chalet.Rating,
       type_of_time: item.type_of_time,
       after_offer: item.After_Offer,
+      type: item.Chalet.type,
+      intial_Amount: item.Chalet.intial_Amount,
     }));
 
     
@@ -916,7 +921,7 @@ exports.getChaletByFeature = async (req, res) => {
       });
     }
 
-    const cacheKey = `chalets:feature:${feature || "not_provided"}:additionalFeatures:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
+    const cacheKey = `chalets1:feature1:${feature || "not_provided"}:additionalFeatures1:${additionalFeatures || "not_provided"}:lang:${lang || "not_provided"}:page:${page}:limit:${limit}`;
 
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
