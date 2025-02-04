@@ -569,22 +569,13 @@ const Chalet = require('../Models/ChaletsModel');
         return res.status(200).json(
           ErrorResponse("No payments found", ["No payments found for the given query."])
         );
-      }
-  
-
-    
-      const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
-
-      const chaletIds = payments.map(p => p.Reservations_Chalet.chalet_id);
-  
+      }    
+      const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);  
 
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
         attributes: ['id', 'title', 'description'],
       });
-  
-
-   
 
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;
