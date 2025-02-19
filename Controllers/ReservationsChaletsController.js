@@ -76,7 +76,7 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    const final_total_amount = total_amount || starting_price; // استخدام starting_price في حالة عدم توفر total_amount
+    const final_total_amount = total_amount || starting_price;
     const cashback = final_total_amount * 0.05;
 
     const reservation = await Reservations_Chalets.create({
@@ -210,6 +210,7 @@ exports.getAllReservations = async (req, res) => {
             "to_time",
             "price",
             "After_Offer",
+            "date"
           ],
         },
       ],
