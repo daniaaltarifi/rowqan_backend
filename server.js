@@ -114,6 +114,7 @@ const allowedOrigins = [
   "https://rowqan.com",
   "https://dashboard.rowqan.com",
   "https://rowqanbackend.rowqan.com",
+  "https://kassel.icu/rowqan/chalets"
 ];
 
 
@@ -244,6 +245,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to Rowqan!");
 });
 
-server.listen(process.env.PORT || 4564, () => {
-  console.log(`Server is running on port ${process.env.PORT || 4564}`);
+server.listen(process.env.PORT || 5000, () => {
+  console.log(`Server is running on port ${process.env.PORT || 5000}`);
 });
