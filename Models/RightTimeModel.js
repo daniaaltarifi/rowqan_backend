@@ -28,9 +28,13 @@ const RightTimeModel = sequelize.define('RightTimeModel', {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-  After_Offer:{
+  After_Offer: {
     type: DataTypes.FLOAT,
     allowNull: true,
+  },
+  date: { 
+    type: DataTypes.DATEONLY,
+    allowNull: false, 
   }
 }, {
   timestamps: false,
