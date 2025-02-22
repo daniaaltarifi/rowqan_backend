@@ -77,12 +77,13 @@ exports.createChalet = async (req, res) => {
         status_id,
       });
 
-     
+      console.log("Received rightTimesData:", rightTimesData);
+
+      let rightTimeDetails = [];
       if (Array.isArray(rightTimesData)) {
-        await Promise.all(
-          rightTimesData.map((rightTime) =>
-            RightTimeModel.create({
-              id:rightTime.id,
+        rightTimeDetails = await Promise.all(
+          rightTimesData.map(async (rightTime) => {
+            const createdRightTime = await RightTimeModel.create({
               type_of_time: rightTime.type_of_time,
               from_time: rightTime.from_time,
               to_time: rightTime.to_time,
@@ -91,11 +92,15 @@ exports.createChalet = async (req, res) => {
               After_Offer: rightTime.After_Offer,
               chalet_id: newChalet.id,
               date: rightTime.date
-            })
-          )
+            });
+
+            return {
+              id: createdRightTime.id,
+              type_of_time: createdRightTime.type_of_time,
+            };
+          })
         );
       }
-
      
       const cacheKey = `chalets4:page:1:limit:100:lang:${lang || "all"}`;
       const updatedChaletData = JSON.stringify(newChalet);
@@ -105,8 +110,8 @@ exports.createChalet = async (req, res) => {
 
       res.status(201).json({
         message: lang === "en" ? "Chalet created successfully" : "تم إنشاء الشاليه بنجاح",
-        rightTimesData,
         chalet: newChalet,
+        rightTimeDetails: rightTimeDetails,
       });
     } else {
       return res
