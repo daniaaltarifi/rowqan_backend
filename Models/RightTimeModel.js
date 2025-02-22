@@ -34,7 +34,7 @@ const RightTimeModel = sequelize.define('RightTimeModel', {
   },
   date: { 
     type: DataTypes.DATEONLY,
-    allowNull: false, 
+    allowNull: true, 
   }
 }, {
   timestamps: false,
