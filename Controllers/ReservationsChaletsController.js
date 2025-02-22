@@ -12,13 +12,14 @@ const Status = require('../Models/StatusModel');
 
 
 
+
 exports.createReservation = async (req, res) => {
   try {
     const {
       start_date,
       end_date = null,
       lang,
-      additional_visitors,
+      additional_visitors = 0,
       number_of_days = null,
       Reservation_Type,
       user_id,
@@ -27,19 +28,18 @@ exports.createReservation = async (req, res) => {
       total_amount,
     } = req.body || {};
 
-    if (!start_date || !lang || !chalet_id || !right_time_id) {
+    if (!start_date || !lang || !chalet_id || !right_time_id || !total_amount) {
       return res.status(400).json(
         ErrorResponse("Validation failed", [
           lang === "en"
-            ? "Start date, lang, chalet_id, and right_time_id are required"
-            : "التاريخ المبدئي، اللغة، chalet_id و right_time_id مطلوبة",
+            ? "Start date, lang, chalet_id, right_time_id, and total_amount are required"
+            : "التاريخ المبدئي، اللغة، chalet_id، right_time_id و total_amount مطلوبة",
         ])
       );
     }
 
     const formattedStartDate = new Date(start_date);
     let formattedEndDate = null;
-
     if (end_date) {
       formattedEndDate = new Date(end_date);
       if (isNaN(formattedEndDate.getTime())) {
@@ -48,16 +48,21 @@ exports.createReservation = async (req, res) => {
         });
       }
     }
-
     if (isNaN(formattedStartDate.getTime())) {
       return res.status(400).json({
         error: lang === "en" ? "Invalid start date format" : "تنسيق التاريخ المبدئي غير صالح",
       });
     }
-
     if (!["ar", "en"].includes(lang)) {
       return res.status(400).json({
         error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
+      });
+    }
+
+    const chalet = await Chalet.findByPk(chalet_id);
+    if (!chalet) {
+      return res.status(404).json({
+        error: lang === "en" ? "Chalet not found" : "الشاليه غير موجود",
       });
     }
 
@@ -68,46 +73,142 @@ exports.createReservation = async (req, res) => {
       });
     }
 
-    const starting_price = rightTime.price; 
-
-    if (!starting_price) {
-      return res.status(400).json({
-        error: lang === "en" ? "Starting price not found for this right time" : "السعر الابتدائي غير موجود لهذا الوقت",
-      });
+    let startingPrice = rightTime.After_Offer > 0 ? rightTime.After_Offer : rightTime.price;
+    let finalPrice = 0;
+    if (["Morning", "Evening", "FullDayMorning", "FullDayEvening"].includes(rightTime.type_of_time)) {
+      finalPrice = startingPrice;
+    } else {
+      return res.status(400).json({ error: "Invalid time selection" });
     }
 
-    const final_total_amount = total_amount || starting_price;
-    const cashback = final_total_amount * 0.05;
+    let additional_fee = additional_visitors > 0 ? additional_visitors * 10 : 0;
+    let days_fee = 0;
+    if (formattedEndDate) {
+      const totalDays = Math.ceil(
+        (formattedEndDate.getTime() - formattedStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1;
+      days_fee = totalDays * 20;
+    }
+
+    const calculated_total_amount = finalPrice + additional_fee + days_fee;
+    const cashback = calculated_total_amount * 0.05;
+
+    
+    if (rightTime.type_of_time === "FullDayMorning" || rightTime.type_of_time === "FullDayEvening") {
+      const existingMorningReservation = await Reservations_Chalets.findOne({
+        where: { chalet_id, start_date: formattedStartDate, Time: "Morning" },
+      });
+    
+      const existingEveningReservation = await Reservations_Chalets.findOne({
+        where: { chalet_id, start_date: formattedStartDate, Time: "Evening" },
+      });
+    
+      if (existingMorningReservation || existingEveningReservation) {
+        return res.status(400).json({
+          error: lang === "en"
+            ? "This chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
+            : "هذا الشاليه محجوز بالفعل لفترة الصباح أو المساء. لا يمكن حجزه ليوم كامل.",
+        });
+      }
+    }
+    
+
+
+    if (rightTime.type_of_time === "Morning") {
+      const existingMorningReservation = await Reservations_Chalets.findOne({
+        where: { chalet_id, start_date: formattedStartDate, Time: "Morning" },
+      });
+
+  
+      if (existingMorningReservation) {
+        return res.status(400).json({
+          error: lang === "en"
+            ? "This chalet is already reserved for both Morning . Morning reservation is not possible."
+            : "هذا الشاليه محجوز بالفعل لفترتي الصباح  لا يمكن حجزه لفترة الصباح.",
+        });
+      }
+    }
+
+
+
+    if (rightTime.type_of_time === "Evening") {
+      const existingEveningReservation = await Reservations_Chalets.findOne({
+        where: { chalet_id, start_date: formattedStartDate, Time: "Evening" },
+      });
+
+  
+      if (existingEveningReservation) {
+        return res.status(400).json({
+          error: lang === "en"
+            ? "This chalet is already reserved for  Evening . Evening reservation is not possible."
+            : "هذا الشاليه محجوز بالفعل لفترتي المساء  لا يمكن حجزه لفترة المساء.",
+        });
+      }
+    }
+
+  const existingReservationInPeriod = await Reservations_Chalets.findOne({
+  where: {
+    chalet_id,
+    start_date: { [Op.lte]: formattedStartDate },
+    end_date: { [Op.gte]: formattedStartDate }, 
+  },
+});
+
+if (existingReservationInPeriod) {
+  return res.status(400).json({
+    error: lang === "en"
+      ? "This chalet is already reserved for the selected period. Please choose a different date."
+      : "هذا الشاليه محجوز بالفعل خلال الفترة المحددة. يرجى اختيار تاريخ آخر.",
+  });
+}
+
+
+// const existingReservation = await Reservations_Chalets.findOne({
+//   where: {
+//     chalet_id,
+//     start_date: formattedStartDate, 
+//     Reservation_Type: { [Op.]: ["Morning", "Evening", "FullDay"] } 
+//   }
+// });
+
+// if (existingReservation) {
+//   return res.status(400).json({
+//     error: lang === "en"
+//       ? "This chalet is already reserved on this date. Please choose a different date or time."
+//       : "هذا الشاليه محجوز بالفعل في هذا اليوم. يرجى اختيار تاريخ أو وقت آخر.",
+//   });
+// }
+
 
     const reservation = await Reservations_Chalets.create({
-      Total_Amount: final_total_amount,
+      price: finalPrice,
+      Total_Amount: calculated_total_amount,
       cashback,
       start_date: formattedStartDate,
       end_date: formattedEndDate,
       Time: rightTime.type_of_time,
+      starting_price: startingPrice,
       additional_visitors,
       number_of_days,
       Reservation_Type,
-      starting_price,
       lang,
       user_id: user_id || null,
       chalet_id,
       right_time_id,
-      Status: 'Pending',
+      Status: "Pending",
     });
 
     let wallet = null;
     if (user_id) {
       wallet = await Wallet.findOne({ where: { user_id } });
-
       if (wallet) {
-        wallet.total_balance += final_total_amount;
+        wallet.total_balance += calculated_total_amount;
         wallet.cashback_balance += cashback;
         await wallet.save();
       } else {
         wallet = await Wallet.create({
           user_id,
-          total_balance: final_total_amount,
+          total_balance: calculated_total_amount,
           cashback_balance: cashback,
           lang,
         });
@@ -118,7 +219,7 @@ exports.createReservation = async (req, res) => {
       message: lang === "en" ? "Reservation created successfully" : "تم إنشاء الحجز بنجاح",
       reservation: {
         id: reservation.id,
-        total_amount: final_total_amount,
+        total_amount: calculated_total_amount,
         cashback,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
@@ -129,22 +230,18 @@ exports.createReservation = async (req, res) => {
         chalet_id,
         right_time_id,
       },
-      wallet: user_id
-        ? {
-            total_balance: wallet?.total_balance || 0,
-            cashback_balance: wallet?.cashback_balance || 0,
-          }
-        : null,
+      wallet: user_id ? { total_balance: wallet?.total_balance || 0, cashback_balance: wallet?.cashback_balance || 0 } : null,
     });
   } catch (error) {
     console.error("Error creating reservation:", error);
-    res.status(500).json(
-      ErrorResponse("Failed to create reservation", [
-        "An internal server error occurred.",
-      ])
-    );
+    res.status(500).json(ErrorResponse("Failed to create reservation", ["An internal server error occurred."]));
   }
 };
+
+
+
+
+
 
 
 
