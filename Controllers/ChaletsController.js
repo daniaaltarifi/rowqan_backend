@@ -82,6 +82,7 @@ exports.createChalet = async (req, res) => {
         await Promise.all(
           rightTimesData.map((rightTime) =>
             RightTimeModel.create({
+              id:rightTime.id,
               type_of_time: rightTime.type_of_time,
               from_time: rightTime.from_time,
               to_time: rightTime.to_time,
@@ -104,6 +105,7 @@ exports.createChalet = async (req, res) => {
 
       res.status(201).json({
         message: lang === "en" ? "Chalet created successfully" : "تم إنشاء الشاليه بنجاح",
+        rightTimesData,
         chalet: newChalet,
       });
     } else {
