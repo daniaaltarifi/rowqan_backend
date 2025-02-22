@@ -536,6 +536,8 @@ exports.getReservationsByChaletId = async (req, res) => {
       });
     }
 
+    await client.del(`reservations:${user_id}:lang:${lang}`);
+
     const cacheKey = `reservations:${user_id}:lang:${lang}`;
 
    
