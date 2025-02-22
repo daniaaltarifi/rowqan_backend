@@ -3,7 +3,7 @@ const RightTimeModel = require('../Models/RightTimeModel');
 const Chalet = require('../Models/ChaletsModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const {client} = require('../Utils/redisClient')
-
+const dateForRightTime = require('../Models/DatesForRightTime')
 
 
 
@@ -131,7 +131,7 @@ exports.getRightTimeById = async (req, res) => {
   exports.getAllRightTimesByChaletId = async (req, res) => {
     try {
       const { chalet_id, lang } = req.params;
-      const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
+      const cacheKey = `rightTime:chalet:${chalet_id}:${lang}`;
 
   
       
@@ -153,6 +153,12 @@ exports.getRightTimeById = async (req, res) => {
   
       const rightTimes = await RightTimeModel.findAll({
         where: { chalet_id, lang },
+        include :[
+          {
+            model: dateForRightTime,
+            attributes: ["id", "date", "price", "right_time_id"]
+          }
+        ]
       });
   
       if (rightTimes.length === 0) {
