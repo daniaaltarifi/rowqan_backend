@@ -18,8 +18,9 @@ exports.createRightTime = async (req, res) => {
         to_time, 
         lang, 
         price, 
-        After_Offer, 
-        chalet_id 
+        After_Offer,
+        chalet_id,
+        date
     } = req.body || {};
 
     console.log("Received lang:", lang);  
@@ -41,6 +42,7 @@ exports.createRightTime = async (req, res) => {
         price, 
         After_Offer, 
         chalet_id,
+        date
     });
 
     const cacheDeletePromises = [client.del(`righttime:page:1:limit:20`)];
@@ -86,7 +88,7 @@ exports.getRightTimeById = async (req, res) => {
 
     
     const rightTimeEntry = await RightTimeModel.findOne({
-      attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer"],
+      attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer","date"],
       where: whereCondition,
       include: [
         {
@@ -186,7 +188,8 @@ exports.getRightTimeById = async (req, res) => {
             lang, 
             price, 
             After_Offer, 
-            chalet_id 
+            chalet_id,
+            date
         } = req.body;
         
         const validationErrors = validateInput({ 
@@ -197,8 +200,9 @@ exports.getRightTimeById = async (req, res) => {
             lang, 
             price, 
             After_Offer, 
-            chalet_id 
-        });
+            chalet_id ,
+            date
+          });
         if (validationErrors.length > 0) {
             return res.status(400).json( ErrorResponse('Validation failed', validationErrors));
         }
@@ -218,6 +222,7 @@ exports.getRightTimeById = async (req, res) => {
         rightTime.price = price || rightTime.price;
         rightTime.After_Offer = After_Offer || rightTime.After_Offer;
         rightTime.chalet_id = chalet_id !== undefined ? chalet_id : rightTime.chalet_id;
+        rightTime.date = date || rightTime.date;
 
         
         await rightTime.save();

@@ -89,6 +89,7 @@ exports.createChalet = async (req, res) => {
               price: rightTime.price,
               After_Offer: rightTime.After_Offer,
               chalet_id: newChalet.id,
+              date: rightTime.date
             })
           )
         );
@@ -167,7 +168,7 @@ const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
         { model: chaletsImages, attributes: ["id", "image"] },
         {
           model: RightTimeModel,
-          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer"],
+          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer","date"],
         },
       ],
       limit: parseInt(limit),
