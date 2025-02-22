@@ -131,8 +131,8 @@ exports.getRightTimeById = async (req, res) => {
   exports.getAllRightTimesByChaletId = async (req, res) => {
     try {
       const { chalet_id, lang } = req.params;
-      const cacheKey = `rightTime:chalet:${chalet_id}:${lang}`;
-
+    
+      const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
   
       
       const cachedData = await client.get(cacheKey);
@@ -175,7 +175,7 @@ exports.getRightTimeById = async (req, res) => {
       console.error("Error in getAllRightTimesByChaletId:", error);
   
       return res.status(500).json({
-        message: lang === 'en' ? 'Failed to fetch RightTimes' : 'فشل في جلب الأوقات المناسبة'
+        message:'Failed to fetch RightTimes'
       });
     }
   };
@@ -220,6 +220,8 @@ exports.getRightTimeById = async (req, res) => {
             return res.status(404).json( ErrorResponse('RightTime not found'));
         }
 
+
+        
        
         rightTime.name = name || rightTime.name;
         rightTime.type_of_time = type_of_time || rightTime.type_of_time;
