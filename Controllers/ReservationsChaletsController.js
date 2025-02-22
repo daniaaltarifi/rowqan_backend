@@ -821,9 +821,9 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     });
 
     const response = {
-      reserved_days: Array.from(reservedDates).sort(),
+      reservedDays: Array.from(reservedDates).sort(),
     };
-
+    
     
     await client.setEx(cacheKey, 300, JSON.stringify(response));
 
