@@ -804,6 +804,9 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       return res.status(404).json({ error: "No reservations found" });
     }
 
+
+    
+
     const reservedDates = new Set();
     const morningDates = new Set();
     const fullDayMorningDates = new Set();
