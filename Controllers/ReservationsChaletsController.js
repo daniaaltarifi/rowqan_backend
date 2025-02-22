@@ -146,6 +146,48 @@ exports.createReservation = async (req, res) => {
       }
     }
 
+
+
+   
+const existingReservation = await Reservations_Chalets.findOne({
+  where: {
+    chalet_id,
+    [Op.or]: [
+      { 
+        start_date: { [Op.lte]: formattedStartDate },
+        end_date: { [Op.gte]: formattedStartDate }
+      },
+      {
+        start_date: { [Op.between]: [formattedStartDate, formattedEndDate] }
+      },
+      {
+        end_date: { [Op.between]: [formattedStartDate, formattedEndDate] }
+      }
+    ]
+  },
+});
+
+if (existingReservation) {
+  
+  const existingReservationEndTime = new Date(existingReservation.end_date);
+  
+  const newReservationStartTime = new Date(formattedStartDate);
+
+  if (newReservationStartTime.getTime() > existingReservationEndTime.getTime()) {
+    
+  } else { 
+    return res.status(400).json({
+      error: lang === "en"
+        ? `This chalet is already reserved until ${existingReservationEndTime.toLocaleTimeString()}. You can reserve it after this time.`
+        : `هذا الشاليه محجوز حتى الساعة ${existingReservationEndTime.toLocaleTimeString()}. يمكنك حجزه بعد هذا الوقت.`,
+    });
+  }
+}
+
+
+
+
+
   const existingReservationInPeriod = await Reservations_Chalets.findOne({
   where: {
     chalet_id,
@@ -163,22 +205,34 @@ if (existingReservationInPeriod) {
 }
 
 
-// const existingReservation = await Reservations_Chalets.findOne({
-//   where: {
-//     chalet_id,
-//     start_date: formattedStartDate, 
-//     Reservation_Type: { [Op.]: ["Morning", "Evening", "FullDay"] } 
-//   }
-// });
 
-// if (existingReservation) {
-//   return res.status(400).json({
-//     error: lang === "en"
-//       ? "This chalet is already reserved on this date. Please choose a different date or time."
-//       : "هذا الشاليه محجوز بالفعل في هذا اليوم. يرجى اختيار تاريخ أو وقت آخر.",
-//   });
-// }
 
+
+const existingFullDayMorningReservation = await Reservations_Chalets.findOne({
+  where: {
+    chalet_id,
+    end_date: formattedStartDate,
+    Time: "FullDayMorning",
+  },
+});
+
+if (existingFullDayMorningReservation) {
+  
+  const existingReservationEndTime = new Date(existingFullDayMorningReservation.end_date);
+  existingReservationEndTime.setHours(9, 0, 0, 0); 
+
+  
+  const newReservationStartTime = new Date(formattedStartDate);
+
+  
+  if (newReservationStartTime.getTime() < existingReservationEndTime.getTime()) {
+    return res.status(400).json({
+      error: lang === "en"
+        ? "This chalet is already reserved for FullDayMorning and ends at 9:00 AM. You can only reserve it after 9:00 AM."
+        : "هذا الشاليه محجوز بالفعل ليوم كامل في الصباح وينتهي في الساعة 9:00 صباحًا. يمكنك حجزه فقط بعد الساعة 9:00 صباحًا.",
+    });
+  }
+}
 
     const reservation = await Reservations_Chalets.create({
       price: finalPrice,
