@@ -761,7 +761,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   console.log("Time:", name);
   console.log("Lang:", lang);
 
-  const cacheKey = `reservations:${chalet_id}:${name}:${lang}`;
+  const cacheKey = `reservation:${chalet_id}:${name}:${lang}`;
 
   try {
   
@@ -793,12 +793,12 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       where: {
         lang: lang,
         chalet_id: chalet_id,
-        right_time_id: rightTimeId,
-        status: 'Confirmed',
+        right_time_id: rightTimeId, 
       },
       attributes: ['start_date', 'end_date'], 
     });
 
+    console.log("Reservations found:", reservations);
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No reservations found" });
     }
@@ -821,7 +821,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     };
 
     
-    await client.setEx(cacheKey, 3600, JSON.stringify(response));
+    await client.setEx(cacheKey, 300, JSON.stringify(response));
 
     res.status(200).json(response);
   } catch (error) {
