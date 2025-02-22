@@ -764,7 +764,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   const cacheKey = `reservation:${chalet_id}:${name}:${lang}`;
 
   try {
-  
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit for reservations");
@@ -773,54 +772,74 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     console.log("Cache miss for reservations");
 
     
-    const rightTime = await RightTimeModel.findOne({
-      where: {
-        lang: lang,
-        chalet_id: chalet_id,
-        type_of_time: name,
-      },
-      attributes: ['id'], 
+    const rightTimes = await RightTimeModel.findAll({
+      where: { lang: lang, chalet_id: chalet_id },
+      attributes: ['id', 'type_of_time'],
     });
 
-    if (!rightTime) {
+    if (!rightTimes || rightTimes.length === 0) {
+      return res.status(404).json({ error: "No right times found for the provided chalet" });
+    }
+
+    
+    const rightTimeMap = new Map(rightTimes.map(rt => [rt.type_of_time, rt.id]));
+
+    if (!rightTimeMap.has(name)) {
       return res.status(404).json({ error: `No right time found for the provided time: ${name}` });
     }
 
-    const rightTimeId = rightTime.id;
-
-    
+   
     const reservations = await Reservations_Chalets.findAll({
       where: {
         lang: lang,
         chalet_id: chalet_id,
-        right_time_id: rightTimeId, 
+        right_time_id: Object.values(rightTimeMap),
       },
-      attributes: ['start_date', 'end_date'], 
+      attributes: ['start_date', 'end_date', 'right_time_id'],
     });
 
     console.log("Reservations found:", reservations);
+    console.log("Morning Dates:", morningDates);
+console.log("FullDayMorning Dates:", fullDayMorningDates);
+
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No reservations found" });
     }
 
-  
     const reservedDates = new Set();
+    const morningDates = new Set();
+    const fullDayMorningDates = new Set();
+
+    
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
       const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+      const type = [...rightTimeMap].find(([key, val]) => val === reservation.right_time_id)?.[0];
 
       let current = start.clone();
       while (current.isSameOrBefore(end)) {
-        reservedDates.add(current.format('YYYY-MM-DD'));
+        const dateStr = current.format('YYYY-MM-DD');
+
+        if (type === "Morning") {
+          morningDates.add(dateStr);
+        }
+        if (type === "FullDayMorning") {
+          fullDayMorningDates.add(dateStr);
+        }
+
+        reservedDates.add(dateStr);
         current.add(1, 'day');
       }
     });
+
+    
+    morningDates.forEach(date => reservedDates.add(date)); 
+    fullDayMorningDates.forEach(date => reservedDates.add(date)); 
 
     const response = {
       reserved_days: Array.from(reservedDates).sort(),
     };
 
-    
     await client.setEx(cacheKey, 300, JSON.stringify(response));
 
     res.status(200).json(response);
@@ -829,6 +848,8 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
 
 
 

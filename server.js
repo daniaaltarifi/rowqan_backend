@@ -170,6 +170,7 @@ const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH
 
 
 async function checkVPN(userIP) {
+
   try {
     const response = await axios.get(`${IP_LOOKUP_API}?ip=${userIP}`);
     const { vpn, proxy, fraud_score, isp, city, asn, is_proxy } = response.data;
