@@ -188,6 +188,8 @@ exports.createReservation = async (req, res) => {
     }
 
 
+
+  
     
 
     if(rightTime.type_of_time === "Evening"){
@@ -204,7 +206,12 @@ exports.createReservation = async (req, res) => {
       }
     }
 
-  
+   
+    
+
+    
+    
+
 
 
     if(rightTime.type_of_time === "Morning"){
@@ -910,17 +917,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   console.log("Time:", name);
   console.log("Lang:", lang);
 
-  const cacheKey = `reservation:${chalet_id}:${name}:${lang}`;
-
   try {
-  
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) {
-      console.log("Cache hit for reservations");
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log("Cache miss for reservations");
-
     
     const rightTime = await RightTimeModel.findOne({
       where: {
@@ -944,7 +941,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         chalet_id: chalet_id,
         right_time_id: rightTimeId, 
       },
-      attributes: ['start_date', 'end_date'], 
+      attributes: ['start_date', 'end_date', 'time'],  
     });
 
     console.log("Reservations found:", reservations);
@@ -952,27 +949,34 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       return res.status(404).json({ error: "No reservations found" });
     }
 
-
     
-
     const reservedDates = new Set();
     reservations.forEach(reservation => {
       const start = moment(reservation.start_date).startOf('day');
       const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
 
+      
       let current = start.clone();
       while (current.isSameOrBefore(end)) {
         reservedDates.add(current.format('YYYY-MM-DD'));
         current.add(1, 'day');
       }
+
+     
+      if (reservation.time === "Morning") {
+        reservedDates.add(current.format('YYYY-MM-DD') + "_FullDayMorning");
+      }
+
+      
+      if (reservation.time === "Evening") {
+        reservedDates.add(current.format('YYYY-MM-DD') + "_FullDayEvening");
+      }
     });
 
+    
     const response = {
       reservedDays: Array.from(reservedDates).sort(),
     };
-    
-    
-    await client.setEx(cacheKey, 300, JSON.stringify(response));
 
     res.status(200).json(response);
   } catch (error) {
@@ -980,6 +984,9 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch reservations" });
   }
 };
+
+
+
 
 
 
