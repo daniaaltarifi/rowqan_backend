@@ -16,11 +16,11 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     allowNull: true, 
   },
   start_date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false,  
   },
   end_date:{
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: true,
   },
   Time:{
