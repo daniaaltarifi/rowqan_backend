@@ -1121,9 +1121,69 @@ exports.getReservationsByRightTimeName = async (req, res) => {
   }
   
 
+    // if (name === "FullDayEvening") {
+    //   const additionalDates = new Set();
+    
+    //   const eveningReservations = await Reservations_Chalets.findAll({
+    //     where: {
+    //       lang: lang,
+    //       chalet_id: chalet_id,
+    //       time: "Evening",
+    //       status: 'Confirmed',
+    //     },
+    //     attributes: ['start_date', 'end_date', 'time'],
+    //   });
+    
+    //   eveningReservations.forEach(reservation => {
+    //     const start = moment(reservation.start_date).startOf('day');
+    //     const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+    
+    //     let current = start.clone();
+    //     while (current.isSameOrBefore(end)) {
+    //       additionalDates.add(current.format('YYYY-MM-DD'));
+    //       current.add(1, 'day');
+    //     }
+    //   });
+    
+    //   reservedDates.forEach(date => {
+    //     additionalDates.add(date);
+    //   });
+    
+      
+    //   const fullDayMorningReservations = await Reservations_Chalets.findAll({
+    //     where: {
+    //       lang: lang,
+    //       chalet_id: chalet_id,
+    //       time: "FullDayMorning",
+    //       status: 'Confirmed',
+    //     },
+    //     attributes: ['start_date', 'end_date', 'time'],
+    //   });
+    
+    //   fullDayMorningReservations.forEach(reservation => {
+    //     const start = moment(reservation.start_date).startOf('day');
+    //     const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+    
+    //     let current = start.clone();
+    //     while (current.isSameOrBefore(end)) {
+    //       additionalDates.add(current.format('YYYY-MM-DD'));
+    //       current.add(1, 'day');
+    //     }
+    //   });
+    
+    //   const response = {
+    //     reservedDays: Array.from(additionalDates).sort(),
+    //   };
+    
+    //   return res.status(200).json(response);
+    // }
+    
+
+
     if (name === "FullDayEvening") {
       const additionalDates = new Set();
     
+      
       const eveningReservations = await Reservations_Chalets.findAll({
         where: {
           lang: lang,
@@ -1132,21 +1192,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
           status: 'Confirmed',
         },
         attributes: ['start_date', 'end_date', 'time'],
-      });
-    
-      eveningReservations.forEach(reservation => {
-        const start = moment(reservation.start_date).startOf('day');
-        const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
-    
-        let current = start.clone();
-        while (current.isSameOrBefore(end)) {
-          additionalDates.add(current.format('YYYY-MM-DD'));
-          current.add(1, 'day');
-        }
-      });
-    
-      reservedDates.forEach(date => {
-        additionalDates.add(date);
       });
     
       
@@ -1160,15 +1205,43 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         attributes: ['start_date', 'end_date', 'time'],
       });
     
-      fullDayMorningReservations.forEach(reservation => {
-        const start = moment(reservation.start_date).startOf('day');
-        const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
     
-        let current = start.clone();
+      const fullDayMorningDates = new Set();
+      fullDayMorningReservations.forEach(reservation => {
+        let start = moment(reservation.start_date).format('YYYY-MM-DD');
+        let end = reservation.end_date ? moment(reservation.end_date).format('YYYY-MM-DD') : start;
+        
+        let current = moment(start);
         while (current.isSameOrBefore(end)) {
-          additionalDates.add(current.format('YYYY-MM-DD'));
+          fullDayMorningDates.add(current.format('YYYY-MM-DD'));
           current.add(1, 'day');
         }
+      });
+    
+      
+      eveningReservations.forEach(reservation => {
+        let start = moment(reservation.start_date).format('YYYY-MM-DD');
+        let end = reservation.end_date ? moment(reservation.end_date).format('YYYY-MM-DD') : start;
+    
+        let current = moment(start);
+        while (current.isSameOrBefore(end)) {
+        
+          if (!fullDayMorningDates.has(current.format('YYYY-MM-DD'))) {
+            console.log(`Error: FullDayEvening found without FullDayMorning on ${current.format('YYYY-MM-DD')}`);
+          }
+          additionalDates.add(current.format('YYYY-MM-DD'));
+    
+          
+          let nextMorning = moment(current).add(1, 'day').format('YYYY-MM-DD');
+          additionalDates.add(nextMorning);
+    
+          current.add(1, 'day');
+        }
+      });
+    
+      
+      reservedDates.forEach(date => {
+        additionalDates.add(date);
       });
     
       const response = {
@@ -1178,7 +1251,6 @@ exports.getReservationsByRightTimeName = async (req, res) => {
       return res.status(200).json(response);
     }
     
-
     const response = {
       reservedDays: Array.from(reservedDates).sort(),
     };
