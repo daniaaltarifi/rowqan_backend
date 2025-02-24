@@ -1352,6 +1352,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 
 
+
 exports.getChaletReservationsDate = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
@@ -1369,8 +1370,6 @@ exports.getChaletReservationsDate = async (req, res) => {
       attributes: ["start_date", "end_date", "Time"],
       order: [["start_date", "ASC"]],
     });
-
-    console.log("Fetched Reservations:", reservations);
 
     if (!reservations || reservations.length === 0) {
       return res.status(404).json({ error: "No confirmed reservations found" });
@@ -1391,13 +1390,20 @@ exports.getChaletReservationsDate = async (req, res) => {
       if (reservation.Time === "FullDayEvening") {
         let nextDay = moment(reservation.start_date).add(1, "days").format("YYYY-MM-DD");
 
-        
-        reservationList.push(
-          { start_date: nextDay, end_date: null, Time: "Morning" },
-          { start_date: nextDay, end_date: null, Time: "FullDayMorning" }
-        );
-
       
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "FullDayMorning",
+        });
+
+        reservationList.push({
+          start_date: nextDay,
+          end_date: null,
+          Time: "FullDayMorning",
+        });
+
+       
         reservationList.push({
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
           end_date: null,
@@ -1405,7 +1411,6 @@ exports.getChaletReservationsDate = async (req, res) => {
         });
       }
 
-      
       if (reservation.Time === "Morning") {
         reservationList.push({
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
@@ -1423,6 +1428,7 @@ exports.getChaletReservationsDate = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 
