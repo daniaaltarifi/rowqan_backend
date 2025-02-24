@@ -1391,8 +1391,6 @@ exports.getChaletReservationsDate = async (req, res) => {
 
 
 
-
-
 exports.getChaletReservationsDate = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
@@ -1428,14 +1426,31 @@ exports.getChaletReservationsDate = async (req, res) => {
 
       reservationList.push(formattedReservation);
 
-  
+     
       if (reservation.Time === "FullDayEvening") {
         let nextDay = moment(reservation.start_date).add(1, "days").format("YYYY-MM-DD");
+
         
         reservationList.push(
           { start_date: nextDay, end_date: null, Time: "Morning" },
           { start_date: nextDay, end_date: null, Time: "FullDayMorning" }
         );
+
+      
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "Evening",
+        });
+      }
+
+      
+      if (reservation.Time === "Morning") {
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "Evening",
+        });
       }
     });
 
@@ -1447,6 +1462,7 @@ exports.getChaletReservationsDate = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 
