@@ -1180,6 +1180,95 @@ exports.getReservationsByRightTimeName = async (req, res) => {
     
 
 
+    
+    
+    // if (name === "FullDayEvening") {
+    //   const additionalDates = new Set();
+    
+    //   const eveningReservations = await Reservations_Chalets.findAll({
+    //     where: {
+    //       lang: lang,
+    //       chalet_id: chalet_id,
+    //       time: "FullDayEvening", 
+    //       status: 'Confirmed',
+    //     },
+    //     attributes: ['start_date', 'end_date', 'time'],
+    //   });
+    
+    //   eveningReservations.forEach(reservation => {
+    //     const start = moment(reservation.start_date).startOf('day');
+    //     const end = reservation.end_date
+    //       ? moment(reservation.end_date).startOf('day')
+    //       : start.clone();
+    
+    //     let current = start.clone();
+    //     while (current.isSameOrBefore(end)) {
+    
+         
+    //       additionalDates.add(current.format('YYYY-MM-DD'));
+    
+          
+    //       const nextDay = current.clone().add(1, 'day').format('YYYY-MM-DD');
+    //       additionalDates.add(nextDay); 
+    
+    //       const nextDayMorning = {
+    //         date: nextDay,
+    //         time: 'Morning'
+    //       };
+    //       const nextDayFullDayMorning = {
+    //         date: nextDay,
+    //         time: 'FullDayMorning'
+    //       };
+    
+    //       additionalDates.add(nextDayMorning);
+    //       additionalDates.add(nextDayFullDayMorning);
+    
+         
+    //       if (current.isSame(start, 'day')) {
+    //         additionalDates.add(current.format('YYYY-MM-DD') + " Evening");
+    //       }
+    
+         
+    //       if (current.isSame(start, 'day')) {
+    //         additionalDates.add(current.format('YYYY-MM-DD') + " FullDayMorning");
+    //       }
+    
+    //       current.add(1, 'day');
+    //     }
+    //   });
+    
+    //   const fullDayMorningReservations = await Reservations_Chalets.findAll({
+    //     where: {
+    //       lang: lang,
+    //       chalet_id: chalet_id,
+    //       time: "FullDayMorning",
+    //       status: 'Confirmed',
+    //     },
+    //     attributes: ['start_date', 'end_date', 'time'],
+    //   });
+    
+    //   fullDayMorningReservations.forEach(reservation => {
+    //     const start = moment(reservation.start_date).startOf('day');
+    //     const end = reservation.end_date
+    //       ? moment(reservation.end_date).startOf('day')
+    //       : start.clone();
+    
+    //     let current = start.clone();
+    //     while (current.isSameOrBefore(end)) {
+    //       additionalDates.add(current.format('YYYY-MM-DD'));
+    //       current.add(1, 'day');
+    //     }
+    //   });
+    
+    //   reservedDates.forEach(date => additionalDates.add(date));
+    
+    //   return res.status(200).json({
+    //     reservedDays: Array.from(additionalDates).sort(),
+    //   });
+    // }
+    
+    
+
     if (name === "FullDayEvening") {
       const additionalDates = new Set();
     
@@ -1187,13 +1276,30 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         where: {
           lang: lang,
           chalet_id: chalet_id,
-          time: "Evening",
+          time: "FullDayEvening", 
           status: 'Confirmed',
         },
         attributes: ['start_date', 'end_date', 'time'],
       });
     
-     
+      eveningReservations.forEach(reservation => {
+        const start = moment(reservation.start_date).startOf('day');
+        const end = reservation.end_date
+          ? moment(reservation.end_date).startOf('day')
+          : start.clone();
+    
+        let current = start.clone();
+        while (current.isSameOrBefore(end)) {
+          additionalDates.add(current.format('YYYY-MM-DD')); 
+    
+          
+          const nextDay = current.clone().add(1, 'day').format('YYYY-MM-DD');
+          additionalDates.add(nextDay); 
+    
+          current.add(1, 'day');
+        }
+      });
+    
       const fullDayMorningReservations = await Reservations_Chalets.findAll({
         where: {
           lang: lang,
@@ -1204,47 +1310,34 @@ exports.getReservationsByRightTimeName = async (req, res) => {
         attributes: ['start_date', 'end_date', 'time'],
       });
     
-      
-      const fullDayMorningDates = new Set();
       fullDayMorningReservations.forEach(reservation => {
-        let start = moment(reservation.start_date).format('YYYY-MM-DD');
-        let end = reservation.end_date ? moment(reservation.end_date).format('YYYY-MM-DD') : start;
-        
-        let current = moment(start);
+        const start = moment(reservation.start_date).startOf('day');
+        const end = reservation.end_date
+          ? moment(reservation.end_date).startOf('day')
+          : start.clone();
+    
+        let current = start.clone();
         while (current.isSameOrBefore(end)) {
-          fullDayMorningDates.add(current.format('YYYY-MM-DD'));
+          additionalDates.add(current.format('YYYY-MM-DD')); 
           current.add(1, 'day');
         }
       });
+    
+      reservedDates.forEach(date => additionalDates.add(date));
     
       
-      eveningReservations.forEach(reservation => {
-        let start = moment(reservation.start_date).format('YYYY-MM-DD');
-        let end = reservation.end_date ? moment(reservation.end_date).format('YYYY-MM-DD') : start;
+      const reservedDays = Array.from(additionalDates).sort();
     
-        let current = moment(start);
-        while (current.isSameOrBefore(end)) {
-          
-          additionalDates.add(current.format('YYYY-MM-DD'));
-    
-          
-          const nextDayMorning = current.add(1, 'day').format('YYYY-MM-DD');
-          additionalDates.add(nextDayMorning); 
-    
-          current.add(1, 'day');
-        }
+      return res.status(200).json({
+        reservedDays: reservedDays, 
       });
-    
-      reservedDates.forEach(date => {
-        additionalDates.add(date);
-      });
-    
-      const response = {
-        reservedDays: Array.from(additionalDates).sort(),
-      };
-    
-      return res.status(200).json(response);
     }
+    
+    
+    
+    
+    
+    
     
     
     const response = {
