@@ -2,6 +2,8 @@ const Chalet = require("../Models/ChaletsModel");
 const Status = require("../Models/StatusModel");
 const chaletsImages = require("../Models/ChaletsImagesModel");
 const RightTimeModel = require("../Models/RightTimeModel");
+const numberstars = require('../Models/no_StartChalet')
+
 
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
@@ -638,7 +640,7 @@ exports.deleteChalet = async (req, res) => {
     
     await RightTimeModel.destroy({ where: { chalet_id: id } });
     await chaletsImages.destroy({ where: { chalet_id: id } });
-
+    await numberstars.destroy({where:{chalet_id:id}})
     
     await Payments.destroy({
       where: {

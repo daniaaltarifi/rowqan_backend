@@ -190,6 +190,7 @@ exports.createReservation = async (req, res) => {
 
 
 
+    const { Op } = require('sequelize'); 
 
     if (rightTime.type_of_time === "Morning") {
       const previousDayStart = moment(formattedStartDate).subtract(1, 'days').startOf('day').toDate();
@@ -241,7 +242,7 @@ exports.createReservation = async (req, res) => {
       if (existingMorningReservation) {
         return res.status(400).json({
           error: lang === "en"
-            ? "صصصصThis chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
+            ? "This chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
             : "هذا الشاليه محجوز بالفعل لفترة الصباح أو المساء. لا يمكن حجزه ليوم كامل.",
         });
       }
@@ -257,7 +258,7 @@ exports.createReservation = async (req, res) => {
       if (existingMorningReservation) {
         return res.status(400).json({
           error: lang === "en"
-            ? "صصصصThis chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
+            ? "This chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
             : "هذا الشاليه محجوز بالفعل لفترة الصباح أو المساء. لا يمكن حجزه ليوم كامل.",
         });
       }
@@ -277,7 +278,7 @@ exports.createReservation = async (req, res) => {
       if (existingMorningReservation || existingEveningReservation) {
         return res.status(400).json({
           error: lang === "en"
-            ? "يذذذذhis chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
+            ? "This chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
             : "هذا الشاليه محجوز بالفعل لفترة الصباح أو المساء. لا يمكن حجزه ليوم كامل.",
         });
       }
@@ -1065,73 +1066,129 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
     if (name === "FullDayMorning") {
       const additionalDates = new Set();
+  
       
       const morningReservations = await Reservations_Chalets.findAll({
-        where: {
-          lang: lang,
-          chalet_id: chalet_id,
-          time: "Morning",
-          status: 'Confirmed',  
-        },
-        attributes: ['start_date', 'end_date', 'time'],
+          where: {
+              lang: lang,
+              chalet_id: chalet_id,
+              time: "Morning", 
+              status: 'Confirmed',  
+          },
+          attributes: ['start_date', 'end_date', 'time'],
       });
-
-      morningReservations.forEach(reservation => {
-        const start = moment(reservation.start_date).startOf('day');
-        const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
-
-        let current = start.clone();
-        while (current.isSameOrBefore(end)) {
-          additionalDates.add(current.format('YYYY-MM-DD'));
-          current.add(1, 'day');
-        }
+  
+     
+      const fullDayMorningReservations = await Reservations_Chalets.findAll({
+          where: {
+              lang: lang,
+              chalet_id: chalet_id,
+              time: "FullDayMorning",  
+              status: 'Confirmed',
+          },
+          attributes: ['start_date', 'end_date', 'time'],
       });
-
-      reservedDates.forEach(date => {
-        additionalDates.add(date);
+  
+     
+      const fullDayEveningReservations = await Reservations_Chalets.findAll({
+          where: {
+              lang: lang,
+              chalet_id: chalet_id,
+              time: "FullDayEvening",  
+              status: 'Confirmed',
+          },
+          attributes: ['start_date', 'end_date', 'time'],
       });
-
-      const response = {
-        reservedDays: Array.from(additionalDates).sort(),
+  
+      
+      const addReservationsToSet = (reservations) => {
+          reservations.forEach(reservation => {
+              let start = moment(reservation.start_date).startOf('day');
+              let end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+  
+              let current = start.clone();
+              while (current.isSameOrBefore(end)) {
+                  additionalDates.add(current.format('YYYY-MM-DD'));
+                  current.add(1, 'day');
+              }
+          });
       };
-
+  
+      
+      addReservationsToSet(morningReservations);
+      addReservationsToSet(fullDayMorningReservations);
+      addReservationsToSet(fullDayEveningReservations);
+  
+      
+      reservedDates.forEach(date => {
+          additionalDates.add(date);
+      });
+  
+      const response = {
+          reservedDays: Array.from(additionalDates).sort(),
+      };
+  
       return res.status(200).json(response);
-    }
+  }
+  
 
     if (name === "FullDayEvening") {
       const additionalDates = new Set();
-      
+    
       const eveningReservations = await Reservations_Chalets.findAll({
         where: {
           lang: lang,
           chalet_id: chalet_id,
           time: "Evening",
-          status: 'Confirmed',  
+          status: 'Confirmed',
         },
         attributes: ['start_date', 'end_date', 'time'],
       });
-
+    
       eveningReservations.forEach(reservation => {
         const start = moment(reservation.start_date).startOf('day');
         const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
-
+    
         let current = start.clone();
         while (current.isSameOrBefore(end)) {
           additionalDates.add(current.format('YYYY-MM-DD'));
           current.add(1, 'day');
         }
       });
-
+    
       reservedDates.forEach(date => {
         additionalDates.add(date);
       });
-
+    
+      
+      const fullDayMorningReservations = await Reservations_Chalets.findAll({
+        where: {
+          lang: lang,
+          chalet_id: chalet_id,
+          time: "FullDayMorning",
+          status: 'Confirmed',
+        },
+        attributes: ['start_date', 'end_date', 'time'],
+      });
+    
+      fullDayMorningReservations.forEach(reservation => {
+        const start = moment(reservation.start_date).startOf('day');
+        const end = reservation.end_date ? moment(reservation.end_date).startOf('day') : start;
+    
+        let current = start.clone();
+        while (current.isSameOrBefore(end)) {
+          additionalDates.add(current.format('YYYY-MM-DD'));
+          current.add(1, 'day');
+        }
+      });
+    
       const response = {
         reservedDays: Array.from(additionalDates).sort(),
       };
-
+    
       return res.status(200).json(response);
     }
+    
 
     const response = {
       reservedDays: Array.from(reservedDates).sort(),
