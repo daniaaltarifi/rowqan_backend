@@ -37,6 +37,10 @@ router.delete('/reservations/:id', ReservationsChaletsController.deleteReservati
 router.get('/reservationsByChaletId/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
 
 
+
+router.get('/reservationsDatesByChaletId/:chalet_id/:lang', ReservationsChaletsController.getChaletReservationsDate);
+
+
 // router.get('/reservations/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
 
 module.exports = router;
