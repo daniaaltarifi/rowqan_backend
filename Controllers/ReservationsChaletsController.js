@@ -1403,6 +1403,11 @@ exports.getChaletReservationsDate = async (req, res) => {
           Time: "FullDayMorning",
         });
 
+        reservationList.push({
+          start_date: nextDay,
+          end_date: null,
+          Time: "Morning",
+        });
        
         reservationList.push({
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
