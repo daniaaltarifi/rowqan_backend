@@ -2,6 +2,8 @@ const Chalet = require("../Models/ChaletsModel");
 const Status = require("../Models/StatusModel");
 const chaletsImages = require("../Models/ChaletsImagesModel");
 const RightTimeModel = require("../Models/RightTimeModel");
+const DatesForRightTime = require('../Models/DatesForRightTime')
+
 
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
@@ -176,6 +178,10 @@ const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
         {
           model: RightTimeModel,
           attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer","date"],
+          include: {
+            model: DatesForRightTime,
+            attributes: ["id", "date","price"],
+          },
         },
       ],
       limit: parseInt(limit),
