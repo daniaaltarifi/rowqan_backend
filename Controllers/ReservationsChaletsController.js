@@ -1389,7 +1389,6 @@ exports.getChaletReservationsDate = async (req, res) => {
 
 
 
-
 exports.getChaletReservationsDate = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
@@ -1440,6 +1439,11 @@ exports.getChaletReservationsDate = async (req, res) => {
           Time: "FullDayMorning",
         });
 
+        reservationList.push({
+          start_date: nextDay,
+          end_date: null,
+          Time: "Morning",
+        });
        
         reservationList.push({
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
