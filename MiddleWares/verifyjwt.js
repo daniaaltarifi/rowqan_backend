@@ -199,7 +199,10 @@ const sendVerificationCode = async (email, mfaCode) => {
 };
 
 
-const blockedIps = new Set();
+// const blockedIps = new Set();
+// const failedAttempts = {};
+
+const blockedIps = new Map();
 const failedAttempts = {};
 
 
@@ -210,6 +213,22 @@ exports.login = async (req, res) => {
     req.ip ||
     req.headers["x-forwarded-for"] ||
     req.connection.remoteAddress;
+
+    const blockDuration = 30 * 60 * 1000;
+
+
+
+
+    if (blockedIps.has(clientIp)) {
+      const blockTime = blockedIps.get(clientIp);
+      const elapsedTime = Date.now() - blockTime;
+     
+      if (elapsedTime < blockDuration) {
+        return res.status(403).send("Your IP is blocked due to too many failed login attempts.");
+      } else {
+        blockedIps.delete(clientIp);
+      }
+    }
 
  
   if (blockedIps.has(clientIp)) {
@@ -224,6 +243,7 @@ exports.login = async (req, res) => {
       failedAttempts[clientIp] = (failedAttempts[clientIp] || 0) + 1;
       if (failedAttempts[clientIp] >= 5) {
         blockedIps.add(clientIp);
+        blockedIps.set(clientIp, Date.now());
       }
 
       await AuditLog.create({
@@ -238,6 +258,7 @@ exports.login = async (req, res) => {
       failedAttempts[clientIp] = (failedAttempts[clientIp] || 0) + 1;
       if (failedAttempts[clientIp] >= 5) {
         blockedIps.add(clientIp);
+        blockedIps.set(clientIp, Date.now());
       }
 
       await AuditLog.create({
@@ -247,8 +268,11 @@ exports.login = async (req, res) => {
       return res.status(400).send("Invalid password");
     }
 
+
+    delete failedAttempts[clientIp];
+
     if (user.user_type_id === 1) {
-    
+   
 
       if (!mfaCode) {
         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
@@ -406,6 +430,209 @@ exports.login = async (req, res) => {
     res.status(500).send({ message: "Internal Server Error", error: err.message });
   }
 };
+// exports.login = async (req, res) => {
+//   const { email, password, mfaCode, ip } = req.body;
+//   const clientIp =
+//     ip ||
+//     req.ip ||
+//     req.headers["x-forwarded-for"] ||
+//     req.connection.remoteAddress;
+
+ 
+//   if (blockedIps.has(clientIp)) {
+//     return res
+//       .status(403)
+//       .send("Your IP is blocked due to too many failed login attempts.");
+//   }
+
+//   try {
+//     const user = await User.findOne({ where: { email } });
+//     if (!user) {
+//       failedAttempts[clientIp] = (failedAttempts[clientIp] || 0) + 1;
+//       if (failedAttempts[clientIp] >= 5) {
+//         blockedIps.add(clientIp);
+//       }
+
+//       await AuditLog.create({
+//         action: "Failed Login",
+//         details: `Failed login attempt with email: ${email} (User not found)`,
+//       });
+//       return res.status(400).send("User not found");
+//     }
+
+//     const isMatch = await argon2.verify(user.password, password);
+//     if (!isMatch) {
+//       failedAttempts[clientIp] = (failedAttempts[clientIp] || 0) + 1;
+//       if (failedAttempts[clientIp] >= 5) {
+//         blockedIps.add(clientIp);
+//       }
+
+//       await AuditLog.create({
+//         action: "Failed Login",
+//         details: `Failed login attempt for user: ${email} (Invalid password)`,
+//       });
+//       return res.status(400).send("Invalid password");
+//     }
+
+//     if (user.user_type_id === 1) {
+    
+
+//       if (!mfaCode) {
+//         mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+//         mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+
+//         await sendVerificationCode(email, mfaCodeMemory);
+
+//         return res.status(200).send(
+//           "MFA code has been sent to your email. Please enter the code to complete login."
+//         );
+//       }
+
+
+//       if (Date.now() > mfaCodeExpiration) {
+//         return res.status(400).send("MFA code has expired");
+//       }
+
+//       if (String(mfaCode) !== String(mfaCodeMemory)) {
+//         await AuditLog.create({
+//           action: "Failed MFA Verification",
+//           details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+//         });
+//         return res.status(400).send("Invalid MFA code");
+//       }
+//     } else if (user.user_type_id === 2) {
+//       const storedDeviceInfo = await User.getDeviceInfo(user.id);
+//       const parsedStoredDeviceInfo = storedDeviceInfo
+//         ? JSON.parse(storedDeviceInfo)
+//         : null;
+
+//         if (!mfaCode) {
+//           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+//           mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+ 
+//           await sendVerificationCode(email, mfaCodeMemory);
+ 
+//           return res.status(200).send(
+//             "MFA code has been sent to your email. Please enter the code to complete login."
+//           );
+//         }
+ 
+ 
+//         if (Date.now() > mfaCodeExpiration) {
+//           return res.status(400).send("MFA code has expired");
+//         }
+ 
+//         if (String(mfaCode) !== String(mfaCodeMemory)) {
+//           await AuditLog.create({
+//             action: "Failed MFA Verification",
+//             details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+//           });
+//           return res.status(400).send("Invalid MFA code");
+//         }
+//     }
+
+//     else if (user.user_type_id === 4) {
+//       const storedDeviceInfo = await User.getDeviceInfo(user.id);
+//       const parsedStoredDeviceInfo = storedDeviceInfo
+//         ? JSON.parse(storedDeviceInfo)
+//         : null;
+
+//         if (!mfaCode) {
+//           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+//           mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+ 
+//           await sendVerificationCode(email, mfaCodeMemory);
+ 
+//           return res.status(200).send(
+//             "MFA code has been sent to your email. Please enter the code to complete login."
+//           );
+//         }
+ 
+ 
+//         if (Date.now() > mfaCodeExpiration) {
+//           return res.status(400).send("MFA code has expired");
+//         }
+ 
+//         if (String(mfaCode) !== String(mfaCodeMemory)) {
+//           await AuditLog.create({
+//             action: "Failed MFA Verification",
+//             details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+//           });
+//           return res.status(400).send("Invalid MFA code");
+//         }
+//     }
+
+
+//     else if (user.user_type_id === 5) {
+//       const storedDeviceInfo = await User.getDeviceInfo(user.id);
+//       const parsedStoredDeviceInfo = storedDeviceInfo
+//         ? JSON.parse(storedDeviceInfo)
+//         : null;
+
+//         if (!mfaCode) {
+//           mfaCodeMemory = Math.floor(100000 + Math.random() * 900000);
+//           mfaCodeExpiration = Date.now() + 5 * 60 * 1000;
+ 
+//           await sendVerificationCode(email, mfaCodeMemory);
+ 
+//           return res.status(200).send(
+//             "MFA code has been sent to your email. Please enter the code to complete login."
+//           );
+//         }
+ 
+ 
+//         if (Date.now() > mfaCodeExpiration) {
+//           return res.status(400).send("MFA code has expired");
+//         }
+ 
+//         if (String(mfaCode) !== String(mfaCodeMemory)) {
+//           await AuditLog.create({
+//             action: "Failed MFA Verification",
+//             details: `Failed MFA verification for user: ${email} from IP: ${clientIp}`,
+//           });
+//           return res.status(400).send("Invalid MFA code");
+//         }
+//     }
+//     const token = jwt.sign(
+//       { id: user.id, user_type_id: user.user_type_id, name: user.name },
+//       SECRET_KEY,
+//       { expiresIn: "1h" }
+//     );
+   
+//     await AuditLog.create({
+//       action: "Successful Login",
+//       details: `Login successful for user: ${email} from IP: ${clientIp}`,
+//     });
+
+//     delete failedAttempts[clientIp];
+//     res.cookie('token', token, {
+//       httpOnly: true, // Cookie can't be accessed from JavaScript
+//       maxAge: 3600000, // 1 hour expiration
+//       secure: false, // Set to true in production, false in development
+//     });
+//     // PRODUCTION
+//     // res.cookie("token", token, {
+//     //   httpOnly: true,
+//     //   secure: true,
+//     //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+//     //   sameSite: "Strict",
+//     // });  
+//     return res.status(200).json({
+//       message: "Login successful",
+//       token,
+//       name: user.name,
+//       user_type_id: user.user_type_id,
+//       id: user.id,
+//     });
+//   } catch (err) {
+//     console.error("Error during login process:", err);
+//     await AuditLog.create({
+//       action: "Login Error",
+//       details: `Error during login for email: ${email} from IP: ${clientIp}. Error: ${err.message}`,
+//     });
+//     res.status(500).send({ message: "Internal Server Error", error: err.message });
+//   }
+// };
 
 
 
