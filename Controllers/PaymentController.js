@@ -576,9 +576,6 @@ const Chalet = require('../Models/ChaletsModel');
         where: { id: chaletIds },
         attributes: ['id', 'title', 'description'],
       });
-  
-
-   
 
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;

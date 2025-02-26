@@ -114,6 +114,7 @@ const allowedOrigins = [
   "https://rowqan.com",
   "https://dashboard.rowqan.com",
   "https://rowqanbackend.rowqan.com",
+  "https://kassel.icu/rowqan/chalets"
 ];
 
 
