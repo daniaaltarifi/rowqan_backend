@@ -32,4 +32,7 @@ const AdminChalet = sequelize.define('AdminChalet', {
   timestamps: false, 
 });
 
+// User.belongsToMany(Chalet, { through: AdminChalet, foreignKey: 'user_id' });
+// Chalet.belongsToMany(User, { through: AdminChalet, foreignKey: 'chalet_id' });
+
 module.exports = AdminChalet;
