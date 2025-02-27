@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../Config/dbConnect');
-const User = require('../Models/UsersModel');
-const Chalet = require('../Models/ChaletsModel');
+const sequelize = require('../Config/dbConnect'); 
+const User = require('../Models/UsersModel'); 
+const Chalet = require('../Models/ChaletsModel'); 
 
 const AdminChalet = sequelize.define('AdminChalet', {
   id: {
@@ -29,13 +29,7 @@ const AdminChalet = sequelize.define('AdminChalet', {
   },
 }, {
   tableName: 'admin_chalets',
-  timestamps: false,
+  timestamps: false, 
 });
-
-// تأكد من أن النماذج المرتبطة هي فئات من Sequelize.Model
-AdminChalet.belongsTo(User, { foreignKey: 'user_id' });
-AdminChalet.belongsTo(Chalet, { foreignKey: 'chalet_id' });
-User.hasMany(AdminChalet, { foreignKey: 'user_id' });
-Chalet.hasMany(AdminChalet, { foreignKey: 'chalet_id' });
 
 module.exports = AdminChalet;
