@@ -455,16 +455,12 @@ exports.getChaletById = async (req, res) => {
         },
         { 
           model: RightTimeModel, 
-          attributes: ["id","type_of_time","from_time","to_time","price","After_Offer"], 
+          attributes: ["type_of_time"], 
         },
         {
           model: chaletsImages, 
-
           attributes: ["id", "image"], 
         },
-
-        
-
       ],
       attributes: [
         "id", "title", "description", "image", "Rating", "city", "area",
@@ -482,24 +478,7 @@ exports.getChaletById = async (req, res) => {
       chalet: chalet,
     });
     
-
-    res.status(200).json({
-      id: chalet.id,
-      title: chalet.title,
-      description: chalet.description,
-      image: chalet.image,
-      Rating: chalet.Rating,
-      city: chalet.city,
-      area: chalet.area,
-      intial_Amount: chalet.intial_Amount,
-      type: chalet.type,
-      features: chalet.features,
-      Additional_features: chalet.Additional_features,
-      near_me: chalet.near_me,
-      status: chalet.Status ? { id: chalet.Status.id, status: chalet.Status.status } : null, 
-      RightTimeModels: chalet.RightTimeModels ? chalet.RightTimeModels.map(rt => rt.type_of_time) : [], 
-      chaletsImages: chalet.chaletsImages ? chalet.chaletsImages.map(img => img.image) : [], 
-    });
+    
 
   } catch (error) {
     console.error("Error in getChaletById:", error);
