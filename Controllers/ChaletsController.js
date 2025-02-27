@@ -432,97 +432,6 @@ client.del(`chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`)
 
 
 
-// exports.getChaletById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { lang } = req.query;
-//     const cacheKey = `chalets5:${id}:lang:${lang || "all"}`;
-
-exports.getChaletById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { lang } = req.query;
-    const cacheKey = `chalets5:${id}:lang:${lang || "all"}`;
-
-
-   
-//     const cachedData = await client.get(cacheKey);
-//     if (cachedData) {
-//       return res.status(200).json(JSON.parse(cachedData));
-//     }
-  
-
-    
-//     const whereClause = { id };
-//     if (lang && ["ar", "en"].includes(lang)) {
-//       whereClause.lang = lang;
-//     } else if (lang) {
-//       return res.status(400).json({
-//         error: 'Invalid language. Supported languages are "ar" and "en".',
-//       });
-//     }
-
-   
-//     const chalet = await Chalet.findOne({
-//       where: whereClause,
-//       include: [
-//         { 
-//           model: Status, 
-//           attributes: ["id", "status"], 
-//         },
-//         { 
-//           model: RightTimeModel, 
-//           attributes: ["type_of_time"], 
-//         },
-//         {
-//           model: chaletsImages,
-//           attributes: ["id", "image"],
-//         }
-//       ],
-//       attributes: [
-//         "id", "title", "description", "image", "Rating", "city", "area",
-//         "intial_Amount", "type", "features", "Additional_features", "near_me"
-//       ],
-//     });
-
-//     if (!chalet) {
-//       return res.status(404).json({
-//         error: `Chalet with id ${id} and language ${lang} not found`,
-//       });
-//     }
-
-    
-//     await client.setEx(cacheKey, JSON.stringify(chalet));
-
-    
-//     res.status(200).json({
-//       id: chalet.id,
-//       title: chalet.title,
-//       description: chalet.description,
-//       image: chalet.image,
-//       Rating: chalet.Rating,
-//       city: chalet.city,
-//       area: chalet.area,
-//       intial_Amount: chalet.intial_Amount,
-//       type: chalet.type,
-//       features: chalet.features,
-//       Additional_features: chalet.Additional_features,
-//       near_me: chalet.near_me,
-//       status: chalet.Status ? { id: chalet.Status.id, status: chalet.Status.status } : null, 
-//       RightTimeModels: chalet.RightTimeModels ? chalet.RightTimeModels.map(rt => rt.type_of_time) : [], 
-//     });
-//   } catch (error) {
-//     console.error("Error in getChaletById:", error);
-//     res.status(500).json({ error: "Failed to fetch chalet" });
-//   }
-// };
-
-
-
-
-
-
-
 exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -554,8 +463,7 @@ exports.getChaletById = async (req, res) => {
           attributes: ["id", "image"], 
         },
 
-          attributes: ["id", "image"],
-        }
+        
 
       ],
       attributes: [
