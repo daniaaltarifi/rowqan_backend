@@ -474,9 +474,9 @@ exports.getChaletById = async (req, res) => {
       });
     }
 
-    res.json({
+    res.json(
        chalet,
-    });
+    );
     
   } catch (error) {
     console.error("Error in getChaletById:", error);
