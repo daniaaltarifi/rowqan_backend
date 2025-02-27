@@ -1,12 +1,12 @@
 const AdminChalet = require('../Models/AdminChalet ');
 const Chalet = require('../Models/ChaletsModel'); 
+const RightTimeModel = require('../Models/RightTimeModel');
 
 
 
 exports.getChaletByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-   
 
     if (!userId) {
       return res.status(400).json({
@@ -31,7 +31,13 @@ exports.getChaletByUserId = async (req, res) => {
       where: {
         id: chaletIds,
       },
-      attributes: ['id', 'title', 'description','image','Rating','city','area','intial_Amount','type','features','Additional_features','near_me'],
+      attributes: ['id', 'title', 'description', 'image', 'Rating', 'city', 'area', 'intial_Amount', 'type', 'features', 'Additional_features', 'near_me'],
+      include: [
+        {
+          model: RightTimeModel, 
+          attributes: ['id', 'type_of_time', 'from_time', 'to_time', 'price', 'After_Offer', 'date'],
+        }
+      ]
     });
 
     if (chalets.length > 0) {
@@ -46,6 +52,7 @@ exports.getChaletByUserId = async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch chalets" });
   }
 };
+
 
 
 
