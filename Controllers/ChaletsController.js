@@ -475,11 +475,9 @@ exports.getChaletById = async (req, res) => {
     }
 
     res.json({
-      chalet: chalet,
+       chalet,
     });
     
-    
-
   } catch (error) {
     console.error("Error in getChaletById:", error);
     res.status(500).json({ error: "Failed to fetch chalet" });

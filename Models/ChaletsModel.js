@@ -4,6 +4,7 @@ const chaletsImages = require('../Models/ChaletsImagesModel');
 const RightTimeModel = require('../Models/RightTimeModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const Status = require('../Models/StatusModel');
+const AdminChalet = require('./AdminChalet ');
 
 
 
@@ -86,10 +87,9 @@ Chalet.belongsTo(Status, { foreignKey: 'status_id' });
 Status.hasOne(Chalet, { foreignKey: 'status_id'});
 
 
+Chalet.belongsTo(AdminChalet, { foreignKey: 'user_id' });
 
-
-
-
+Chalet.hasMany(AdminChalet, { foreignKey: 'chalet_id' });
 
 
 module.exports = Chalet;
