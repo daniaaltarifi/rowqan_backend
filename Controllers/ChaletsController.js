@@ -455,7 +455,7 @@ exports.getChaletById = async (req, res) => {
         },
         { 
           model: RightTimeModel, 
-          attributes: ["type_of_time"], 
+          attributes: ["type_of_time","from_time","to_time","price","After_Offer","date"], 
         },
         {
           model: chaletsImages, 

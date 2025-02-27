@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../Config/dbConnect'); 
-const User = require('../Models/UsersModel'); 
-const Chalet = require('../Models/ChaletsModel'); 
+const sequelize = require('../Config/dbConnect'); // تأكد من استيراد اتصال قاعدة البيانات
+const User = require('../Models/UsersModel'); // جدول المستخدمين
+const Chalet = require('../Models/ChaletsModel'); // جدول الشاليهات
 
 const AdminChalet = sequelize.define('AdminChalet', {
   id: {
@@ -29,10 +29,10 @@ const AdminChalet = sequelize.define('AdminChalet', {
   },
 }, {
   tableName: 'admin_chalets',
-  timestamps: false, 
+  timestamps: false,
 });
 
-// User.belongsToMany(Chalet, { through: AdminChalet, foreignKey: 'user_id' });
-// Chalet.belongsToMany(User, { through: AdminChalet, foreignKey: 'chalet_id' });
+User.belongsToMany(Chalet, { through: AdminChalet, foreignKey: 'user_id' });
+Chalet.belongsToMany(User, { through: AdminChalet, foreignKey: 'chalet_id' });
 
 module.exports = AdminChalet;
