@@ -4,7 +4,6 @@ const chaletsImages = require('../Models/ChaletsImagesModel');
 const RightTimeModel = require('../Models/RightTimeModel');
 const ReservationDate = require('../Models/ReservationDatesModel');
 const Status = require('../Models/StatusModel');
-const AdminChalet = require('./AdminChalet ');
 
 
 
