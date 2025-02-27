@@ -752,35 +752,55 @@ exports.updatePayment = async (req, res) => {
  
 
 
-exports.deletePayment = async (req, res) => {
-  try {
-    const { id } = req.params;
+  exports.deletePayment = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+     
+      const payment = await Payments.findByPk(id);
+      if (!payment) {
+        return res
+          .status(404)
+          .json(
+            ErrorResponse('Payment not found', [
+              'No payment found with the given ID.',
+            ])
+          );
+      }
+  
+      
+      const reservationId = payment.reservation_id; 
+  
+      if (reservationId) {
+        
 
-    const payment = await Payments.findByPk(id);
-    if (!payment) {
-      return res
-        .status(404)
+        const reservation = await ReservationChalets.findOne({
+          where: { id: reservationId },
+        });
+  
+        if (reservation) {
+          
+          await reservation.destroy();
+        }
+      }
+  
+
+      await payment.destroy();
+  
+      const cacheKey = `payment:${id}`;
+      await client.del(cacheKey);
+  
+      res.status(200).json({ message: 'Payment and related reservation deleted successfully' });
+    } catch (error) {
+      console.error('Error in deletePayment:', error.message);
+      res
+        .status(500)
         .json(
-          ErrorResponse('Payment not found', [
-            'No payment found with the given ID.',
+          ErrorResponse('Failed to delete payment', [
+            'An internal server error occurred.',
           ])
         );
     }
-
-    await payment.destroy();
-
-    const cacheKey = `payment:${id}`;
-    await client.del(cacheKey);
-
-    res.status(200).json({ message: 'Payment deleted successfully' });
-  } catch (error) {
-    console.error('Error in deletePayment:', error.message);
-    res
-      .status(500)
-      .json(
-        ErrorResponse('Failed to delete payment', [
-          'An internal server error occurred.',
-        ])
-      );
-  }
-};
+  };
+  
+  
