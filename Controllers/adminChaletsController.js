@@ -31,7 +31,7 @@ exports.getChaletByUserId = async (req, res) => {
       where: {
         id: chaletIds,
       },
-      attributes: ['id', 'title', 'image'],
+      attributes: ['id', 'title', 'description','image','Rating','city','area','intial_Amount','type','features','Additional_features','near_me'],
     });
 
     if (chalets.length > 0) {
