@@ -1169,6 +1169,10 @@ exports.getChaletReservationsDate = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;
 
+    if (!chalet_id) {
+      return res.status(400).json({ message: "chalet_id is required" });
+    }
+
     const reservations = await Reservations_Chalets.findAll({
       where: {
         chalet_id: chalet_id,
@@ -1228,12 +1232,55 @@ exports.getChaletReservationsDate = async (req, res) => {
         reservationList.push({
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
           end_date: null,
-          Time: "Evening",
+          Time: "FullDayMorning",
         });
       }
+
+      if (reservation.Time === "Evening") {
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "FullDayEvening",
+        });
+      }
+
+
+      if (reservation.Time === "FullDayMorning") {
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "FullDayMorning",
+        });
+
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "Morning",
+        });
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "FullDayEvening",
+        });
+
+
+        reservationList.push({
+          start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
+          end_date: null,
+          Time: "Evening",
+        });
+
+      }
+
     });
-
-
+    return res.status(200).json({
+      reservations: reservationList,
+    });
+  } catch (error) {
+    console.error("Error fetching reservations:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 
 
@@ -1470,7 +1517,7 @@ exports.getChaletReservationsDate = async (req, res) => {
           start_date: moment(reservation.start_date).format("YYYY-MM-DD"),
           end_date: null,
           Time: "FullDayMorning",
-        });
+       });
       }
 
 
@@ -1498,17 +1545,7 @@ exports.getChaletReservationsDate = async (req, res) => {
 
       }
 
-
-      
-
-
-
-
     });
-
-
-    
-
     return res.status(200).json({
       reservations: reservationList,
     });
