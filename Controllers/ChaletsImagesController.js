@@ -215,7 +215,7 @@ exports.getChaletImageById = async (req, res) => {
     }
 
    
-    await client.setEx(cacheKey, 3600, JSON.stringify(chaletImage));
+    await client.set(cacheKey, JSON.stringify(chaletImage));
 
     return res.status(200).json(
       chaletImage,

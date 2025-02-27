@@ -89,4 +89,7 @@ Status.hasOne(Chalet, { foreignKey: 'status_id'});
 
 
 
+
+
+
 module.exports = Chalet;

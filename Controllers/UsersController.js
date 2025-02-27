@@ -8,6 +8,7 @@ const argon2 = require("argon2");
 const Chalet = require('../Models/ChaletsModel');
 const { client } = require('../Utils/redisClient');
 const Wallet = require('../Models/WalletModel');
+const AdminChalet = require('../Models/AdminChalet ');
 
 
 exports.createUser = async (req, res) => {
@@ -61,6 +62,12 @@ exports.createUser = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
 
 
 
@@ -356,52 +363,69 @@ exports.logout = (req, res) => {
 
 
 exports.createAdmin = async (req, res) => {
-  const { name, email, phone_number, country, password, RepeatPassword, user_type_id, lang, chalet_id } = req.body;
+  const { name, email, phone_number, country, password, repeat_password, lang, user_type_id, chalet_ids } = req.body;
 
   try {
     
-    if (password !== RepeatPassword) {
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Password and Repeat Password do not match' : 'كلمة المرور وتكرار كلمة المرور غير متطابقتين',
+        code: 'ER_DUP_ENTRY',
+        message: lang === 'en' ? 'Email already exists' : 'البريد الالكتروني موجود',
       });
     }
 
     
-    if (user_type_id !== '1') {
+    if (!['ar', 'en'].includes(lang)) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Role must be admin to create an admin user' : 'يجب أن يكون الدور "admin" لإنشاء مستخدم أدمن',
+        error: lang === 'en' ? 'Invalid language. Please use "ar" or "en".' : 'اللغة غير صالحة. استخدم "ar" أو "en".',
       });
     }
 
     
-    const chalet = await Chalet.findByPk(chalet_id);
-    if (!chalet) {
+    if (password !== repeat_password) {
       return res.status(400).json({
-        error: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود',
+        error: lang === 'en' ? 'Passwords do not match' : 'كلمتا المرور غير متطابقتين',
       });
     }
 
-    
-    const saltRounds = 10;
-    const hashedPassword = await argon2.hash(password, saltRounds);
+   
+    const hashedPassword = await argon2.hash(password);
+    const finalUserType = user_type_id || 2; 
 
     
-    const newAdmin = await User.create({
+    const newUser = await User.create({
       name,
       email,
       phone_number,
       country,
       password: hashedPassword,
-      user_type_id,
       lang,
-      chalet_id, 
+      user_type_id: finalUserType,
     });
 
-    res.status(201).json(newAdmin);
+    
+    if (finalUserType === 1) {
+      
+      if (Array.isArray(chalet_ids) && chalet_ids.length > 0) {
+        await Promise.all(chalet_ids.map(async (chalet_id) => {
+          await AdminChalet.create({
+            user_id: newUser.id,
+            chalet_id,
+          });
+        }));
+      }
+    }
+
+    res.status(201).json({
+      message: lang === 'en' ? 'User created successfully' : 'تم إنشاء المستخدم بنجاح',
+      user: newUser,
+    });
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error('Error creating user:', error);
     res.status(500).json({
-      error: lang === 'en' ? 'Failed to create admin' : 'فشل في إنشاء الأدمن',
+      error: lang === 'en' ? 'Failed to create user' : 'فشل في إنشاء المستخدم',
     });
   }
 };
