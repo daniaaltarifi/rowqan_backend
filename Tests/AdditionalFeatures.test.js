@@ -10,7 +10,7 @@ jest.mock('../Models/AdditionalFeatures');
 jest.mock('../Utils/redisClient', () => ({
   client: {
     get: jest.fn(),
-    setEx: jest.fn(),
+    setEx: jest.fn(),   
     del: jest.fn(),
   },
 }));
