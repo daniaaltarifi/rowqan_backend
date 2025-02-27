@@ -87,9 +87,5 @@ Chalet.belongsTo(Status, { foreignKey: 'status_id' });
 Status.hasOne(Chalet, { foreignKey: 'status_id'});
 
 
-Chalet.belongsTo(AdminChalet, { foreignKey: 'user_id' });
-
-Chalet.hasMany(AdminChalet, { foreignKey: 'chalet_id' });
-
 
 module.exports = Chalet;
