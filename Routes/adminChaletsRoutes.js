@@ -5,7 +5,7 @@ const AdminChaletsController = require('../Controllers/adminChaletsController');
 const authMiddleware = require('../MiddleWares/authMiddleware');  
 const rateLimiter = require('../MiddleWares/rateLimiter');  
 
-router.get('/getChaletsByAdminId/:id',rateLimiter,AdminChaletsController.getChaletByUserId)
+router.get('/getChaletsByAdminId/:userId',rateLimiter,AdminChaletsController.getChaletByUserId)
 
 
 
