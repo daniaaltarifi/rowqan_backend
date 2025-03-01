@@ -291,38 +291,40 @@ exports.getRightTimeById = async (req, res) => {
 
 
 exports.deleteRightTime = async (req, res) => {
-    try {
+  try {
       const { id, lang } = req.params;
-  
-     
+
       const [rightTime, _] = await Promise.all([
-        RightTimeModel.findByPk(id, { where: { lang } }),
-        client.del(`rightTime:${id}:${lang}`), 
+          RightTimeModel.findByPk(id, { where: { lang } }),
+          client.del(`rightTime:${id}:${lang}`),
       ]);
-  
+
       if (!rightTime) {
-        return res.status(404).json(
-          ErrorResponse("RightTime not found", [
-            "No RightTime found with the given ID and language.",
-          ])
-        );
+          return res.status(404).json(
+              ErrorResponse("RightTime not found", [
+                  "No RightTime found with the given ID and language.",
+              ])
+          );
       }
 
-    
-      await rightTime.destroy();
-      await dateForRightTime.destroy();
       
+      await dateForRightTime.destroy({ where: { right_time_id: id } });
+
+     
+      await rightTime.destroy();
+
       return res.status(200).json({ message: "RightTime deleted successfully" });
-    } catch (error) {
+  } catch (error) {
       console.error("Error in deleteRightTime:", error);
-  
+
       return res.status(500).json(
-        ErrorResponse("Failed to delete RightTime", [
-          "An internal server error occurred. Please try again later.",
-        ])
+          ErrorResponse("Failed to delete RightTime", [
+              "An internal server error occurred. Please try again later.",
+          ])
       );
-    }
-  };
+  }
+};
+
   
 
 exports.get = async (req, res) => {
