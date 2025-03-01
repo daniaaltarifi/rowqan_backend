@@ -460,6 +460,7 @@ if (existingFullDayMorningReservation) {
         user_id,
         chalet_id,
         right_time_id,
+        Status
       },
       wallet: user_id ? { total_balance: wallet?.total_balance || 0, cashback_balance: wallet?.cashback_balance || 0 } : null,
     });
