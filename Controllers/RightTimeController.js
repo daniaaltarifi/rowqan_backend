@@ -171,57 +171,44 @@ exports.getRightTimeById = async (req, res) => {
   }
 };
 
-  exports.getAllRightTimesByChaletId = async (req, res) => {
-    try {
+exports.getAllRightTimesByChaletId = async (req, res) => {
+  try {
       const { chalet_id, lang } = req.params;
-    
-      const cacheKey = `rightTimes:chalet:${chalet_id}:${lang}`;
-  
-      
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) {
-        return res.status(200).json(
-          JSON.parse(cachedData),
-      );
-      }
-      
-  
+
       
       const chalet = await Chalet.findByPk(chalet_id);
       if (!chalet) {
-        return res.status(404).json({
-          message: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود'
-        });
+          return res.status(404).json({
+              message: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود'
+          });
       }
-  
+
+      
       const rightTimes = await RightTimeModel.findAll({
-        where: { chalet_id, lang },
-        include :[
-          {
-            model: dateForRightTime,
-            attributes: ["id", "date", "price", "right_time_id"]
-          }
-        ]
+          where: { chalet_id, lang },
+          include: [
+              {
+                  model: dateForRightTime,
+                  attributes: ["id", "date", "price", "right_time_id"]
+              }
+          ]
       });
-  
+
       if (rightTimes.length === 0) {
-        return res.status(404).json({
-          message: lang === 'en' ? 'No RightTimes found for this chalet in the specified language' : 'لم يتم العثور على أوقات مناسبة لهذا الشاليه باللغة المحددة'
-        });
+          return res.status(404).json({
+              message: lang === 'en' ? 'No RightTimes found for this chalet in the specified language' : 'لم يتم العثور على أوقات مناسبة لهذا الشاليه باللغة المحددة'
+          });
       }
-  
-     
-      await client.setEx(cacheKey, 3600, JSON.stringify(rightTimes));
-  
+
       return res.status(200).json(rightTimes);
-    } catch (error) {
+  } catch (error) {
       console.error("Error in getAllRightTimesByChaletId:", error);
-  
+
       return res.status(500).json({
-        message:'Failed to fetch RightTimes'
+          message: 'Failed to fetch RightTimes'
       });
-    }
-  };
+  }
+};
 
   
 
