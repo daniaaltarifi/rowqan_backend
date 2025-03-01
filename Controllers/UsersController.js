@@ -256,17 +256,11 @@ exports.login = async (req, res) => {
   try {
 
 
-    // Validate the language input
-
     if (!['ar', 'en'].includes(lang)) {
       return res.status(400).json({
         error: lang === 'en' ? 'Invalid language. Please use "ar" or "en".' : 'اللغة غير صالحة. استخدم "ar" أو "en".',
       });
     }
-
-
-
-    // Check if the user exists
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -275,9 +269,6 @@ exports.login = async (req, res) => {
       });
     }
 
-
-
-    // Verify the password
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
@@ -300,9 +291,6 @@ exports.login = async (req, res) => {
       secretKey,
       { expiresIn: '1h' }
     );
-
-    // Generate JWT token
-
 
     // Set the cookie first before sending the response
     
