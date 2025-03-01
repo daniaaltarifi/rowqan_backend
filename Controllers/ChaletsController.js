@@ -458,7 +458,7 @@ exports.getChaletById = async (req, res) => {
           include: [
             { 
               model: DatesForRightTime,
-              attributes: ["id", "date"], 
+              attributes: ["id", "date","price"], 
             }
           ]
         },

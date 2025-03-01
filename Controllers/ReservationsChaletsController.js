@@ -428,7 +428,7 @@ if (existingFullDayMorningReservation) {
       user_id: user_id || null,
       chalet_id,
       right_time_id,
-      Status: "Pending",
+      Status,
     });
 
     let wallet = null;
