@@ -500,8 +500,10 @@ exports.getAllReservations = async (req, res) => {
     }
 
     
+    
     const cacheKey = `reservations:page:${page}:limit:${limit}:lang:${lang}`;
 
+    await client.del(cacheKey);
     
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
