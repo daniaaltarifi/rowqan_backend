@@ -102,45 +102,112 @@ exports.getAllUsers = async (req, res) => {
 
 
 
+// exports.getUserById = async (req, res) => {
+//   const { id } = req.params;
+//   const { lang } = req.query;
+  
+//   try {
+//     const cacheKey = `user:${id}:lang:${lang || 'all'}`;
+   
+//     const cachedData = await client.get(cacheKey);
+//     if (cachedData) {
+//       return res.status(200).json(JSON.parse(cachedData));  
+//     }
+
+    
+//     const whereCondition = lang ? { id, lang } : { id };
+    
+//     const user = await User.findOne({
+//       where: whereCondition,
+//       include: [
+//         {
+//           model: UserTypes,
+//           attributes: ['id', 'type'],
+//         },
+//       ],
+//       attributes: ['id', 'name', 'email', 'phone_number', 'country'],  
+//       raw: true,  
+//     });
+
+    
+//     if (!user) {
+//       return res.status(404).json({
+//         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
+//       });
+//     }
+
+    
+//     await client.setEx(cacheKey, 3600, JSON.stringify(user));
+    
+    
+//     res.status(200).json(user);
+//   } catch (error) {
+//     console.error('Error fetching user:', error);
+//     res.status(500).json({
+//       error: lang === 'en' ? 'Failed to fetch user' : 'فشل في جلب المستخدم',
+//     });
+//   }
+// };
+
 exports.getUserById = async (req, res) => {
   const { id } = req.params;
   const { lang } = req.query;
-  
+
   try {
     const cacheKey = `user:${id}:lang:${lang || 'all'}`;
-   
+
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));  
+      return res.status(200).json(JSON.parse(cachedData));
     }
 
-    
-    const whereCondition = lang ? { id, lang } : { id };
-    
+   
     const user = await User.findOne({
-      where: whereCondition,
+      where: { id },
       include: [
         {
           model: UserTypes,
           attributes: ['id', 'type'],
         },
       ],
-      attributes: ['id', 'name', 'email', 'phone_number', 'country'],  
-      raw: true,  
+      attributes: ['id', 'name', 'email', 'phone_number', 'country', 'User_Type_id'],
+      raw: true,
     });
 
-    
     if (!user) {
       return res.status(404).json({
         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
       });
     }
 
+    let responseData = { ...user };
+
+    if (user.User_Type_id === 1) {
+      const adminChalets = await AdminChalet.findAll({
+        where: { user_id: id },
+        attributes: ['chalet_id'],
+        raw: true,
+      });
+
+  
+      const chaletIds = adminChalets.map((chalet) => chalet.chalet_id);
+
     
-    await client.setEx(cacheKey, 3600, JSON.stringify(user));
-    
-    
-    res.status(200).json(user);
+      const chalets = await Chalet.findAll({
+        where: { id: chaletIds },
+        attributes: ['id', 'title', 'description', 'image','Rating','city','area','intial_Amount','type',
+          'features','Additional_features','near_me'
+        ],
+        raw: true,
+      });
+
+      responseData.chalets = chalets;
+    }
+
+   
+    await client.setEx(cacheKey, 3600, JSON.stringify(responseData));
+
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({

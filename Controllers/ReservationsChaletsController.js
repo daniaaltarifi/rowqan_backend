@@ -529,7 +529,7 @@ exports.getAllReservations = async (req, res) => {
         },
         {
           model: User,
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email","user_type_id"],
         },
         {
           model: RightTimeModel,
