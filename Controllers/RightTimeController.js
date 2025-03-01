@@ -307,10 +307,10 @@ exports.deleteRightTime = async (req, res) => {
           ])
         );
       }
-  
+
     
       await rightTime.destroy();
-  
+      await dateForRightTime.destroy();
       
       return res.status(200).json({ message: "RightTime deleted successfully" });
     } catch (error) {
