@@ -24,6 +24,7 @@ exports.createReservation = async (req, res) => {
       chalet_id,
       right_time_id,
       total_amount,
+      Status
     } = req.body || {};
 
     if (!start_date || !lang || !chalet_id || !right_time_id || !total_amount) {
