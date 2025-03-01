@@ -8,7 +8,6 @@ const DatesForRightTime = require('../Models/DatesForRightTime')
 const numberstars = require('../Models/no_StartChalet')
 
 
-
 const { validateInput, ErrorResponse } = require("../Utils/validateInput");
 const { client } = require("../Utils/redisClient");
 const  {Sequelize,Op}  = require('sequelize');
@@ -455,7 +454,13 @@ exports.getChaletById = async (req, res) => {
         },
         { 
           model: RightTimeModel, 
-          attributes: ["id","type_of_time","from_time","to_time","price","After_Offer","date"], 
+          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer", "date"], 
+          include: [
+            { 
+              model: DatesForRightTime,
+              attributes: ["id", "date"], 
+            }
+          ]
         },
         {
           model: chaletsImages, 
@@ -474,9 +479,7 @@ exports.getChaletById = async (req, res) => {
       });
     }
 
-    res.json(
-       chalet,
-    );
+    res.json(chalet);
     
   } catch (error) {
     console.error("Error in getChaletById:", error);

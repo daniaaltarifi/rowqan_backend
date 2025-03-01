@@ -350,6 +350,8 @@ exports.logout = (req, res) => {
 };
 
 
+
+
 exports.createAdmin = async (req, res) => {
   const { name, email, phone_number, country, password, repeat_password, lang, user_type_id, chalet_ids } = req.body;
 
@@ -395,7 +397,6 @@ exports.createAdmin = async (req, res) => {
 
     
     if (finalUserType === 1) {
-      
       if (Array.isArray(chalet_ids) && chalet_ids.length > 0) {
         await Promise.all(chalet_ids.map(async (chalet_id) => {
           await AdminChalet.create({

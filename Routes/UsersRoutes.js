@@ -51,6 +51,7 @@ router.post('/logout', rateLimiter, userController.logout);
 
 
 router.post('/createAdmin', userController.createAdmin);
+
 router.get('/verifytoken',userController.verifyToken, (req, res) => {
     const userId = req.user.id; 
     res.status(200).json({ userId });
@@ -63,8 +64,9 @@ router.post('/login', rateLimiter,login);
 
 router.post('/logout', rateLimiter, userController.logout);
 
-router.post('/createAdmin', userController.createAdmin);
+
 router.get('/verifytoken',userController.verifyToken, (req, res) => {
+
     const userId = req.user.id; 
     res.status(200).json({ userId });
   });

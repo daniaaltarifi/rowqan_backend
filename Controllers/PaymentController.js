@@ -222,13 +222,16 @@ exports.createPayment = async (req, res) => {
 
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
+
+
+
     reservation.Status = 'Confirmed';
     await reservation.save();
 
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
-      status: reservation.Status,
+      status: paymentMethod === "Cliq" ? "Pending" : reservation.Status,
       paymentMethod,
       UserName,
       Phone_Number,
