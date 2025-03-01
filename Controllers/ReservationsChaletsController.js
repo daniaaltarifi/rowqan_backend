@@ -7,8 +7,6 @@ const Wallet = require('../Models/WalletModel')
 const { Op } = require('sequelize');
 const {client} = require('../Utils/redisClient');
 const moment = require('moment');
-const Status = require('../Models/StatusModel');
-
 const { addDays, format } = require('date-fns');
 
 
@@ -428,7 +426,7 @@ if (existingFullDayMorningReservation) {
       user_id: user_id || null,
       chalet_id,
       right_time_id,
-      Status,
+      Status
     });
 
     let wallet = null;
