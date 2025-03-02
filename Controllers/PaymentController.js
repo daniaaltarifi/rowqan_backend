@@ -169,11 +169,12 @@ const nodemailer = require('nodemailer');
 
 
 
+
 exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
-    
+    // إذا كانت بعض الحقول الأساسية مفقودة (باستثناء user_id)
     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
       return res.status(400).json(
         ErrorResponse('Validation failed', [
@@ -182,22 +183,14 @@ exports.createPayment = async (req, res) => {
       );
     }
 
-    
+    // التحقق من المدخلات
     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
       return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
     }
 
-    
     let user = null;
-    if (user_id) {
-      user = await Users.findByPk(user_id);
-      if (!user) {
-        return res.status(404).json(ErrorResponse('Validation failed', ['User not found.']));
-      }
-    }
-
-    
+    // التحقق من الحجز باستخدام reservation_id
     const reservation = await ReservationChalets.findByPk(reservation_id, {
       include: [
         {
@@ -223,32 +216,24 @@ exports.createPayment = async (req, res) => {
     const remainingAmount = totalAmount - initialAmount;
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
-    
+    // التحقق من وجود صورة الدفع إذا كانت Cliq
     let paymentImage = null;
     if (paymentMethod === "Cliq") {
-      
       paymentImage = req.file ? req.file.path : null;
       if (!paymentImage) {
         return res.status(400).json(ErrorResponse('Validation failed', ['Payment image is required for Cliq payment.']));
       }
     }
 
-    
+    // تحديث حالة الحجز إذا كانت Cliq
     if (paymentMethod === "Cliq") {
-      
-      const paymentImage = req.file ? req.file.path : null;
-    
-      if (!paymentImage) {
-        return res.status(400).json(ErrorResponse('Validation failed', ['Payment image is required for Cliq payment.']));
-      }
-    
       reservation.Status = 'Pending';
       await reservation.save();
-    
     }
-    
+
+    // إضافة الدفع
     const newPayment = await Payments.create({
-      user_id,
+      user_id: user_id || null,  // إذا كان user_id فارغاً أو null نتركه null
       reservation_id,
       status: "Pending", 
       paymentMethod,
@@ -260,54 +245,58 @@ exports.createPayment = async (req, res) => {
       image: paymentImage
     });
 
-    
-    if (user) {
-      const email = user.email;
-      const insuranceValue = getInsuranceValue(reservation.Chalet.description);
+    // إذا كان user_id موجوداً، نرسل البريد الإلكتروني
+    if (user_id) {
+      user = await User.findByPk(user_id); // البحث عن المستخدم باستخدام user_id
+      if (user) {
+        const email = user.email;
+        const insuranceValue = getInsuranceValue(reservation.Chalet.description);
 
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          }
+        });
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Payment and Reservation Details',
-        html: `
-          <h3>Your Payment and Reservation Details</h3>
-          <p><strong>Reservation ID:</strong> ${reservation.id}</p>
-          <p><strong>Status:</strong> ${reservation.Status}</p>
-          <p><strong>CashBack:</strong> ${reservation.cashback}</p>
-          <p><strong>Start Date:</strong> ${reservation.start_date}</p>
-          <p><strong>End Date:</strong> ${reservation.end_date}</p>
-          <p><strong>Time:</strong> ${reservation.Time}</p>
-          <p><strong>Reservation Type:</strong> ${reservation.Reservation_Type}</p>
-          <p><strong>Additional Visitors:</strong> ${reservation.additional_visitors}</p>
-          <p><strong>Number of Days:</strong> ${reservation.number_of_days}</p>
-          <p><strong>Initial Payment:</strong> ${initialAmount}</p>
-          <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
-          <h4>Payment Method: ${paymentMethod}</h4>
-          <p><strong>User Name:</strong> ${UserName}</p>
-          <p><strong>Phone Number:</strong> ${Phone_Number}</p>
-          <h3>Chalet Details</h3>
-          <p><strong>Name:</strong> ${reservation.Chalet.title ?? 'Not available'}</p>
-          <p><strong>Description:</strong> ${reservation.Chalet.description ?? 'Not available'}</p>
-          <p><strong>Rating:</strong> ${reservation.Chalet.Rating ?? 'Not available'}</p>
-          <p><strong>City:</strong> ${reservation.Chalet.city ?? 'Not available'}</p>
-          <p><strong>Area:</strong> ${reservation.Chalet.area ?? 'Not available'}</p>
-          <p><strong>Initial Amount:</strong> ${reservation.Chalet.intial_Amount ?? 'Not available'}</p>
-          <p><strong>Features:</strong> ${reservation.Chalet.features ?? 'Not available'}</p>
-          ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ''}
-        `,
-      };
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Payment and Reservation Details',
+          html: `
+            <h3>Your Payment and Reservation Details</h3>
+            <p><strong>Reservation ID:</strong> ${reservation.id}</p>
+            <p><strong>Status:</strong> ${reservation.Status}</p>
+            <p><strong>CashBack:</strong> ${reservation.cashback}</p>
+            <p><strong>Start Date:</strong> ${reservation.start_date}</p>
+            <p><strong>End Date:</strong> ${reservation.end_date}</p>
+            <p><strong>Time:</strong> ${reservation.Time}</p>
+            <p><strong>Reservation Type:</strong> ${reservation.Reservation_Type}</p>
+            <p><strong>Additional Visitors:</strong> ${reservation.additional_visitors}</p>
+            <p><strong>Number of Days:</strong> ${reservation.number_of_days}</p>
+            <p><strong>Initial Payment:</strong> ${initialAmount}</p>
+            <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
+            <h4>Payment Method: ${paymentMethod}</h4>
+            <p><strong>User Name:</strong> ${UserName}</p>
+            <p><strong>Phone Number:</strong> ${Phone_Number}</p>
+            <h3>Chalet Details</h3>
+            <p><strong>Name:</strong> ${reservation.Chalet.title ?? 'Not available'}</p>
+            <p><strong>Description:</strong> ${reservation.Chalet.description ?? 'Not available'}</p>
+            <p><strong>Rating:</strong> ${reservation.Chalet.Rating ?? 'Not available'}</p>
+            <p><strong>City:</strong> ${reservation.Chalet.city ?? 'Not available'}</p>
+            <p><strong>Area:</strong> ${reservation.Chalet.area ?? 'Not available'}</p>
+            <p><strong>Initial Amount:</strong> ${reservation.Chalet.intial_Amount ?? 'Not available'}</p>
+            <p><strong>Features:</strong> ${reservation.Chalet.features ?? 'Not available'}</p>
+            ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ''}
+          `,
+        };
 
-      await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+      }
     }
 
+    // الرد بنجاح
     res.status(201).json({
       message: 'Payment created successfully, and email sent if logged in!',
       payment: newPayment,
@@ -323,6 +312,7 @@ exports.createPayment = async (req, res) => {
     );
   }
 };
+
 
 
 
