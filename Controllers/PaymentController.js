@@ -171,7 +171,7 @@ exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
-    console.log(req.body)
+    console.log(req.body);
   
     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
       return res.status(400).json(
@@ -181,7 +181,6 @@ exports.createPayment = async (req, res) => {
       );
     }
 
-   
     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
       return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
@@ -214,7 +213,6 @@ exports.createPayment = async (req, res) => {
     const remainingAmount = totalAmount - initialAmount;
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
-  
     let paymentImage = null;
     if (paymentMethod === "Cliq") {
       paymentImage = req.file ? req.file.path : null;
@@ -223,17 +221,19 @@ exports.createPayment = async (req, res) => {
       }
     }
 
-
+    
     if (paymentMethod === "Cliq") {
       reservation.Status = 'Pending';
       await reservation.save();
+    } else {
+      reservation.Status = 'Confirmed';
+      await reservation.save();
     }
 
-  
     const newPayment = await Payments.create({
       user_id: user_id || null, 
       reservation_id,
-      status: "Pending", 
+      status: paymentMethod === "Cliq" ? "Pending" : "Confirmed",
       paymentMethod,
       UserName,
       Phone_Number,
@@ -243,7 +243,6 @@ exports.createPayment = async (req, res) => {
       image: paymentImage
     });
 
- 
     if (user_id) {
       user = await User.findByPk(user_id); 
       if (user) {
@@ -309,6 +308,7 @@ exports.createPayment = async (req, res) => {
     );
   }
 };
+
 
 
 const getInsuranceValue = (description) => {
@@ -534,8 +534,6 @@ const User = require('../Models/UsersModel');
   
 
 
-
-
  
   exports.getAllPayments = async (req, res) => {
     try {
@@ -605,6 +603,10 @@ const User = require('../Models/UsersModel');
 
 
 
+
+
+ 
+
   exports.updatePaymentStatus = async (req, res) => {
     try {
       const { id } = req.params; 
@@ -616,6 +618,7 @@ const User = require('../Models/UsersModel');
         });
       }
   
+     
       const payment = await Payments.findByPk(id);
       if (!payment) {
         return res.status(404).json({
@@ -623,33 +626,52 @@ const User = require('../Models/UsersModel');
         });
       }
   
+   
       if (status === undefined) {
         return res.status(400).json({
           error: lang === 'en' ? 'Status is required' : 'الحالة مطلوبة',
         });
       }
   
+      
       payment.status = status;
       await payment.save();
   
-    
+      
+      const reservation = await ReservationChalets.findByPk(payment.reservation_id);
+      if (!reservation) {
+        return res.status(404).json({
+          error: lang === 'en' ? 'Reservation not found' : 'الحجز غير موجود',
+        });
+      }
+  
+      
+      reservation.Status = 'Confirmed';
+      await reservation.save();
+  
+      
       const cacheKey = `payment:page:*:limit:*`;
       const keysToDelete = await client.keys(cacheKey);
       if (keysToDelete.length > 0) {
-        await Promise.all(keysToDelete.map((key) => client.del(key))); 
+        await Promise.all(keysToDelete.map((key) => client.del(key)));
       }
   
       res.status(200).json({
-        message: lang === 'en' ? 'Payment status updated successfully' : 'تم تحديث حالة الحجز بنجاح',
+        message: lang === 'en' ? 'Payment and reservation status updated to Confirmed successfully' : 'تم تحديث حالة الدفع والحجز إلى مؤكدة بنجاح',
         payment,
+        reservation,
       });
     } catch (error) {
       console.error('Error updating payment status:', error);
       res.status(500).json({
-        error: lang === 'en' ? 'Failed to update payment status' : 'فشل في تحديث حالة الحجز',
+        error: lang === 'en' ? 'Failed to update payment and reservation status' : 'فشل في تحديث حالة الدفع والحجز',
       });
     }
   };
+  
+  
+  
+  
   
 
 
