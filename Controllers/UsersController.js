@@ -149,19 +149,24 @@ exports.getAllUsers = async (req, res) => {
 //   }
 // };
 
+
+
+
+
+
+
+
+
 exports.getUserById = async (req, res) => {
   const { id } = req.params;
   const { lang } = req.query;
 
+  console.log('User ID:', id);
+
   try {
-    const cacheKey = `user:${id}:lang:${lang || 'all'}`;
+    console.log('Fetching user with ID:', id);
 
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-
-   
+  
     const user = await User.findOne({
       where: { id },
       include: [
@@ -171,42 +176,75 @@ exports.getUserById = async (req, res) => {
         },
       ],
       attributes: ['id', 'name', 'email', 'phone_number', 'country', 'User_Type_id'],
-      raw: true,
     });
 
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({
         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
       });
     }
 
-    let responseData = { ...user };
+    console.log('User:', user); 
 
-    if (user.User_Type_id === 1) {
+    let responseData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone_number: user.phone_number,
+      country: user.country,
+      Users_Type: user.Users_Type ? [{ id: user.Users_Type.id, type: user.Users_Type.type }] : [],
+      chalets: [],
+    };
+
+    console.log(`the User Type id is: ${user.Users_Type.id}`);
+ 
+    if (user.Users_Type.id === 1) {
+      console.log('User is Admin, fetching chalets...');
+
+      
       const adminChalets = await AdminChalet.findAll({
         where: { user_id: id },
-        attributes: ['chalet_id'],
-        raw: true,
+        attributes: ['chalet_id'], 
       });
 
-  
-      const chaletIds = adminChalets.map((chalet) => chalet.chalet_id);
+      console.log('Admin Chalets:', adminChalets); 
 
-    
-      const chalets = await Chalet.findAll({
-        where: { id: chaletIds },
-        attributes: ['id', 'title', 'description', 'image','Rating','city','area','intial_Amount','type',
-          'features','Additional_features','near_me'
-        ],
-        raw: true,
-      });
+     
+      if (adminChalets.length > 0) {
+        
+        const chaletIds = adminChalets.map((adminChalet) => adminChalet.chalet_id);
 
-      responseData.chalets = chalets;
-    }
+        const chalets = await Chalet.findAll({
+          where: {
+            id: chaletIds, 
+          },
+          attributes: [
+            'id', 'title', 'description', 'image', 'Rating', 'city', 'area',
+            'intial_Amount', 'type', 'features', 'Additional_features', 'near_me'
+          ],
+        });
 
-   
-    await client.setEx(cacheKey, 3600, JSON.stringify(responseData));
-
+       
+        responseData.chalets = chalets.map((chalet) => ({
+          id: chalet.id,
+          title: chalet.title,
+          description: chalet.description,
+          image: chalet.image,
+          Rating: chalet.Rating,
+          city: chalet.city,
+          area: chalet.area,
+          intial_Amount: chalet.intial_Amount,
+          type: chalet.type,
+          features: chalet.features,
+          Additional_features: chalet.Additional_features,
+          near_me: chalet.near_me,
+        }));
+      } else {
+        console.log('No chalets found for this admin');
+      }
+    }      
+    console.log('Final responseData:', responseData);
     res.status(200).json(responseData);
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -220,57 +258,143 @@ exports.getUserById = async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// exports.updateUser = async (req, res) => {
+//   const { id } = req.params;
+//   const { name, email, phone_number, country, password, confirm_password, lang, user_type_id } = req.body;
+
+//   try {
+    
+//     const user = await User.findByPk(id);
+//     if (!user) {
+//       return res.status(404).json({
+//         error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
+//       });
+//     }
+
+    
+//     if (password && confirm_password) {
+//       if (password !== confirm_password) {
+//         return res.status(400).json({
+//           error: lang === 'en' ? 'Passwords do not match' : 'كلمتا المرور غير متطابقتين',
+//         });
+//       }
+//     }
+
+    
+//     let hashedPassword = user.password;
+//     if (password) {
+//       hashedPassword = await argon2.hash(password);
+//     }
+
+    
+//     await user.update({
+//       name,
+//       email,
+//       phone_number,
+//       country,
+//       password: hashedPassword,
+//       lang,
+//       user_type_id,
+//     });
+
+//     res.status(200).json({
+//       message: lang === 'en' ? 'User updated successfully' : 'تم تحديث المستخدم بنجاح',
+//       user,
+//     });
+//   } catch (error) {
+//     console.error('Error updating user:', error);
+//     res.status(500).json({
+//       error: lang === 'en' ? 'Failed to update user' : 'فشل في تحديث المستخدم',
+//     });
+//   }
+// };
+
+
+
+
+
 exports.updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { name, email, phone_number, country, password, confirm_password, lang, user_type_id } = req.body;
+    const { id } = req.params;
+    const { name, email, phone_number, country, password, confirm_password, lang, user_type_id, user_id, chalet_ids } = req.body;
 
-  try {
-    
-    const user = await User.findByPk(id);
-    if (!user) {
-      return res.status(404).json({
-        error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
-      });
-    }
+    try {
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({
+                error: lang === 'en' ? 'User not found' : 'المستخدم غير موجود',
+            });
+        }
 
-    
-    if (password && confirm_password) {
-      if (password !== confirm_password) {
-        return res.status(400).json({
-          error: lang === 'en' ? 'Passwords do not match' : 'كلمتا المرور غير متطابقتين',
+        
+        if (password && confirm_password && password !== confirm_password) {
+            return res.status(400).json({
+                error: lang === 'en' ? 'Passwords do not match' : 'كلمتا المرور غير متطابقتين',
+            });
+        }
+
+        
+        let hashedPassword = user.password;
+        if (password) {
+            hashedPassword = await argon2.hash(password);
+        }
+
+        
+        await user.update({
+            name,
+            email,
+            phone_number,
+            country,
+            password: hashedPassword,
+            lang,
+            user_type_id,
         });
-      }
+
+        
+        if (user_type_id === 1 && user_id && Array.isArray(chalet_ids) && chalet_ids.length > 0) {
+            
+            await AdminChalet.destroy({ where: { user_id } });
+
+          
+            const adminChaletsData = chalet_ids
+                .filter(chalet_id => chalet_id !== null) 
+                .map(chalet_id => ({
+                    user_id,
+                    chalet_id
+                }));
+
+            if (adminChaletsData.length > 0) {
+                await AdminChalet.bulkCreate(adminChaletsData);
+            }
+        }
+
+        res.status(200).json({
+            message: lang === 'en' ? 'User updated successfully' : 'تم تحديث المستخدم بنجاح',
+            user,
+        });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({
+            error: lang === 'en' ? 'Failed to update user' : 'فشل في تحديث المستخدم',
+        });
     }
-
-    
-    let hashedPassword = user.password;
-    if (password) {
-      hashedPassword = await argon2.hash(password);
-    }
-
-    
-    await user.update({
-      name,
-      email,
-      phone_number,
-      country,
-      password: hashedPassword,
-      lang,
-      user_type_id,
-    });
-
-    res.status(200).json({
-      message: lang === 'en' ? 'User updated successfully' : 'تم تحديث المستخدم بنجاح',
-      user,
-    });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({
-      error: lang === 'en' ? 'Failed to update user' : 'فشل في تحديث المستخدم',
-    });
-  }
 };
-
 
 
 

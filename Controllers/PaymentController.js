@@ -224,9 +224,12 @@ exports.createPayment = async (req, res) => {
 
 
 
+    if(paymentMethod === "Cliq"){
+      reservation.Status = 'Pending';
+      await reservation.save();
+    }
 
-    reservation.Status = 'Confirmed';
-    await reservation.save();
+  
 
     const newPayment = await Payments.create({
       user_id,

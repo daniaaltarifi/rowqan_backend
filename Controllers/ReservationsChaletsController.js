@@ -480,12 +480,6 @@ if (existingFullDayMorningReservation) {
 
 
 
-
-
-
-
-
-
 exports.getAllReservations = async (req, res) => {
   try {
     const { lang } = req.params;
