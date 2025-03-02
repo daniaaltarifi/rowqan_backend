@@ -174,7 +174,7 @@ exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
-    // إذا كانت بعض الحقول الأساسية مفقودة (باستثناء user_id)
+  
     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
       return res.status(400).json(
         ErrorResponse('Validation failed', [
@@ -183,14 +183,14 @@ exports.createPayment = async (req, res) => {
       );
     }
 
-    // التحقق من المدخلات
+   
     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
       return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
     }
 
     let user = null;
-    // التحقق من الحجز باستخدام reservation_id
+  
     const reservation = await ReservationChalets.findByPk(reservation_id, {
       include: [
         {
@@ -216,7 +216,7 @@ exports.createPayment = async (req, res) => {
     const remainingAmount = totalAmount - initialAmount;
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
-    // التحقق من وجود صورة الدفع إذا كانت Cliq
+  
     let paymentImage = null;
     if (paymentMethod === "Cliq") {
       paymentImage = req.file ? req.file.path : null;
@@ -225,15 +225,15 @@ exports.createPayment = async (req, res) => {
       }
     }
 
-    // تحديث حالة الحجز إذا كانت Cliq
+
     if (paymentMethod === "Cliq") {
       reservation.Status = 'Pending';
       await reservation.save();
     }
 
-    // إضافة الدفع
+  
     const newPayment = await Payments.create({
-      user_id: user_id || null,  // إذا كان user_id فارغاً أو null نتركه null
+      user_id: user_id || null, 
       reservation_id,
       status: "Pending", 
       paymentMethod,
@@ -245,9 +245,9 @@ exports.createPayment = async (req, res) => {
       image: paymentImage
     });
 
-    // إذا كان user_id موجوداً، نرسل البريد الإلكتروني
+ 
     if (user_id) {
-      user = await User.findByPk(user_id); // البحث عن المستخدم باستخدام user_id
+      user = await User.findByPk(user_id); 
       if (user) {
         const email = user.email;
         const insuranceValue = getInsuranceValue(reservation.Chalet.description);
@@ -296,7 +296,6 @@ exports.createPayment = async (req, res) => {
       }
     }
 
-    // الرد بنجاح
     res.status(201).json({
       message: 'Payment created successfully, and email sent if logged in!',
       payment: newPayment,
@@ -359,6 +358,7 @@ const getInsuranceValue = (description) => {
 
   const axios = require('axios');
 const Chalet = require('../Models/ChaletsModel');
+const User = require('../Models/UsersModel');
 
   exports.createPaymentIntent = async (req, res) => {
     try {
