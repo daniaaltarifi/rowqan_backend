@@ -22,7 +22,7 @@ const Payments = sequelize.define('Payments', {
       allowNull: true, 
     },
     Phone_Number: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: true, 
     },
     initialAmount: {

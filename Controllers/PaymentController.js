@@ -167,13 +167,11 @@ exports.capturePayPalPayment = async (req, res) => {
 
 const nodemailer = require('nodemailer');
 
-
-
-
 exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
+    console.log(req.body)
   
     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
       return res.status(400).json(
@@ -313,11 +311,8 @@ exports.createPayment = async (req, res) => {
 };
 
 
-
-
-
 const getInsuranceValue = (description) => {
-  const match = description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
+  const match = description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*(دينار?)/i);
   return match ? parseInt(match[1]) : null;
 };
 
@@ -395,10 +390,6 @@ const User = require('../Models/UsersModel');
     
       reservation.Status = 'Confirmed';
       await reservation.save();  
-  
-    
-     
-      
         res.send({
           clientSecret: paymentIntent.client_secret,
           referenceId: paymentIntent.id,
@@ -545,18 +536,12 @@ const User = require('../Models/UsersModel');
 
 
 
+ 
   exports.getAllPayments = async (req, res) => {
     try {
       const { page = 1, limit = 100 } = req.query;
       const offset = (page - 1) * limit;
-      const cacheKey = `paymen:page:${page}:limit:${limit}`;
   
-
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) {
-        return res.status(200).json(JSON.parse(cachedData));
-      }
-
       const payments = await Payments.findAll({
         include: [
           {
@@ -583,13 +568,12 @@ const User = require('../Models/UsersModel');
       }
   
       const chaletIds = payments.map(p => p.Reservations_Chalet?.chalet_id).filter(Boolean);
-
-
+  
       const chalets = await Chalet.findAll({
         where: { id: chaletIds },
         attributes: ['id', 'title', 'description'],
       });
-
+  
       const chaletMap = new Map(chalets.map(chalet => {
         let insuranceValue = null;
         const match = chalet.description.match(/(?:التامين|insurance)\s*[:\-]?\s*(\d+)\s*دينار?/i);
@@ -599,18 +583,10 @@ const User = require('../Models/UsersModel');
         return [chalet.id, { ...chalet.toJSON(), insurance: insuranceValue }];
       }));
   
-      
       const paymentsWithChaletInfo = payments.map(payment => ({
         ...payment.toJSON(),
         Chalet: chaletMap.get(payment.Reservations_Chalet?.chalet_id) || null,
       }));
-  
-
-     
-      await client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
-
-      client.setEx(cacheKey, 300, JSON.stringify(paymentsWithChaletInfo));
-
   
       res.status(200).json(paymentsWithChaletInfo);
     } catch (error) {
@@ -620,6 +596,7 @@ const User = require('../Models/UsersModel');
       );
     }
   };
+  
   
   
   
