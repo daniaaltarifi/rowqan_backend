@@ -1,8 +1,7 @@
-
 const { DataTypes } = require('sequelize');
 const sequelize = require('../Config/dbConnect');
 const Users = require('../Models/UsersModel');
-const ReservationChalets = require('../Models/Reservations_Chalets')
+const ReservationChalets = require('../Models/Reservations_Chalets');
 
 const Payments = sequelize.define('Payments', {
     id: {
@@ -12,45 +11,52 @@ const Payments = sequelize.define('Payments', {
     },
     status: { 
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, 
     },
     paymentMethod: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, 
     },
-    UserName:{
+    UserName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, 
     },
-    Phone_Number:{
+    Phone_Number: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, 
     },
-    initialAmount:{
+    initialAmount: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true, 
     },
-    RemainningAmount :{
+    RemainningAmount: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true, 
     },
-    Method:{
+    Method: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, 
     },
     user_id: {  
       type: DataTypes.INTEGER,
+      allowNull: true, 
+    },
+    reservation_id: {  
+      type: DataTypes.INTEGER,
+      allowNull: true, 
+    },
+    image: {  
+      type: DataTypes.STRING,
       allowNull: true,  
-  },
+    },
   }, {
     timestamps: true,
   });
 
-  Payments.belongsTo(Users, { foreignKey: 'user_id' });
-  Users.hasMany(Payments, { foreignKey: 'user_id' });
+Payments.belongsTo(Users, { foreignKey: 'user_id' });
+Users.hasMany(Payments, { foreignKey: 'user_id' });
 
+Payments.belongsTo(ReservationChalets, { foreignKey: 'reservation_id' });
+ReservationChalets.hasMany(Payments, { foreignKey: 'reservation_id' });
 
-  Payments.belongsTo(ReservationChalets, { foreignKey:'reservation_id' });
-  ReservationChalets.hasMany(Payments, { foreignKey:'reservation_id' });
-
-  module.exports = Payments;
+module.exports = Payments;

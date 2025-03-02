@@ -173,14 +173,16 @@ exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
 
+    
     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
       return res.status(400).json(
         ErrorResponse('Validation failed', [
-          'Reservation, paymentMethod, UserName, Phone_Number, and initialAmount are required.',
+          'Reservation ID, paymentMethod, UserName, Phone_Number, and initialAmount are required.',
         ])
       );
     }
 
+    
     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
     if (validationErrors.length > 0) {
       return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
@@ -195,6 +197,7 @@ exports.createPayment = async (req, res) => {
       }
     }
 
+    
     const reservation = await ReservationChalets.findByPk(reservation_id, {
       include: [
         {
@@ -213,37 +216,51 @@ exports.createPayment = async (req, res) => {
     }
 
     const totalAmount = reservation.Total_Amount;
-
     if (initialAmount > totalAmount) {
       return res.status(400).json(ErrorResponse('Validation failed', ['Initial amount cannot exceed total amount.']));
     }
 
     const remainingAmount = totalAmount - initialAmount;
-
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
-
-
-    if(paymentMethod === "Cliq"){
-      reservation.Status = 'Pending';
-      await reservation.save();
+    
+    let paymentImage = null;
+    if (paymentMethod === "Cliq") {
+      
+      paymentImage = req.file ? req.file.path : null;
+      if (!paymentImage) {
+        return res.status(400).json(ErrorResponse('Validation failed', ['Payment image is required for Cliq payment.']));
+      }
     }
 
-  
-
+    
+    if (paymentMethod === "Cliq") {
+      
+      const paymentImage = req.file ? req.file.path : null;
+    
+      if (!paymentImage) {
+        return res.status(400).json(ErrorResponse('Validation failed', ['Payment image is required for Cliq payment.']));
+      }
+    
+      reservation.Status = 'Pending';
+      await reservation.save();
+    
+    }
+    
     const newPayment = await Payments.create({
       user_id,
       reservation_id,
-      status: paymentMethod === "Cliq" ? "Pending" : reservation.Status,
+      status: "Pending", 
       paymentMethod,
       UserName,
       Phone_Number,
       initialAmount,
       RemainningAmount: remainingAmount,
       Method: paymentMethodType,
+      image: paymentImage
     });
 
-   
+    
     if (user) {
       const email = user.email;
       const insuranceValue = getInsuranceValue(reservation.Chalet.description);
@@ -265,25 +282,25 @@ exports.createPayment = async (req, res) => {
           <p><strong>Reservation ID:</strong> ${reservation.id}</p>
           <p><strong>Status:</strong> ${reservation.Status}</p>
           <p><strong>CashBack:</strong> ${reservation.cashback}</p>
-          <p><strong>start_date:</strong> ${reservation.start_date}</p>
-          <p><strong>end_date:</strong> ${reservation.end_date}</p>
+          <p><strong>Start Date:</strong> ${reservation.start_date}</p>
+          <p><strong>End Date:</strong> ${reservation.end_date}</p>
           <p><strong>Time:</strong> ${reservation.Time}</p>
-          <p><strong>Reservation_Type:</strong> ${reservation.Reservation_Type}</p>
-          <p><strong>additional_visitors:</strong> ${reservation.additional_visitors}</p>
-          <p><strong>number_of_days:</strong> ${reservation.number_of_days}</p>
+          <p><strong>Reservation Type:</strong> ${reservation.Reservation_Type}</p>
+          <p><strong>Additional Visitors:</strong> ${reservation.additional_visitors}</p>
+          <p><strong>Number of Days:</strong> ${reservation.number_of_days}</p>
           <p><strong>Initial Payment:</strong> ${initialAmount}</p>
           <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
           <h4>Payment Method: ${paymentMethod}</h4>
           <p><strong>User Name:</strong> ${UserName}</p>
           <p><strong>Phone Number:</strong> ${Phone_Number}</p>
-          <h3>Reservation Details</h3>
-          <p><strong>Chalet Name:</strong> ${reservation.Chalet.title || 'Not available'}</p>
-          <p><strong>Chalet Description:</strong> ${reservation.Chalet.description || 'Not available'}</p>
-          <p><strong>Chalet Rating:</strong> ${reservation.Chalet.Rating || 'Not available'}</p>
-          <p><strong>Chalet City:</strong> ${reservation.Chalet.city || 'Not available'}</p>
-          <p><strong>Chalet area:</strong> ${reservation.Chalet.area || 'Not available'}</p>
-          <p><strong>Chalet initial_Amount:</strong> ${reservation.Chalet.intial_Amount || 'Not available'}</p>
-          <p><strong>Chalet Features:</strong> ${reservation.Chalet.features || 'Not available'}</p>
+          <h3>Chalet Details</h3>
+          <p><strong>Name:</strong> ${reservation.Chalet.title ?? 'Not available'}</p>
+          <p><strong>Description:</strong> ${reservation.Chalet.description ?? 'Not available'}</p>
+          <p><strong>Rating:</strong> ${reservation.Chalet.Rating ?? 'Not available'}</p>
+          <p><strong>City:</strong> ${reservation.Chalet.city ?? 'Not available'}</p>
+          <p><strong>Area:</strong> ${reservation.Chalet.area ?? 'Not available'}</p>
+          <p><strong>Initial Amount:</strong> ${reservation.Chalet.intial_Amount ?? 'Not available'}</p>
+          <p><strong>Features:</strong> ${reservation.Chalet.features ?? 'Not available'}</p>
           ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ''}
         `,
       };
