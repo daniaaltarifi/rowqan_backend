@@ -1438,8 +1438,7 @@ exports.updateReservation = async (req, res) => {
 
 exports.deleteReservation = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { lang } = req.query;
+    const { id,lang } = req.params;
 
     if (!['ar', 'en'].includes(lang)) {
       return res.status(400).json({
