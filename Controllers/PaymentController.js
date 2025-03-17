@@ -167,6 +167,7 @@ exports.capturePayPalPayment = async (req, res) => {
 
 const nodemailer = require('nodemailer');
 
+
 exports.createPayment = async (req, res) => {
   try {
     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
@@ -213,34 +214,27 @@ exports.createPayment = async (req, res) => {
     const remainingAmount = totalAmount - initialAmount;
     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
 
+    
     let paymentImage = null;
-    if (paymentMethod === "Cliq") {
-      paymentImage = req.file ? req.file.path : null;
-      if (!paymentImage) {
-        return res.status(400).json(ErrorResponse('Validation failed', ['Payment image is required for Cliq payment.']));
-      }
+    if (req.file) {
+      paymentImage = req.file.path;
     }
 
-    
-    if (paymentMethod === "Cliq") {
-      reservation.Status = 'Pending';
-      await reservation.save();
-    } else {
-      reservation.Status = 'Confirmed';
-      await reservation.save();
-    }
+   
+    reservation.Status = 'Confirmed';
+    await reservation.save();
 
     const newPayment = await Payments.create({
       user_id: user_id || null, 
       reservation_id,
-      status: paymentMethod === "Cliq" ? "Pending" : "Confirmed",
+      status: "Confirmed", 
       paymentMethod,
       UserName,
       Phone_Number,
       initialAmount,
       RemainningAmount: remainingAmount,
       Method: paymentMethodType,
-      image: paymentImage
+      image: paymentImage 
     });
 
     if (user_id) {
@@ -254,6 +248,9 @@ exports.createPayment = async (req, res) => {
           auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
+          },
+          tls: {
+            rejectUnauthorized: false
           }
         });
 
