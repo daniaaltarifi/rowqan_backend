@@ -221,13 +221,14 @@ exports.createPayment = async (req, res) => {
     }
 
    
-    reservation.Status = 'Confirmed';
+  
+    reservation.Status = 'Pending';
     await reservation.save();
 
     const newPayment = await Payments.create({
       user_id: user_id || null, 
       reservation_id,
-      status: "Confirmed", 
+      status: "Pending",  
       paymentMethod,
       UserName,
       Phone_Number,

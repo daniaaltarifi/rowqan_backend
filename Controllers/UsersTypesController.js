@@ -10,40 +10,25 @@ exports.getAllUserTypes = async (req, res) => {
     const offset = (page - 1) * limit;
     const { lang } = req.params;
 
-    
     if (lang && !['ar', 'en'].includes(lang)) {
       return res.status(400).json({
         error: 'Invalid language. Supported languages are "ar" and "en".',
       });
     }
 
-    
-    const cacheKey = `userTypes:page:${page}:limit:${limit}:lang:${lang || 'all'}`;
-    const cachedData = await client.get(cacheKey);
-
-    
-    if (cachedData) {
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-
-    
     const whereClause = lang ? { lang } : {};
 
-    
     const userTypes = await Users_Types.findAll({
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
 
-    
     if (!userTypes.length) {
       return res.status(404).json({
         error: lang === 'en' ? 'No user types found for the specified language' : 'لم يتم العثور على أنواع للمستخدمين للغة المحددة',
       });
     }
-
-    await client.setEx(cacheKey, 3600, JSON.stringify(userTypes));
 
     res.status(200).json(userTypes);
   } catch (error) {
@@ -53,7 +38,6 @@ exports.getAllUserTypes = async (req, res) => {
     });
   }
 };
-
 
 
 
