@@ -8,7 +8,7 @@ const { Op } = require('sequelize');
 const {client} = require('../Utils/redisClient');
 const moment = require('moment');
 const { addDays, format } = require('date-fns');
-
+const Payment = require('../Models/PaymentModel')
 
 
 exports.createReservation = async (req, res) => {
@@ -1447,10 +1447,7 @@ exports.deleteReservation = async (req, res) => {
     }
 
    
-    const [reservation, _] = await Promise.all([
-      Reservations_Chalets.findByPk(id),
-      client.del(`reservation:${id}`), 
-    ]);
+    const reservation = await Reservations_Chalets.findByPk(id);
 
     if (!reservation) {
       return res.status(404).json({
@@ -1458,7 +1455,14 @@ exports.deleteReservation = async (req, res) => {
       });
     }
 
-    await reservation.destroy();
+
+    await Promise.all([
+      reservation.destroy(),
+      Payment.destroy({ where: { reservation_id: id } }),
+      client.del(`reservation:${id}`),
+    ]);
+
+  
 
     return res.status(200).json({
       message: lang === 'en' ? 'Reservation deleted successfully' : 'تم حذف الحجز بنجاح',
@@ -1467,10 +1471,14 @@ exports.deleteReservation = async (req, res) => {
     console.error('Error deleting reservation:', error);
 
     return res.status(500).json({
-      error: lang === 'en' ? 'Failed to delete reservation' : 'فشل في حذف الحجز',
+      error:'Failed to delete reservation',
     });
   }
 };
+
+
+
+
 exports.getChaletReservationsDate = async (req, res) => {
   try {
     const { chalet_id, lang } = req.params;

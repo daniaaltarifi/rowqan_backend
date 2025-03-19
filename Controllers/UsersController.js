@@ -571,6 +571,9 @@ exports.createAdmin = async (req, res) => {
       });
     }
 
+    if(user_type_id === 5){
+      return res.status(400).json({error:lang === 'en'? 'The admin does not have the authority to create a super admin.':'الادمن ليس من صلاحياته انه يعمل انشاء لسوبر ادمن '})
+    }
    
     const hashedPassword = await argon2.hash(password);
     const finalUserType = user_type_id || 2; 
