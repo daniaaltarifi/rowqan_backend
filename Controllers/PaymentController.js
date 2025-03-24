@@ -7,8 +7,8 @@ const stripe = require('stripe')('sk_test_51Qdn2mR2zHb3l1vg8ng6R9o3lqoO6ZJw5X0qN
 const dotenv = require("dotenv");
 
 
-const  {Client}  = require('../Config/PayPalClient');
-const paypal = require('@paypal/checkout-server-sdk'); 
+// const  {Client}  = require('../Config/PayPalClient');
+// const paypal = require('@paypal/checkout-server-sdk'); 
 exports.createPayPalPayment = async (req, res) => {
   try {
     const { amount, currency, reservation_id, name } = req.body; 
@@ -135,9 +135,10 @@ exports.createPayPalPayment = async (req, res) => {
 // };
 
 
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
 
-
-
+const WhatsAppClient = require('../Services/WhatsappServices');
 
 exports.capturePayPalPayment = async (req, res) => {
   try {
@@ -166,6 +167,180 @@ exports.capturePayPalPayment = async (req, res) => {
 
 
 const nodemailer = require('nodemailer');
+
+
+// exports.createPayment = async (req, res) => {
+//   try {
+//     const { user_id, reservation_id, paymentMethod, UserName, Phone_Number, initialAmount } = req.body;
+
+//     console.log(req.body);
+  
+//     if (!reservation_id || !paymentMethod || !UserName || !Phone_Number || !initialAmount) {
+//       return res.status(400).json(
+//         ErrorResponse('Validation failed', [
+//           'Reservation ID, paymentMethod, UserName, Phone_Number, and initialAmount are required.',
+//         ])
+//       );
+//     }
+
+//     const validationErrors = validateInput({ paymentMethod, UserName, Phone_Number });
+//     if (validationErrors.length > 0) {
+//       return res.status(400).json(ErrorResponse('Validation failed', validationErrors));
+//     }
+
+//     let user = null;
+  
+//     const reservation = await ReservationChalets.findByPk(reservation_id, {
+//       include: [
+//         {
+//           model: Chalet,
+//           attributes: ['title', 'description', 'Rating', 'city', 'area', 'intial_Amount', 'type', 'features', 'Additional_features']
+//         },
+//       ],
+//     });
+
+//     if (!reservation) {
+//       return res.status(404).json(ErrorResponse('Validation failed', ['Reservation not found.']));
+//     }
+
+//     if (reservation.Status === 'Confirmed') {
+//       return res.status(400).json({ error: 'Reservation is already confirmed.' });
+//     }
+
+//     const totalAmount = reservation.Total_Amount;
+//     if (initialAmount > totalAmount) {
+//       return res.status(400).json(ErrorResponse('Validation failed', ['Initial amount cannot exceed total amount.']));
+//     }
+
+//     const remainingAmount = totalAmount - initialAmount;
+//     const paymentMethodType = remainingAmount > 0 ? 'initial' : 'Total';
+
+    
+//     let paymentImage = null;
+//     if (req.file) {
+//       paymentImage = req.file.path;
+//     }
+
+   
+  
+//     reservation.Status = 'Pending';
+//     await reservation.save();
+
+//     const newPayment = await Payments.create({
+//       user_id: user_id || null, 
+//       reservation_id,
+//       status: "Pending",  
+//       paymentMethod,
+//       UserName,
+//       Phone_Number,
+//       initialAmount,
+//       RemainningAmount: remainingAmount,
+//       Method: paymentMethodType,
+//       image: paymentImage 
+//     });
+
+//     if (user_id) {
+//       user = await User.findByPk(user_id); 
+//       if (user) {
+//         const email = user.email;
+//         const insuranceValue = getInsuranceValue(reservation.Chalet.description);
+
+//         const transporter = nodemailer.createTransport({
+//           service: "gmail",
+//           auth: {
+//             user: process.env.EMAIL_USER,
+//             pass: process.env.EMAIL_PASS
+//           },
+//           tls: {
+//             rejectUnauthorized: false
+//           }
+//         });
+
+//         const mailOptions = {
+//           from: process.env.EMAIL_USER,
+//           to: email,
+//           subject: 'Payment and Reservation Details',
+//           html: `
+//             <h3>Your Payment and Reservation Details</h3>
+//             <p><strong>Reservation ID:</strong> ${reservation.id}</p>
+//             <p><strong>Status:</strong> ${reservation.Status}</p>
+//             <p><strong>CashBack:</strong> ${reservation.cashback}</p>
+//             <p><strong>Start Date:</strong> ${reservation.start_date}</p>
+//             <p><strong>End Date:</strong> ${reservation.end_date}</p>
+//             <p><strong>Time:</strong> ${reservation.Time}</p>
+//             <p><strong>Reservation Type:</strong> ${reservation.Reservation_Type}</p>
+//             <p><strong>Additional Visitors:</strong> ${reservation.additional_visitors}</p>
+//             <p><strong>Number of Days:</strong> ${reservation.number_of_days}</p>
+//             <p><strong>Initial Payment:</strong> ${initialAmount}</p>
+//             <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
+//             <h4>Payment Method: ${paymentMethod}</h4>
+//             <p><strong>User Name:</strong> ${UserName}</p>
+//             <p><strong>Phone Number:</strong> ${Phone_Number}</p>
+//             <h3>Chalet Details</h3>
+//             <p><strong>Name:</strong> ${reservation.Chalet.title ?? 'Not available'}</p>
+//             <p><strong>Description:</strong> ${reservation.Chalet.description ?? 'Not available'}</p>
+//             <p><strong>Rating:</strong> ${reservation.Chalet.Rating ?? 'Not available'}</p>
+//             <p><strong>City:</strong> ${reservation.Chalet.city ?? 'Not available'}</p>
+//             <p><strong>Area:</strong> ${reservation.Chalet.area ?? 'Not available'}</p>
+//             <p><strong>Initial Amount:</strong> ${reservation.Chalet.intial_Amount ?? 'Not available'}</p>
+//             <p><strong>Features:</strong> ${reservation.Chalet.features ?? 'Not available'}</p>
+//             ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ''}
+//           `,
+//         };
+
+//         await transporter.sendMail(mailOptions);
+//       }
+//     }
+
+
+//     if (isClientReady && Phone_Number) {
+//       try {
+//         // تنسيق رقم الهاتف
+//         let formattedNumber = Phone_Number.replace(/^0+/, '');
+//         if (!formattedNumber.startsWith('962')) {
+//           formattedNumber = `962${formattedNumber}`;
+//         }
+        
+//         const chatId = `${formattedNumber}@c.us`;
+        
+//         // تجهيز نص الرسالة مع المعلومات الديناميكية
+//         const message = `For booking confirmation, please pay ${initialAmount}JOD 💰 as a reservation fee and a refundable security deposit of 50 JOD to be paid upon arrival at the farm 💵. Booking details are as follows:
+//   Date: ${reservation.start_date} to ${reservation.end_date} 📅
+//   Time: From ${reservation.Time} 🕙 - 🕘
+//   Chalet Name: ${reservation.Chalet.title} 🏡
+//   CliQ account name: lorans mahmood mohammed alkhateeb
+//   Name that will appear on CliQ: lorans mahmood mohammed alkhateeb
+//   يرجى تأكيد الدفع للمتابعة. شكراً لاختياركم روقان🌿`;
+        
+//         // إرسال الرسالة
+//         await client.sendMessage(chatId, message);
+//         console.log(`تم إرسال رسالة WhatsApp إلى: ${Phone_Number}`);
+//       } catch (whatsappError) {
+//         console.error('خطأ في إرسال رسالة WhatsApp:', whatsappError);
+//         // لا نريد أن يفشل كامل العملية إذا فشل إرسال WhatsApp، لذلك نسجل الخطأ فقط
+//       }
+//     } else if (!isClientReady) {
+//       console.log('عميل WhatsApp غير جاهز، لم يتم إرسال الرسالة');
+//     }
+
+
+
+//     res.status(201).json({
+//       message: 'Payment created successfully, and email sent if logged in!',
+//       payment: newPayment,
+//       reservation: reservation,
+//     });
+
+//   } catch (error) {
+//     console.error('Error in createPayment:', error.message);
+//     res.status(500).json(
+//       ErrorResponse('Failed to create payment', [
+//         'An internal server error occurred.',
+//       ])
+//     );
+//   }
+// };
+
 
 
 exports.createPayment = async (req, res) => {
@@ -238,6 +413,7 @@ exports.createPayment = async (req, res) => {
       image: paymentImage 
     });
 
+    // إرسال البريد الإلكتروني كما هو في الكود الأصلي
     if (user_id) {
       user = await User.findByPk(user_id); 
       if (user) {
@@ -291,8 +467,42 @@ exports.createPayment = async (req, res) => {
       }
     }
 
+    // إضافة إرسال رسالة WhatsApp
+    if (WhatsAppClient.isClientReady() && Phone_Number) {
+      try {
+        // تنسيق رقم الهاتف
+        let formattedNumber = Phone_Number.replace(/^0+/, '');
+        if (!formattedNumber.startsWith('962')) {
+          formattedNumber = `962${formattedNumber}`;
+        }
+        
+        const chatId = `${formattedNumber}@c.us`;
+        
+        // تنسيق التواريخ
+        const startDate = new Date(reservation.start_date).toLocaleDateString('ar-JO');
+        const endDate = new Date(reservation.end_date).toLocaleDateString('ar-JO');
+        
+        // تجهيز نص الرسالة
+        const message = `For booking confirmation, please pay ${initialAmount}JOD 💰 as a reservation fee and a refundable security deposit of 50 JOD to be paid upon arrival at the farm 💵. Booking details are as follows:
+  Date: ${startDate} to ${endDate} 📅
+  Time: From ${reservation.Time} 🕙 - 🕘
+  Chalet Name: ${reservation.Chalet.title} 🏡
+  CliQ account name: lorans mahmood mohammed alkhateeb
+  Name that will appear on CliQ: lorans mahmood mohammed alkhateeb
+  يرجى تأكيد الدفع للمتابعة. شكراً لاختياركم روقان🌿`;
+        
+        // استخدام client من خلال WhatsAppClient
+        await WhatsAppClient.client.sendMessage(chatId, message);
+        console.log(`تم إرسال رسالة WhatsApp إلى: ${Phone_Number}`);
+      } catch (whatsappError) {
+        console.error('خطأ في إرسال رسالة WhatsApp:', whatsappError);
+      }
+    } else if (!WhatsAppClient.isClientReady()) {
+      console.log('عميل WhatsApp غير جاهز، لم يتم إرسال الرسالة');
+    }
+
     res.status(201).json({
-      message: 'Payment created successfully, and email sent if logged in!',
+      message: 'Payment created successfully, and notifications sent!',
       payment: newPayment,
       reservation: reservation,
     });
@@ -306,7 +516,6 @@ exports.createPayment = async (req, res) => {
     );
   }
 };
-
 
 
 const getInsuranceValue = (description) => {
