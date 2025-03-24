@@ -1,0 +1,59 @@
+2025/03/25-01:18:59.818 45e4 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/03/25-01:18:59.820 45e4 Recovering log #1999
+2025/03/25-01:18:59.854 45e4 Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001999.log 
+2025/03/25-01:19:01.344 727c Level-0 table #2017: started
+2025/03/25-01:19:01.355 727c Level-0 table #2017: 208133 bytes OK
+2025/03/25-01:19:01.357 727c Delete type=0 #1999
+2025/03/25-01:19:01.358 727c Manual compaction at level-0 from '\x00\xbb\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xbc\x00\x00\x00' @ 0 : 0; will stop at '\x00\xbb\x00\x00\x05' @ 4067512 : 1
+2025/03/25-01:19:01.358 727c Compacting 1@0 + 0@1 files
+2025/03/25-01:19:01.374 727c Generated table #2018@0: 4327 keys, 91111 bytes
+2025/03/25-01:19:01.389 727c Generated table #2019@0: 130 keys, 1902 bytes
+2025/03/25-01:19:01.389 727c Compacted 1@0 + 0@1 files => 93013 bytes
+2025/03/25-01:19:01.391 727c compacted to: files[ 0 2 22 0 0 0 0 ]
+2025/03/25-01:19:01.391 727c Delete type=2 #2017
+2025/03/25-01:19:01.391 727c Manual compaction at level-0 from '\x00\xbb\x00\x00\x05' @ 4067512 : 1 .. '\x00\xbc\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/03/25-01:19:03.250 45e4 Compacting 1@1 + 16@2 files
+2025/03/25-01:19:03.487 45e4 Generated table #2020@1: 83319 keys, 2238089 bytes
+2025/03/25-01:19:03.580 45e4 Generated table #2021@1: 37077 keys, 2195019 bytes
+2025/03/25-01:19:03.607 45e4 Generated table #2022@1: 1909 keys, 2145982 bytes
+2025/03/25-01:19:03.639 45e4 Generated table #2023@1: 3082 keys, 2149127 bytes
+2025/03/25-01:19:03.699 45e4 Generated table #2024@1: 19242 keys, 2204520 bytes
+2025/03/25-01:19:03.773 45e4 Generated table #2025@1: 26451 keys, 2218041 bytes
+2025/03/25-01:19:03.810 45e4 Generated table #2026@1: 4373 keys, 2122610 bytes
+2025/03/25-01:19:03.854 45e4 Generated table #2027@1: 6291 keys, 2130599 bytes
+2025/03/25-01:19:03.965 45e4 Generated table #2028@1: 65418 keys, 2203782 bytes
+2025/03/25-01:19:04.089 45e4 Generated table #2029@1: 105876 keys, 2256618 bytes
+2025/03/25-01:19:04.101 45e4 Generated table #2030@1: 8153 keys, 176420 bytes
+2025/03/25-01:19:04.101 45e4 Compacted 1@1 + 16@2 files => 22040807 bytes
+2025/03/25-01:19:04.102 45e4 compacted to: files[ 0 1 17 0 0 0 0 ]
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1911
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1912
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1913
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1914
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1927
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1961
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1973
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1985
+2025/03/25-01:19:04.103 45e4 Delete type=2 #1997
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2003
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2004
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2005
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2006
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2007
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2008
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2009
+2025/03/25-01:19:04.103 45e4 Delete type=2 #2018
+2025/03/25-01:19:59.648 25dc Compacting 1@1 + 5@2 files
+2025/03/25-01:19:59.807 25dc Generated table #2031@1: 105341 keys, 2257014 bytes
+2025/03/25-01:19:59.938 25dc Generated table #2032@1: 105448 keys, 2256817 bytes
+2025/03/25-01:20:00.069 25dc Generated table #2033@1: 105506 keys, 2258165 bytes
+2025/03/25-01:20:00.214 25dc Generated table #2034@1: 104832 keys, 2255480 bytes
+2025/03/25-01:20:00.293 25dc Generated table #2035@1: 60580 keys, 1284433 bytes
+2025/03/25-01:20:00.293 25dc Compacted 1@1 + 5@2 files => 10311909 bytes
+2025/03/25-01:20:00.295 25dc compacted to: files[ 0 0 17 0 0 0 0 ]
+2025/03/25-01:20:00.295 25dc Delete type=2 #2010
+2025/03/25-01:20:00.295 25dc Delete type=2 #2011
+2025/03/25-01:20:00.295 25dc Delete type=2 #2012
+2025/03/25-01:20:00.295 25dc Delete type=2 #2013
+2025/03/25-01:20:00.296 25dc Delete type=2 #2014
+2025/03/25-01:20:00.296 25dc Delete type=2 #2019

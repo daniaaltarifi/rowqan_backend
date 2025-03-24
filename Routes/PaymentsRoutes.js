@@ -22,6 +22,7 @@ router.get('/getPayments/:userId',rateLimiter, paymentsController.getPayments);
 
 router.get('/getAllPayments',rateLimiter, paymentsController.getAllPayments);
 
+
 router.get('/getcapturePayPalPayment',rateLimiter, paymentsController.capturePayPalPayment);
 
 router.get('/getPaymentById/:id', rateLimiter, paymentsController.getPaymentById);

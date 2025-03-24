@@ -49,6 +49,10 @@ const Payments = sequelize.define('Payments', {
       type: DataTypes.STRING,
       allowNull: true,  
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    }
   }, {
     timestamps: true,
   });
