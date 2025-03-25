@@ -1422,10 +1422,6 @@ exports.getChaletReservationsDate = async (req, res) => {
 
 
 
-
-
-
-
 exports.getReservationsByRightTime = async (req, res) => {
   const { chalet_id, lang } = req.params;
 
