@@ -979,7 +979,7 @@ exports.updatePaymentStatus = async (req, res) => {
           },
           {
             model: RightTimeModel,
-            attributes: ["from_time", "to_time"]
+            attributes: ["from_time", "to_time","type_of_time"]
           }
         ]
       }
@@ -991,19 +991,24 @@ exports.updatePaymentStatus = async (req, res) => {
       });
     }
 
-    reservation.Status = "Confirmed";
+    reservation.status = "Confirmed";
     await reservation.save();
 
     if (WhatsAppClient.isClientReady() && payment.Phone_Number) {
       try {
         let phoneNumber = payment.Phone_Number;
 
-        phoneNumber = "+962" + phoneNumber.replace(/^0/, "");
+    
+    if (!phoneNumber.startsWith("+962")) {
+      phoneNumber = phoneNumber.startsWith("0") 
+        ? "+962" + phoneNumber.slice(1) 
+        : "+962" + phoneNumber;
+    }
 
-        console.log("Original Phone Number:", payment.Phone_Number);
-        console.log("Formatted Phone Number:", phoneNumber);
+    console.log("Original Phone Number:", payment.Phone_Number);
+    console.log("Formatted Phone Number:", phoneNumber);
 
-        const chatId = `${phoneNumber.replace("+", "")}@c.us`;
+    const chatId = `${phoneNumber.replace("+", "")}@c.us`;
         console.log("Chat ID:", chatId);
 
         const paymentDate = new Date().toLocaleDateString("ar-JO");
@@ -1013,6 +1018,7 @@ exports.updatePaymentStatus = async (req, res) => {
 
         const fromTime = reservation.RightTimeModel?.from_time || "";
         const toTime = reservation.RightTimeModel?.to_time || "";
+        const type_of_time = reservation.RightTimeModel?.type_of_time || "";
 
         const message = `اسم المستأجر: ${payment.UserName}
 تاريخ الدفع: ${paymentDate}
@@ -1020,6 +1026,7 @@ exports.updatePaymentStatus = async (req, res) => {
 المبلغ المتبقي: ${payment.RemainningAmount} دينار (تدفع عند الوصول للمزرعة) 💵
 تفاصيل الحجز:
 التاريخ: ${reservationDate} 📅
+نوع الحجز: ${type_of_time}
 الوقت: من الساعة ${fromTime} إلى الساعة ${toTime} 🕙 - 🕘
 اسم الشاليه: ${reservation.Chalet.title} 🏡
 شكراً لاختياركم "روقان" 🌿`;
@@ -1061,16 +1068,16 @@ const { Op } = require('sequelize');
 
 const deleteUnconfirmedPayments = async () => {
   try {
-    // const oneAndHalfHourAgo = new Date(Date.now() - 90 * 60 * 1000);
+     const oneAndHalfHourAgo = new Date(Date.now() - 90 * 60 * 1000);
 
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    // const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
     const unconfirmedPayments = await Payments.findAll({
       where: {
         status: {
           [Op.ne]: 'Confirmed'
         },
         createdAt: {
-          [Op.lt]: twoMinutesAgo
+          [Op.lt]: oneAndHalfHourAgo
         },
       }
     });
@@ -1126,8 +1133,10 @@ const deleteUnconfirmedPayments = async () => {
   }
 };
 
-// setInterval(deleteUnconfirmedPayments, 5 * 60 * 1000);
-setInterval(deleteUnconfirmedPayments, 30 * 1000);
+
+
+setInterval(deleteUnconfirmedPayments, 5 * 60 * 1000);
+
 
 
 
