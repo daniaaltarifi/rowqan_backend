@@ -21,7 +21,7 @@ router.post(
   
 
 
-router.get('/getallchalets/:lang', chaletController.getAllChalets);
+router.get('/getallchalets', chaletController.getAllChalets);
 
 router.get('/getchalets/:lang', chaletController.getAllChaletsFront);
 
@@ -35,7 +35,7 @@ router.get('/getchaletsbyfeature/:lang', chaletController.getChaletByFeature);
 
 
 
-router.get('/getChaletsByTypeOfTimeAndOffer/:type_of_time/:lang',rateLimiter,chaletController.getChaletsByTypeOfTimeAndOffer)
+router.get('/getChaletsByTypeOfTimeAndOffer/:type_of_time',rateLimiter,chaletController.getChaletsByTypeOfTimeAndOffer)
 
 router.get('/getAllChaletsByType/:lang',rateLimiter,chaletController.getChaletsByType)
 

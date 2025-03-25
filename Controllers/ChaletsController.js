@@ -144,20 +144,12 @@ exports.getAllChalets = async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query; 
     const offset = (page - 1) * limit;
-    const { lang } = req.params;
+
+  
+await client.del(`chalets5:page:${page}:limit:${limit}`);
 
     
-    if (lang && !["ar", "en"].includes(lang)) {
-      return res.status(400).json({
-        error: 'Invalid language. Supported languages are "ar" and "en".',
-      });
-    }
-
-    
-await client.del(`chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`);
-
-    
-const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
+const cacheKey = `chalets5:page:${page}:limit:${limit}`;
 
    
     
@@ -169,12 +161,8 @@ const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang || "all"}`;
       );
     }
 
-    
-    const whereClause = lang ? { lang } : {};
 
-    
-    const chalets = await Chalet.findAll({
-      where: whereClause,
+      const chalets = await Chalet.findAll({
       attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"], 
       include: [
         { model: Status, attributes: ["status"] },

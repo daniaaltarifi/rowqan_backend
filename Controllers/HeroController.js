@@ -147,12 +147,12 @@ exports.deleteHero = async (req, res) => {
 
 exports.getHeroesByLang = async (req, res) => {
   try {
-    const { lang } = req.params;
+    
     const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    client.del(`heroes:lang:${lang}:page:${page}:limit:${limit}`)
-    const cacheKey = `heroes:lang:${lang}:page:${page}:limit:${limit}`;
+    client.del(`heroes:page:${page}:limit:${limit}`)
+    const cacheKey = `heroes:page:${page}:limit:${limit}`;
     
     const cachedData = await client.get(cacheKey);
     
@@ -163,7 +163,6 @@ exports.getHeroesByLang = async (req, res) => {
     }
 
     const heroes = await Hero.findAll({
-      where: { lang },
       limit: parseInt(limit),
       offset: parseInt(offset),
     });

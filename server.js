@@ -218,7 +218,7 @@ const TagRoutes = require('./Routes/TagRoutes')
 const number_Of_Stars = require('./Routes/numberOfStarsRoutes')
 const DateForRightTime = require('./Routes/RightTimeDateRoutes')
 const adminChaletsRoutes = require('./Routes/adminChaletsRoutes')
-
+const LetRowqanChooseRoutes = require('./Routes/LetRowqanChooseRoutes')
 
 
 const allowedOrigins = [
@@ -276,7 +276,7 @@ app.use('/Tags',TagRoutes)
 app.use('/NOstars',number_Of_Stars)
 app.use('/DatesForRightTime',DateForRightTime)
 app.use('/adminChalets',adminChaletsRoutes)
-
+app.use('/RowqanChoose',LetRowqanChooseRoutes)
 
 
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";

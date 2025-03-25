@@ -27,7 +27,7 @@ const Reservations_Chalets = sequelize.define('Reservations_Chalets', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  Status:{
+  status:{
     type: DataTypes.STRING,
     allowNull: true,
   },
