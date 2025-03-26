@@ -14,7 +14,7 @@ router.post('/createPayPal', rateLimiter, paymentsController.createPayPalPayment
 router.post('/createPaymentIntent',rateLimiter, paymentsController.createPaymentIntent);
 
 
-router.put('/updatePayment/:id', rateLimiter, paymentsController.updatePayment);
+router.put('/updatePayment/:id', rateLimiter, paymentsController.UpdatePayment);
 
 router.put('/updatePaymentStatus/:id', rateLimiter, paymentsController.updatePaymentStatus);
 
