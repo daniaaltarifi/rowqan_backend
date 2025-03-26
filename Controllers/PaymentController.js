@@ -604,6 +604,157 @@ const getInsuranceValue = (description) => {
   return match ? parseInt(match[1]) : null;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+exports.UpdatePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      UserName, 
+      Phone_Number, 
+      RemainningAmount,
+      initialAmount, 
+      Method, 
+      paymentMethod 
+    } = req.body;
+    const image = req.file?.filename || null;
+
+    
+    const payment = await Payments.findByPk(id);
+    if (!payment) {
+      return res
+        .status(404)
+        .json(
+          ErrorResponse("Payment not found", [
+            "No payment found with the given ID."
+          ])
+        );
+    }
+
+   
+    const validationErrors = validateInput({ 
+      UserName, 
+      Phone_Number, 
+      paymentMethod 
+    });
+    if (validationErrors.length > 0) {
+      return res
+        .status(400)
+        .json(ErrorResponse("Validation failed", validationErrors));
+    }
+
+   
+    if (initialAmount && isNaN(initialAmount)) {
+      return res
+        .status(400)
+        .json(
+          ErrorResponse("Validation failed", [
+            "Initial amount must be a valid number."
+          ])
+        );
+    }
+
+    if (RemainningAmount && isNaN(RemainningAmount)) {
+      return res
+        .status(400)
+        .json(
+          ErrorResponse("Validation failed", [
+            "Remaining amount must be a valid number."
+          ])
+        );
+    }
+ 
+    const updatedFields = {};
+    if (UserName && UserName !== payment.UserName) 
+      updatedFields.UserName = UserName;
+    
+    if (Phone_Number && Phone_Number !== payment.Phone_Number) 
+      updatedFields.Phone_Number = Phone_Number;
+    
+    if (initialAmount && initialAmount !== payment.initialAmount)
+      updatedFields.initialAmount = initialAmount;
+    
+    if (RemainningAmount && RemainningAmount !== payment.RemainningAmount) 
+      updatedFields.RemainningAmount = RemainningAmount;
+    
+    if (Method && Method !== payment.Method) 
+      updatedFields.Method = Method;
+    
+    if (paymentMethod && paymentMethod !== payment.paymentMethod) 
+      updatedFields.paymentMethod = paymentMethod;
+    
+    if (image) 
+      updatedFields.image = image;
+
+    
+    if (Object.keys(updatedFields).length > 0) {
+      await payment.update(updatedFields);
+    }
+
+   
+    const updatedPayment = await Payments.findOne({
+      where: { id },
+      include: [
+        {
+          model: Users,
+          attributes: ["id", "name", "email"]
+        },
+        {
+          model: ReservationChalets,
+          attributes: [
+            "id",
+            "cashback",
+            "start_date",
+            "end_date",
+            "Time",
+            "Status",
+            "Reservation_Type",
+            "starting_price",
+            "Total_Amount",
+            "additional_visitors",
+            "number_of_days"
+          ]
+        }
+      ]
+    });
+
+    
+    return res.status(200).json({
+      message: "Payment updated successfully",
+      payment: updatedPayment
+    });
+
+  } catch (error) {
+    console.error("Error in UpdatePayment:", error);
+    return res
+      .status(500)
+      .json(
+        ErrorResponse("Failed to update payment", [
+          "An internal server error occurred. Please try again later."
+        ])
+      );
+  }
+};;
+
+
+
+
+
+
+
+
+
+
+
 // exports.createPaymentIntent = async(req, res) => {
 //   try {
 //     const { amount } = req.body;
@@ -1135,7 +1286,22 @@ const deleteUnconfirmedPayments = async () => {
 
 
 
-setInterval(deleteUnconfirmedPayments, 5 * 60 * 1000);
+ setInterval(deleteUnconfirmedPayments, 5 * 60 * 1000);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
