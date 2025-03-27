@@ -1,84 +1,21 @@
-[0327/121848.239:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Feature xr-spatial-tracking's parameters are ignored.", source:  (0)
-[0327/121848.239:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'attribution-reporting'.", source:  (0)
-[0327/121848.239:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'compute-pressure'.", source:  (0)
-[0327/121848.239:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'interest-cohort'.", source:  (0)
-[0327/121848.239:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'private-state-token-issuance'.", source:  (0)
-[0327/121848.241:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'shared-storage'.", source:  (0)
-[0327/121848.241:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'shared-storage-select-url'.", source:  (0)
-[0327/121848.241:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'private-state-token-redemption'.", source:  (0)
-[0327/121848.241:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'unload'.", source:  (0)
-[0327/121848.241:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'window-management'.", source:  (0)
-[0327/121850.202:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/ym/r/iKbnKwPRrZn.js (157)
-[0327/121904.740:ERROR:entry_impl.cc(1072)] No file for 8000001a
-[0327/121904.740:ERROR:entry_impl.cc(1072)] No file for 80000018
-[0327/121904.748:ERROR:entry_impl.cc(1072)] No file for 8000001b
-[0327/121904.749:ERROR:entry_impl.cc(1072)] No file for 80000019
-[0327/121908.378:ERROR:entry_impl.cc(1072)] No file for 8000001f
-[0327/121908.381:INFO:CONSOLE(1)] "Uncaught NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'https://static.whatsapp.net/rsrc.php/v4/yr/r/pG2oJOaeAak.js' failed to load.", source: https://web.whatsapp.com/static_resources/webworker_v1/init_script/?__hs=20174.HYP%3Awhatsapp_comet_pkg.2.1...1&__spin_r=1021308654&__spin_b=trunk&__spin_t=1743067122 (1)
-[0327/121909.773:ERROR:entry_impl.cc(1072)] No file for 80000022
-[0327/121909.782:ERROR:entry_impl.cc(1072)] No file for 80000023
-[0327/121909.784:ERROR:entry_impl.cc(1072)] No file for 80000024
-[0327/121909.786:ERROR:entry_impl.cc(1072)] No file for 80000025
-[0327/121909.790:ERROR:entry_impl.cc(1072)] No file for 80000026
-[0327/121909.790:ERROR:entry_impl.cc(1072)] No file for 80000027
-[0327/121909.793:ERROR:entry_impl.cc(1072)] No file for 80000028
-[0327/121909.793:ERROR:entry_impl.cc(1072)] No file for 80000029
-[0327/121909.794:ERROR:entry_impl.cc(1072)] No file for 8000002a
-[0327/121909.794:ERROR:entry_impl.cc(1072)] No file for 8000002b
-[0327/121909.794:ERROR:entry_impl.cc(1072)] No file for 8000002c
-[0327/121909.795:ERROR:entry_impl.cc(1072)] No file for 8000002d
-[0327/121909.795:ERROR:entry_impl.cc(1072)] No file for 8000002e
-[0327/121909.795:ERROR:entry_impl.cc(1072)] No file for 80000030
-[0327/121909.796:ERROR:entry_impl.cc(1072)] No file for 8000002f
-[0327/121909.796:ERROR:entry_impl.cc(1072)] No file for 80000031
-[0327/121909.796:ERROR:entry_impl.cc(1072)] No file for 80000032
-[0327/121909.797:ERROR:entry_impl.cc(1072)] No file for 80000033
-[0327/121909.797:ERROR:entry_impl.cc(1072)] No file for 80000034
-[0327/121909.797:ERROR:entry_impl.cc(1072)] No file for 80000035
-[0327/121909.798:ERROR:entry_impl.cc(1072)] No file for 80000036
-[0327/121909.798:ERROR:entry_impl.cc(1072)] No file for 80000037
-[0327/121909.798:ERROR:entry_impl.cc(1072)] No file for 80000038
-[0327/121909.798:ERROR:entry_impl.cc(1072)] No file for 80000039
-[0327/121909.798:ERROR:entry_impl.cc(1072)] No file for 8000003a
-[0327/121909.799:ERROR:entry_impl.cc(1072)] No file for 8000003c
-[0327/121909.799:ERROR:entry_impl.cc(1072)] No file for 8000003b
-[0327/121909.800:ERROR:entry_impl.cc(1072)] No file for 8000003d
-[0327/121909.801:ERROR:entry_impl.cc(1072)] No file for 8000003e
-[0327/121909.806:ERROR:entry_impl.cc(1072)] No file for 8000003f
-[0327/121909.807:ERROR:entry_impl.cc(1072)] No file for 80000040
-[0327/121909.808:ERROR:entry_impl.cc(1072)] No file for 80000041
-[0327/121909.813:ERROR:entry_impl.cc(1072)] No file for 80000042
-[0327/121909.818:ERROR:entry_impl.cc(1072)] No file for 80000043
-[0327/121909.818:ERROR:entry_impl.cc(1072)] No file for 80000047
-[0327/121909.819:ERROR:entry_impl.cc(1072)] No file for 80000044
-[0327/121909.819:ERROR:entry_impl.cc(1072)] No file for 80000045
-[0327/121909.819:ERROR:entry_impl.cc(1072)] No file for 80000046
-[0327/121909.822:ERROR:entry_impl.cc(1072)] No file for 80000048
-[0327/121909.823:ERROR:entry_impl.cc(1072)] No file for 80000049
-[0327/121909.823:ERROR:entry_impl.cc(1072)] No file for 8000004a
-[0327/121909.823:ERROR:entry_impl.cc(1072)] No file for 8000004b
-[0327/121909.824:ERROR:entry_impl.cc(1072)] No file for 8000004c
-[0327/121909.824:ERROR:entry_impl.cc(1072)] No file for 8000004d
-[0327/121909.824:ERROR:entry_impl.cc(1072)] No file for 8000004e
-[0327/121909.824:ERROR:entry_impl.cc(1072)] No file for 8000004f
-[0327/121909.825:ERROR:entry_impl.cc(1072)] No file for 80000050
-[0327/121909.827:ERROR:entry_impl.cc(1072)] No file for 80000051
-[0327/121909.830:ERROR:entry_impl.cc(1072)] No file for 80000052
-[0327/121909.830:ERROR:entry_impl.cc(1072)] No file for 80000053
-[0327/121909.832:ERROR:entry_impl.cc(1072)] No file for 80000054
-[0327/121909.835:ERROR:entry_impl.cc(1072)] No file for 80000055
-[0327/121909.836:ERROR:entry_impl.cc(1072)] No file for 80000056
-[0327/121909.837:ERROR:entry_impl.cc(1072)] No file for 80000057
-[0327/121909.840:ERROR:entry_impl.cc(1072)] No file for 80000058
-[0327/121909.841:ERROR:entry_impl.cc(1072)] No file for 80000059
-[0327/121909.842:ERROR:entry_impl.cc(1072)] No file for 8000005a
-[0327/121914.574:INFO:CONSOLE(70)] "ErrorUtils caught an error:
+[0327/144839.805:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/ym/r/iKbnKwPRrZn.js (157)
+[0327/144842.649:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Feature xr-spatial-tracking's parameters are ignored.", source:  (0)
+[0327/144842.649:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'attribution-reporting'.", source:  (0)
+[0327/144842.649:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'compute-pressure'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'interest-cohort'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'private-state-token-issuance'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Origin trial controlled feature not enabled: 'shared-storage'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'shared-storage-select-url'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'private-state-token-redemption'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'unload'.", source:  (0)
+[0327/144842.651:INFO:CONSOLE(0)] "Error with Permissions-Policy header: Unrecognized feature: 'window-management'.", source:  (0)
+[0327/144845.720:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/y6/r/vDhUiNUffYa.js (157)
+[0327/144846.469:ERROR:entry_impl.cc(1072)] No file for 8000001c
+[0327/144846.469:ERROR:entry_impl.cc(1072)] No file for 8000001d
+[0327/144846.474:ERROR:entry_impl.cc(1072)] No file for 8000001e
+[0327/144847.915:INFO:CONSOLE(70)] "ErrorUtils caught an error:
 
 Requiring unknown module "WAWebForwardMessagesToChat"
 
 Subsequent non-fatal errors won't be logged; see https://fburl.com/debugjs. [object Object]", source: https://static.whatsapp.net/rsrc.php/v4/y8/r/EGevZFMXnRp.js (70)
-[0327/122045.608:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/ym/r/iKbnKwPRrZn.js (157)
-[0327/122359.000:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/ym/r/iKbnKwPRrZn.js (157)
-[0327/122408.436:INFO:CONSOLE(1254)] "Failed to parse video contentType: video/mp4; codecs=avc1.42000a", source: https://static.whatsapp.net/rsrc.php/v4ie_I4/y9/l/rt/AGEkwCjR4zD.js (1254)
-[0327/122408.436:INFO:CONSOLE(1254)] "Failed to parse video contentType: video/mp4; codecs=hev1.1.6.L93.B0", source: https://static.whatsapp.net/rsrc.php/v4ie_I4/y9/l/rt/AGEkwCjR4zD.js (1254)
-[0327/122913.671:INFO:CONSOLE(157)] "Event handler of 'x-storagemutated-1' event must be added on the initial evaluation of worker script.", source: https://static.whatsapp.net/rsrc.php/v4/ym/r/iKbnKwPRrZn.js (157)
+[0327/144848.052:ERROR:entry_impl.cc(1072)] No file for 80000020

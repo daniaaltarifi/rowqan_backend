@@ -417,7 +417,6 @@ exports.createPayment = async (req, res) => {
           ])
         );
     }
-
     const remainingAmount = totalAmount - initialAmount;
     const paymentMethodType = remainingAmount > 0 ? "initial" : "Total";
 
