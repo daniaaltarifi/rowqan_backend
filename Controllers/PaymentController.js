@@ -442,6 +442,50 @@ exports.createPayment = async (req, res) => {
       image: paymentImage
     });
 
+
+    setTimeout(async () => {
+      try {
+       
+        const payment = await Payments.findByPk(newPayment.id);
+        if (payment && payment.status !== 'Confirmed') {
+          
+          await payment.update({ status: 'Cancelled' });
+
+          
+          const reservation = await ReservationChalets.findByPk(payment.reservation_id);
+          if (reservation) {
+            await reservation.update({ Status: 'Cancelled' });
+          }
+
+         
+          if (WhatsAppClient.isClientReady() && payment.Phone_Number) {
+            try {
+              let phoneNumber = payment.Phone_Number.replace(/\D/g, "");
+              if (!phoneNumber.startsWith("962")) {
+                phoneNumber = phoneNumber.startsWith("0") 
+                  ? "962" + phoneNumber.substring(1) 
+                  : "962" + phoneNumber;
+              }
+
+              const chatId = `${phoneNumber}@c.us`;
+              const cancellationMessage = `عزيزي ${payment.UserName}،
+تم إلغاء حجزك بسبب عدم إكمال إجراءات الدفع خلال المدة المحددة (ساعة ونصف).
+يمكنك إعادة الحجز مرة أخرى من خلال التطبيق.
+شكراً لك 🌿`;
+
+              await WhatsAppClient.client.sendMessage(chatId, cancellationMessage);
+              console.log(`Cancellation message sent to: ${chatId}`);
+            } catch (error) {
+              console.error("WhatsApp cancellation notification error:", error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error in payment cancellation timeout:", error);
+      }
+    },90 * 60 * 1000);
+
+
     let emailSent = false;
     if (user_id) {
       const user = await User.findByPk(user_id);
@@ -596,6 +640,347 @@ Name that will appear on CliQ: ${UserName}
       );
   }
 };
+
+
+
+
+
+const { Op } = require('sequelize');
+
+const deleteUnconfirmedPayments = async () => {
+  try {
+     const oneAndHalfHourAgo = new Date(Date.now() - 90 * 60 * 1000);
+
+    const unconfirmedPayments = await Payments.findAll({
+      where: {
+        status: {
+          [Op.ne]: 'Confirmed'
+        },
+        createdAt: {
+          [Op.lt]: oneAndHalfHourAgo
+        },
+      }
+    });
+
+    for (const payment of unconfirmedPayments) {
+      const reservation = await ReservationChalets.findByPk(payment.reservation_id);
+     
+      if (WhatsAppClient.isClientReady() && payment.Phone_Number) {
+        try {
+          let phoneNumber = payment.Phone_Number;
+          phoneNumber = "+962" + phoneNumber.replace(/^0/, "");
+          
+          console.log('Original Phone Number:', payment.Phone_Number);
+          console.log('Formatted Phone Number:', phoneNumber);
+
+          const chatId = `${phoneNumber.replace("+", "")}@c.us`;
+          console.log('Chat ID:', chatId);
+
+          const message = `عزيزي ${payment.UserName}،
+تم إلغاء حجزك بسبب عدم إكمال إجراءات الدفع خلال المدة المحددة.
+يمكنك إعادة الحجز مرة أخرى من خلال التطبيق.
+شكراً لك 🌿`;
+
+          await WhatsAppClient.client.sendMessage(chatId, message);
+          console.log(`Cancellation WhatsApp message sent to: ${chatId}`);
+        } catch (error) {
+          console.error("WhatsApp error:", error);
+        }
+      }
+
+      if (reservation) {
+        await reservation.update({ 
+          Status: 'Cancelled' 
+        }, { 
+          where: { id: reservation.id } 
+        });
+        console.log(`Updated reservation status to Cancelled: ${reservation.id}`);
+      }
+
+      await payment.update({ 
+        status: 'Cancelled' 
+      }, { 
+        where: { id: payment.id } 
+      });
+      console.log(`Updated payment status to Cancelled: ${payment.id}, created at: ${payment.createdAt}`);
+    }
+
+    console.log('Status update completed successfully');
+  } catch (error) {
+    console.error('Error in update task:', error);
+  }
+};
+
+setInterval(deleteUnconfirmedPayments, 2 * 60 * 1000);
+
+
+
+
+
+// exports.createPayment = async (req, res) => {
+//   try {
+//     const {
+//       user_id,
+//       reservation_id,
+//       paymentMethod,
+//       UserName,
+//       Phone_Number,
+//       initialAmount
+//     } = req.body;
+
+//     console.log("Payment Request:", req.body);
+
+//     if (
+//       !reservation_id ||
+//       !paymentMethod ||
+//       !UserName ||
+//       !Phone_Number ||
+//       !initialAmount
+//     ) {
+//       return res.status(400).json(
+//         ErrorResponse("Validation failed", [
+//           "Reservation ID, paymentMethod, UserName, Phone_Number, and initialAmount are required."
+//         ])
+//       );
+//     }
+
+//     const validationErrors = validateInput({
+//       paymentMethod,
+//       UserName,
+//       Phone_Number
+//     });
+//     if (validationErrors.length > 0) {
+//       return res.status(400).json(ErrorResponse("Validation failed", validationErrors));
+//     }
+
+//     const reservation = await ReservationChalets.findByPk(reservation_id, {
+//       include: [
+//         {
+//           model: Chalet,
+//           attributes: [
+//             "title",
+//             "description",
+//             "Rating",
+//             "city",
+//             "area",
+//             "intial_Amount",
+//             "type",
+//             "features",
+//             "Additional_features"
+//           ]
+//         },
+//         {
+//           model: RightTimeModel,
+//           attributes: ["from_time", "to_time"]
+//         }
+//       ]
+//     });
+
+//     if (!reservation) {
+//       return res.status(404).json(ErrorResponse("Error", ["Reservation not found"]));
+//     }
+
+//     if (reservation.Status === "Confirmed") {
+//       return res.status(400).json(ErrorResponse("Error", ["Reservation is already confirmed"]));
+//     }
+
+//     const totalAmount = reservation.Total_Amount;
+//     if (initialAmount > totalAmount) {
+//       return res.status(400).json(
+//         ErrorResponse("Validation failed", ["Initial amount cannot exceed total amount"])
+//       );
+//     }
+
+//     const remainingAmount = totalAmount - initialAmount;
+//     const paymentMethodType = remainingAmount > 0 ? "initial" : "Total";
+
+//     let paymentImage = null;
+//     if (req.file) {
+//       paymentImage = req.file.path;
+//     }
+
+//     reservation.Status = "Pending";
+//     await reservation.save();
+
+//     const newPayment = await Payments.create({
+//       user_id: user_id || null,
+//       reservation_id,
+//       status: "Pending",
+//       paymentMethod,
+//       UserName,
+//       Phone_Number,
+//       initialAmount,
+//       RemainningAmount: remainingAmount,
+//       Method: paymentMethodType,
+//       image: paymentImage
+//     });
+
+//     // Schedule payment cancellation after 1.5 hours
+//     setTimeout(async () => {
+//       try {
+//         const payment = await Payments.findByPk(newPayment.id);
+//         if (payment && payment.status !== 'Confirmed') {
+//           // Update payment status
+//           await payment.update({ status: 'Cancelled' });
+
+//           // Update reservation status
+//           const reservation = await ReservationChalets.findByPk(payment.reservation_id);
+//           if (reservation) {
+//             await reservation.update({ Status: 'Cancelled' });
+//           }
+
+//           // Send WhatsApp notification
+//           if (WhatsAppClient.isClientReady() && payment.Phone_Number) {
+//             try {
+//               let phoneNumber = payment.Phone_Number;
+//               if (!phoneNumber.startsWith("+962")) {
+//                 phoneNumber = phoneNumber.startsWith("0") 
+//                   ? "+962" + phoneNumber.slice(1) 
+//                   : "+962" + phoneNumber;
+//               }
+
+//               const chatId = `${phoneNumber.replace("+", "")}@c.us`;
+              
+//               const message = `عزيزي ${payment.UserName}،
+// تم إلغاء حجزك بسبب عدم إكمال إجراءات الدفع خلال المدة المحددة.
+// يمكنك إعادة الحجز مرة أخرى من خلال التطبيق.
+// شكراً لك 🌿`;
+
+//               await WhatsAppClient.client.sendMessage(chatId, message);
+//               console.log(`Cancellation WhatsApp message sent to: ${chatId}`);
+//             } catch (error) {
+//               console.error("WhatsApp notification error:", error);
+//             }
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Error in payment cancellation timeout:", error);
+//       }
+//     }, 2 * 60 * 1000); // 2 minutes
+
+//     let emailSent = false;
+//     if (user_id) {
+//       const user = await User.findByPk(user_id);
+//       if (user && user.email) {
+//         try {
+//           const insuranceValue = getInsuranceValue(reservation.Chalet.description);
+
+//           const transporter = nodemailer.createTransport({
+//             service: "gmail",
+//             auth: {
+//               user: process.env.EMAIL_USER,
+//               pass: process.env.EMAIL_PASS
+//             },
+//             tls: { rejectUnauthorized: false }
+//           });
+
+//           const mailOptions = {
+//             from: process.env.EMAIL_USER,
+//             to: user.email,
+//             subject: "Payment and Reservation Details",
+//             html: `
+//               <h3>Your Payment and Reservation Details</h3>
+//               <p><strong>Reservation ID:</strong> ${reservation.id}</p>
+//               <p><strong>Status:</strong> ${reservation.Status}</p>
+//               <p><strong>CashBack:</strong> ${reservation.cashback}</p>
+//               <p><strong>Start Date:</strong> ${reservation.start_date}</p>
+//               <p><strong>End Date:</strong> ${reservation.end_date}</p>
+//               <p><strong>Time:</strong> ${reservation.Time}</p>
+//               <p><strong>Reservation Type:</strong> ${reservation.Reservation_Type}</p>
+//               <p><strong>Additional Visitors:</strong> ${reservation.additional_visitors}</p>
+//               <p><strong>Number of Days:</strong> ${reservation.number_of_days}</p>
+//               <p><strong>Initial Payment:</strong> ${initialAmount}</p>
+//               <p><strong>Remaining Amount:</strong> ${remainingAmount}</p>
+//               <h4>Payment Method: ${paymentMethod}</h4>
+//               <p><strong>User Name:</strong> ${UserName}</p>
+//               <p><strong>Phone Number:</strong> ${Phone_Number}</p>
+//               <h3>Chalet Details</h3>
+//               <p><strong>Name:</strong> ${reservation.Chalet.title ?? "Not available"}</p>
+//               <p><strong>Description:</strong> ${reservation.Chalet.description ?? "Not available"}</p>
+//               <p><strong>Rating:</strong> ${reservation.Chalet.Rating ?? "Not available"}</p>
+//               <p><strong>City:</strong> ${reservation.Chalet.city ?? "Not available"}</p>
+//               <p><strong>Area:</strong> ${reservation.Chalet.area ?? "Not available"}</p>
+//               <p><strong>Initial Amount:</strong> ${reservation.Chalet.intial_Amount ?? "Not available"}</p>
+//               <p><strong>Features:</strong> ${reservation.Chalet.features ?? "Not available"}</p>
+//               ${insuranceValue ? `<p><strong>Insurance:</strong> ${insuranceValue} دينار</p>` : ""}
+//             `
+//           };
+
+//           await transporter.sendMail(mailOptions);
+//           emailSent = true;
+//         } catch (error) {
+//           console.error("Email error:", error);
+//         }
+//       }
+//     }
+
+//     const timeDetails = {
+//       from: reservation.RightTimeModel ? reservation.RightTimeModel.from_time : null,
+//       to: reservation.RightTimeModel ? reservation.RightTimeModel.to_time : null
+//     };
+
+//     let whatsappSent = false;
+//     if (WhatsAppClient.isClientReady() && Phone_Number) {
+//       try {
+//         let formattedNumber = Phone_Number.replace(/\D/g, "");
+//         if (formattedNumber.startsWith("962")) {
+//           formattedNumber = formattedNumber;
+//         } else if (formattedNumber.startsWith("0")) {
+//           formattedNumber = "962" + formattedNumber.substring(1);
+//         } else {
+//           formattedNumber = "962" + formattedNumber;
+//         }
+
+//         if (formattedNumber.length !== 12) {
+//           throw new Error("Invalid phone number length");
+//         }
+
+//         const chatId = `${formattedNumber}@c.us`;
+//         const startDate = new Date(reservation.start_date).toLocaleDateString("ar-JO");
+//         const endDate = new Date(reservation.end_date).toLocaleDateString("ar-JO");
+
+//         const message = `For booking confirmation, please pay ${initialAmount}JOD 💰 as a reservation fee and a refundable security deposit of 50 JOD to be paid upon arrival at the farm 💵. Booking details are as follows:
+// Date: ${startDate} to ${endDate} 📅
+// Time: From ${reservation.RightTimeModel?.from_time || ""} 🕙 to ${reservation.RightTimeModel?.to_time || ""} 🕘
+// Chalet Name: ${reservation.Chalet.title} 🏡
+// CliQ account name: ${UserName}
+// Name that will appear on CliQ: ${UserName}
+// يرجى تأكيد الدفع للمتابعة. شكراً لاختياركم روقان🌿`;
+
+//         await WhatsAppClient.client.sendMessage(chatId, message);
+//         whatsappSent = true;
+//         console.log(`WhatsApp message sent to: ${Phone_Number}`);
+//       } catch (error) {
+//         console.error("WhatsApp error:", error);
+//       }
+//     } else {
+//       console.log("WhatsApp client not ready or phone number missing");
+//     }
+
+//     res.status(201).json({
+//       message: "Payment created successfully",
+//       notifications: {
+//         whatsapp: whatsappSent ? "sent" : "failed",
+//         email: emailSent ? "sent" : "not applicable"
+//       },
+//       payment: newPayment,
+//       reservation: reservation,
+//       timeDetails: timeDetails,
+//       expiresAt: new Date(Date.now() + 2 * 60 * 1000) // Add expiration time (2 minutes)
+//     });
+
+//   } catch (error) {
+//     console.error("Payment creation error:", error);
+//     res.status(500).json(
+//       ErrorResponse("Failed to create payment", ["An internal server error occurred"])
+//     );
+//   }
+// };
+
+// Keep the interval as a backup system but run it less frequently
+setInterval(deleteUnconfirmedPayments, 2 * 60 * 1000);
+
+
 
 const getInsuranceValue = (description) => {
   const match = description.match(
@@ -1214,80 +1599,6 @@ exports.updatePaymentStatus = async (req, res) => {
     });
   }
 };
-
-const { Op } = require('sequelize');
-
-const deleteUnconfirmedPayments = async () => {
-  try {
-     const oneAndHalfHourAgo = new Date(Date.now() - 90 * 60 * 1000);
-
-    // const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-    const unconfirmedPayments = await Payments.findAll({
-      where: {
-        status: {
-          [Op.ne]: 'Confirmed'
-        },
-        createdAt: {
-          [Op.lt]: oneAndHalfHourAgo
-        },
-      }
-    });
-
-    for (const payment of unconfirmedPayments) {
-      const reservation = await ReservationChalets.findByPk(payment.reservation_id);
-     
-      if (WhatsAppClient.isClientReady() && payment.Phone_Number) {
-        try {
-          let phoneNumber = payment.Phone_Number;
-          phoneNumber = "+962" + phoneNumber.replace(/^0/, "");
-          
-          console.log('Original Phone Number:', payment.Phone_Number);
-          console.log('Formatted Phone Number:', phoneNumber);
-
-          const chatId = `${phoneNumber.replace("+", "")}@c.us`;
-          console.log('Chat ID:', chatId);
-
-          const message = `عزيزي ${payment.UserName}،
-تم إلغاء حجزك بسبب عدم إكمال إجراءات الدفع خلال المدة المحددة.
-يمكنك إعادة الحجز مرة أخرى من خلال التطبيق.
-شكراً لك 🌿`;
-
-          await WhatsAppClient.client.sendMessage(chatId, message);
-          console.log(`Cancellation WhatsApp message sent to: ${chatId}`);
-        } catch (error) {
-          console.error("WhatsApp error:", error);
-        }
-      }
-
-     
-      if (reservation) {
-        await reservation.update({ 
-          Status: 'Cancelled' 
-        }, { 
-          where: { id: reservation.id } 
-        });
-        console.log(`Updated reservation status to Cancelled: ${reservation.id}`);
-      }
-
-    
-      await payment.update({ 
-        status: 'Cancelled' 
-      }, { 
-        where: { id: payment.id } 
-      });
-      console.log(`Updated payment status to Cancelled: ${payment.id}, created at: ${payment.createdAt}`);
-    }
-
-    console.log('Status update completed successfully');
-  } catch (error) {
-    console.error('Error in update task:', error);
-  }
-};
-
-
-
- setInterval(deleteUnconfirmedPayments, 5 * 60 * 1000);
-
 
 
 

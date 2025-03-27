@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "test": "jest",
-    "start": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop whatsapp-service",
+    "restart": "pm2 restart whatsapp-service",
+    "logs": "pm2 logs whatsapp-service"
   },
   "keywords": [],
   "author": "",

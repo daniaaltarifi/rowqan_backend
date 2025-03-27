@@ -286,7 +286,7 @@ exports.createReservation = async (req, res) => {
       if (existingMorningReservation || existingEveningReservation) {
         return res.status(400).json({
           error: lang === "en"
-            ? "is chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
+            ? "This chalet is already reserved for Morning or Evening. FullDay reservation is not possible."
             : "هذا الشاليه محجوز بالفعل لفترة الصباح أو المساء. لا يمكن حجزه ليوم كامل.",
         });
       }
