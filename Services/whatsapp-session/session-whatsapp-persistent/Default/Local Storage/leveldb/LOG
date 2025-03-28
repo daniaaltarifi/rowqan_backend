@@ -1,6 +1,2 @@
-2025/03/27-15:10:46.107 39cc Reusing MANIFEST C:\Users\iuygf\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
-2025/03/27-15:10:46.107 39cc Recovering log #10
-2025/03/27-15:10:46.107 39cc Reusing old log C:\Users\iuygf\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/000010.log 
-2025/03/27-15:11:46.575 609c Level-0 table #12: started
-2025/03/27-15:11:46.577 609c Level-0 table #12: 18088 bytes OK
-2025/03/27-15:11:46.578 609c Delete type=0 #10
+2025/03/28-14:05:13.375 8120 Creating DB C:\Users\hp\OneDrive\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb since it was missing.
+2025/03/28-14:05:13.386 8120 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\Services\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
