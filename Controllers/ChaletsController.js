@@ -139,61 +139,58 @@ exports.createChalet = async (req, res) => {
 
 
 
-
 exports.getAllChalets = async (req, res) => {
   try {
-    const { page = 1, limit = 100 } = req.query; 
+    const { page = 1, limit = 100 } = req.query;
+    const { lang } = req.params;
     const offset = (page - 1) * limit;
 
-  
-await client.del(`chalets5:page:${page}:limit:${limit}`);
+    const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang}`;
 
-    
-const cacheKey = `chalets5:page:${page}:limit:${limit}`;
+    await client.del(cacheKey);
 
-   
-    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit");
       return res.status(200).json(
-       JSON.parse(cachedData),  
+        JSON.parse(cachedData)
       );
     }
 
+    const whereConditions = {
+      lang: lang  
+    };
 
-      const chalets = await Chalet.findAll({
-      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"], 
+    const chalets = await Chalet.findAll({
+      where: whereConditions,
+      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"],
       include: [
         { model: Status, attributes: ["status"] },
         { model: chaletsImages, attributes: ["id", "image"] },
         {
           model: RightTimeModel,
-          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer","date"],
+          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer", "date"],
           include: {
             model: DatesForRightTime,
-            attributes: ["id", "date","price"],
+            attributes: ["id", "date", "price"],
           },
         },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [["id", "DESC"]], 
+      order: [["id", "DESC"]],
     });
 
-    
     if (chalets.length === 0) {
       return res.status(404).json({
         error: "No chalets found",
       });
     }
 
-    
     await client.setEx(cacheKey, 300, JSON.stringify(chalets));
 
-    
     res.status(200).json(
-      chalets,  
+      chalets
     );
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
@@ -242,19 +239,20 @@ exports.getChaletsWithOffer = async (req, res) => {
 };
 
 
+
 exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
-  const { type_of_time } = req.params; 
+  const { type_of_time, lang } = req.params; 
 
   try {
-   
     const chaletsWithOfferAndTime = await RightTimeModel.findAll({
       where: {
         type_of_time: type_of_time,
-        After_Offer: { [Op.gt]: 0 }, 
+        After_Offer: { [Op.gt]: 0 },
       },
       include: [
         {
-          model: Chalet, 
+          model: Chalet,
+          where: { lang: lang }, 
           attributes: [
             "id",
             "title",
@@ -271,15 +269,13 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       ],
     });
 
-  
     if (!chaletsWithOfferAndTime || chaletsWithOfferAndTime.length === 0) {
       return res.status(200).json({
         success: false,
-        message: `No chalets found with type_of_time "${type_of_time}" and an offer.`,
+        message: `No chalets found with type_of_time "${type_of_time}" and an offer in language "${lang}".`,
       });
     }
 
-    
     const formattedChalets = chaletsWithOfferAndTime.map((item) => ({
       id: item.Chalet.id,
       title: item.Chalet.title,
@@ -294,7 +290,6 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       intial_Amount: item.Chalet.intial_Amount,
     }));
 
-    
     return res.status(200).json({
       success: true,
       data: formattedChalets,

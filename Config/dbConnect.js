@@ -13,7 +13,7 @@ const sequelize = new Sequelize(
     dialectOptions: {
       connectTimeout: 50000, 
       ssl: {
-        rejectUnauthorized: true, 
+        rejectUnauthorized: false
       },
     },
     pool: {

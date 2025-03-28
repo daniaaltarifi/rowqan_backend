@@ -1,0 +1,32 @@
+2025/03/28-14:26:00.898 1238 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/03/28-14:26:00.899 1238 Recovering log #450
+2025/03/28-14:26:00.925 1238 Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000450.log 
+2025/03/28-14:26:02.550 3c74 Level-0 table #463: started
+2025/03/28-14:26:02.558 3c74 Level-0 table #463: 118372 bytes OK
+2025/03/28-14:26:02.561 3c74 Delete type=0 #450
+2025/03/28-14:26:02.564 3c74 Manual compaction at level-0 from '\x00\x1f\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00 \x00\x00\x00' @ 0 : 0; will stop at '\x00\x1f\x00\x00\x05' @ 2165420 : 1
+2025/03/28-14:26:02.566 3c74 Compacting 1@0 + 1@1 files
+2025/03/28-14:26:02.583 3c74 Generated table #464@0: 3142 keys, 63768 bytes
+2025/03/28-14:26:02.589 3c74 Generated table #465@0: 610 keys, 13622 bytes
+2025/03/28-14:26:02.589 3c74 Compacted 1@0 + 1@1 files => 77390 bytes
+2025/03/28-14:26:02.590 3c74 compacted to: files[ 0 2 15 0 0 0 0 ]
+2025/03/28-14:26:02.590 3c74 Delete type=2 #463
+2025/03/28-14:26:02.591 3c74 Manual compaction at level-0 from '\x00\x1f\x00\x00\x05' @ 2165420 : 1 .. '\x00 \x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/03/28-14:26:04.446 80d4 Compacting 1@1 + 6@2 files
+2025/03/28-14:26:04.598 80d4 Generated table #466@1: 53593 keys, 2216649 bytes
+2025/03/28-14:26:04.629 80d4 Generated table #467@1: 3621 keys, 2144649 bytes
+2025/03/28-14:26:04.668 80d4 Generated table #468@1: 2974 keys, 2150959 bytes
+2025/03/28-14:26:04.707 80d4 Generated table #469@1: 9574 keys, 2157995 bytes
+2025/03/28-14:26:04.800 80d4 Generated table #470@1: 32173 keys, 2257907 bytes
+2025/03/28-14:26:04.834 80d4 Generated table #471@1: 5699 keys, 2135939 bytes
+2025/03/28-14:26:04.838 80d4 Generated table #472@1: 83 keys, 40230 bytes
+2025/03/28-14:26:04.838 80d4 Compacted 1@1 + 6@2 files => 13104328 bytes
+2025/03/28-14:26:04.840 80d4 compacted to: files[ 0 1 16 0 0 0 0 ]
+2025/03/28-14:26:04.840 80d4 Delete type=2 #453
+2025/03/28-14:26:04.840 80d4 Delete type=2 #454
+2025/03/28-14:26:04.840 80d4 Delete type=2 #455
+2025/03/28-14:26:04.840 80d4 Delete type=2 #456
+2025/03/28-14:26:04.840 80d4 Delete type=2 #457
+2025/03/28-14:26:04.840 80d4 Delete type=2 #458
+2025/03/28-14:26:04.840 80d4 Delete type=2 #459
+2025/03/28-14:26:04.840 80d4 Delete type=2 #464
