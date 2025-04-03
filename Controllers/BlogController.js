@@ -61,17 +61,11 @@ exports.createBlog = async (req, res) => {
     try {
       const { page = 1, limit = 20 } = req.query; 
       const offset = (page - 1) * limit; 
-      const { lang } = req.params; 
   
       
-      if (!lang || typeof lang !== "string") {
-        return res
-          .status(400)
-          .json(ErrorResponse("Invalid language", ["Language parameter is required and must be a string"]));
-      }
   
-      client.del(`blogs:lang:${lang}:page:${page}:limit:${limit}`)
-      const cacheKey = `blogs:lang:${lang}:page:${page}:limit:${limit}`;
+      client.del(`blogs:page:${page}:limit:${limit}`)
+      const cacheKey = `blogs:page:${page}:limit:${limit}`;
   
       
       const cachedData = await client.get(cacheKey);
@@ -84,7 +78,6 @@ exports.createBlog = async (req, res) => {
   
       
       const blogEntries = await Blog.findAll({
-        where: { lang }, 
         attributes: ["id", "title", "description", "lang", "image"], 
         limit: parseInt(limit), 
         offset: parseInt(offset), 
@@ -95,14 +88,22 @@ exports.createBlog = async (req, res) => {
       if (!blogEntries.length) {
         return res
           .status(404)
-          .json(ErrorResponse(lang === "en" ? "No Blogs found" : "لا توجد مدونات"));
+          .json(ErrorResponse( "No Blogs found"));
       }
   
     
       await client.setEx(cacheKey, 3600, JSON.stringify(blogEntries));
   
-      
-      return res.status(200).json(blogEntries);
+      const plainBlogs = blogEntries.map(blog=>({
+        id:blog.id,
+        title:blog.title,
+        description:blog.description,
+        lang:blog.lang,
+        image:blog.image
+      }))
+
+      return res.status(200).json(plainBlogs);
+  
     } catch (error) {
       console.error("Error in Get All Blogs:", error);
   
@@ -122,54 +123,54 @@ exports.createBlog = async (req, res) => {
 
   exports.getBlogById = async (req, res) => {
     try {
-      const { id, lang } = req.params;
-  
-    
-      const validationErrors = validateInput({ id, lang });
+      const { id } = req.params;
+      
+      const validationErrors = validateInput({ id });
       if (validationErrors.length > 0) {
-        return res.status(400).json(new ErrorResponse('Invalid ID or language', validationErrors));
+        return res.status(400).json(new ErrorResponse('Invalid ID', validationErrors));
       }
-  
-      client.del(`Blog:${id}:lang:${lang || 'all'}`);
-      const cacheKey = `Blog:${id}:lang:${lang || 'all'}`;
-  
-     
+      
+      const cacheKey = `Blog:${id}`;
+      client.del(cacheKey);
+      
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
         console.log("Cache hit for blog:", id);
         return res.status(200).json(JSON.parse(cachedData));
       }
       console.log("Cache miss for blog:", id);
-  
-     
-      const whereCondition = lang ? { id, lang } : { id };
+      
       const blogEntry = await Blog.findOne({
-        attributes: ["id", "title", "description", "lang", "image"],
-        where: whereCondition,
+        attributes: ["id", "title", "description", "image"],
+        where: { id }
       });
-  
       
       if (!blogEntry) {
         return res
           .status(404)
-          .json( ErrorResponse("Blog entry not found", [
-            "No Blog entry found with the given ID and language.",
+          .json(ErrorResponse("Blog entry not found", [
+            "No Blog entry found with the given ID."
           ]));
       }
-  
       
       await client.setEx(cacheKey, 3600, JSON.stringify(blogEntry));
-  
       
-      return res.status(200).json([blogEntry]);
+    
+      return res.status(200).json([{
+        id: blogEntry.id,
+        title: blogEntry.title,
+        description: blogEntry.description,
+        image:blogEntry.image
+      }]);
+      
+    
     } catch (error) {
       console.error("Error in getBlogById:", error);
-  
-     
+      
       return res
         .status(500)
-        .json( ErrorResponse("Failed to fetch Blog entry", [
-          "An internal server error occurred. Please try again later.",
+        .json(ErrorResponse("Failed to fetch Blog entry", [
+          "An internal server error occurred. Please try again later."
         ]));
     }
   };

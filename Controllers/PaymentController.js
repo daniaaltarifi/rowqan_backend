@@ -401,7 +401,7 @@ exports.createPayment = async (req, res) => {
         .json(ErrorResponse("Error", ["Reservation not found"]));
     }
 
-    if (reservation.Status === "Confirmed") {
+    if (reservation.status === "Confirmed") {
       return res
         .status(400)
         .json(ErrorResponse("Error", ["Reservation is already confirmed"]));
@@ -427,7 +427,7 @@ exports.createPayment = async (req, res) => {
       paymentImage = req.file.path;
     }
 
-    reservation.Status = "Pending";
+    reservation.status = "Pending";
     await reservation.save();
 
     const newPayment = await Payments.create({
@@ -443,6 +443,7 @@ exports.createPayment = async (req, res) => {
       image: paymentImage
     });
 
+    console.log(`the Status is :${reservation.status}`)
 
     setTimeout(async () => {
       try {
@@ -484,7 +485,7 @@ exports.createPayment = async (req, res) => {
       } catch (error) {
         console.error("Error in payment cancellation timeout:", error);
       }
-    },90 * 60 * 1000);
+    },2 * 60 * 1000);
 
 
     let emailSent = false;
@@ -650,7 +651,7 @@ const { Op } = require('sequelize');
 
 const deleteUnconfirmedPayments = async () => {
   try {
-     const oneAndHalfHourAgo = new Date(Date.now() - 90 * 60 * 1000);
+     const oneAndHalfHourAgo = new Date(Date.now() - 2 * 60 * 1000);
 
     const unconfirmedPayments = await Payments.findAll({
       where: {
@@ -691,7 +692,7 @@ const deleteUnconfirmedPayments = async () => {
 
       if (reservation) {
         await reservation.update({ 
-          Status: 'Cancelled' 
+          status: 'Cancelled' 
         }, { 
           where: { id: reservation.id } 
         });

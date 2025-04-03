@@ -8,7 +8,7 @@ const rateLimiter = require('../MiddleWares/rateLimiter');
 router.post('/createHeader', rateLimiter, headerController.createHeader);
 
 
-router.get('/getAllHeaders/:lang', headerController.getAllHeaders);
+router.get('/getAllHeaders', headerController.getAllHeaders);
 
 
 router.get('/getHeaderById/:id/:lang', headerController.getHeaderById);

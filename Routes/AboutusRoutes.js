@@ -10,7 +10,7 @@ router.post('/createabout', multer.single('image'), AboutController.createAbout)
 
 router.put('/updateabout/:id', rateLimiter, multer.single('image'), AboutController.updateAbout);
 
-router.get('/getabout/:lang', AboutController.getAbout);
+router.get('/getabout', AboutController.getAbout);
 
 
 router.get('/getaboutById/:id/:lang', AboutController.getAboutById);

@@ -58,49 +58,49 @@ exports.createAbout = async (req, res) => {
 
 
 
-  exports.getAbout = async (req, res) => {
-    try {
-      const { page = 1, limit = 20 } = req.query;
-      const {lang} = req.params
-      const offset = (page - 1) * limit;
-  
-      
-      const cacheKey = `about:page:${page}:limit:${limit}:lang:${lang || 'all'}`;
-  
-      client.del(cacheKey);
-      
-      const cachedData = await client.get(cacheKey);
-  
-      if (cachedData) {
-        return res.status(200).json(JSON.parse(cachedData));
-      }
-  
-      
-      const whereCondition = lang ? { lang } : {};
-  
-      const aboutEntries = await About.findAll({
-        attributes: ["id", "title", "description", "lang", "image"],
-        where: whereCondition, 
-        order: [["id", "DESC"]],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
-  
-      
-      await client.setEx(cacheKey, 3600, JSON.stringify(aboutEntries));
-  
-      res.status(200).json(aboutEntries);
-    } catch (error) {
-      console.error("Error in getAbout:", error.message);
-      res
-        .status(500)
-        .json(
-          ErrorResponse("Failed to fetch About entries", [
-            "An internal server error occurred.",
-          ])
-        );
+exports.getAbout = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, lang = "ar" } = req.query;
+    const offset = (page - 1) * limit;
+
+    const cacheKey = `about:page:${page}:limit:${limit}:lang:${lang}`;
+
+   
+     await client.del(cacheKey);
+    
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
     }
-  };
+
+    const aboutEntries = await About.findAll({
+      attributes: ["id", "title", "description", "lang", "image"],
+      order: [["id", "DESC"]],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    
+    const plainAboutEntries = aboutEntries.map(entry => ({
+      id: entry.id,
+      title: entry.title,
+      description: entry.description,
+      image: entry.image
+    }));
+
+    
+    await client.setEx(cacheKey, 3600, JSON.stringify(plainAboutEntries));
+
+    
+    return res.json(plainAboutEntries);
+  } catch (error) {
+    console.error("Error in getAbout:", error.message);
+    return res.status(500).json({
+      error: "Failed to fetch About entries",
+      messages: ["An internal server error occurred."]
+    });
+  }
+};
   
 
   exports.getAboutById = async (req, res) => {

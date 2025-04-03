@@ -9,7 +9,7 @@ const rateLimiter = require('../MiddleWares/rateLimiter');
 router.post('/createHero', rateLimiter, multer.single('image'), heroController.createHero);
 
 
-router.get('/getAllHeroes/:lang', heroController.getHeroesByLang);
+router.get('/getAllHeroes', heroController.getHeroesByLang);
 
 router.get('/getHeroById/:id/:lang', heroController.getHeroById);
 

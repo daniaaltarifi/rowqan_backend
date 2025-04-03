@@ -38,7 +38,7 @@ router.get('/reservationsByChaletId/:chalet_id/:lang', ReservationsChaletsContro
 
 
 
-router.get('/reservationsDatesByChaletId/:chalet_id/:lang', ReservationsChaletsController.getChaletReservationsDate);
+router.get('/reservationsDatesByChaletId/:chalet_id', ReservationsChaletsController.getChaletReservationsDate);
 
 
 // router.get('/reservations/:chalet_id/:lang', ReservationsChaletsController.getReservationsByChaletId);
