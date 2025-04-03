@@ -163,6 +163,7 @@ exports.getHeroesByLang = async (req, res) => {
     }
 
     const heroes = await Hero.findAll({
+      attributes:['id','title','description','title_btn','image','lang'],
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
@@ -177,8 +178,19 @@ exports.getHeroesByLang = async (req, res) => {
 
     await client.setEx(cacheKey, 3600, JSON.stringify(heroes));
 
+
+
+    const plainHeros = heroes.map(hero=>({
+      id:hero.id,
+      title:hero.title,
+      description:hero.description,
+      title_btn:hero.title_btn,
+      image:hero.image,
+      lang:hero.lang
+    }))
+
     res.status(200).json(
-       heroes,
+      plainHeros,
     );
   } catch (error) {
     console.error("Error in getHeroesByLang:", error.message);

@@ -13,10 +13,10 @@ router.post('/createBlog', multer.single('image'), BlogController.createBlog);
 
 router.put('/updateBlog/:id', rateLimiter, multer.single('image'), BlogController.updateBlog);
 
-router.get('/getAllBlogs/:lang', BlogController.getAllBlogs);
+router.get('/getAllBlogs', BlogController.getAllBlogs);
 
 
-router.get('/getBlogById/:id/:lang', BlogController.getBlogById);
+router.get('/getBlogById/:id', BlogController.getBlogById);
 
 
 router.delete('/deleteBlog/:id/:lang', BlogController.deleteBlog);

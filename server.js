@@ -9,6 +9,12 @@ require("dotenv").config();
 const app = express();
 const compression = require("compression");
 app.use(compression());
+const translateMiddleware  = require('./MiddleWares/translateMiddleware')
+app.use(translateMiddleware)
+
+const translateChaletMiddleWare = require('./MiddleWares/translateChaletMiddleware')
+app.use(translateChaletMiddleWare)
+
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
@@ -30,116 +36,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// const client = new Client({
-//   authStrategy: new LocalAuth({
-//     dataPath: './whatsapp-session',
-//     clientId: 'client-one' 
-//   }),
-//   puppeteer: { 
-//     headless: false,
-//     args: [
-//       '--no-sandbox', 
-//       '--disable-setuid-sandbox',
-//       '--disable-gpu',
-//       '--disable-dev-shm-usage',
-//       '--disable-web-security',
-//       '--disable-features=IsolateOrigins,site-per-process'
-//     ],
-//     timeout: 120000, 
-//     defaultViewport: null
-//   }
-// });
-
-
-// let isClientReady = false;
-
-
-// client.on('qr', (qr) => {
-//   qrcode.generate(qr, {small: true});
-//   console.log('يرجى مسح QR Code');
-// });
-
-
-// client.on('ready', () => {
-//   isClientReady = true;
-//   console.log('العميل جاهز للإرسال');
-// });
-
-
-// client.initialize();
-
-
-
-// client.on('disconnected', (reason) => {
-//   console.log('تم قطع الاتصال بالعميل:', reason);
-//   isClientReady = false;
-  
-  
-//   try {
-//     fs.rmdirSync('./whatsapp-session', { recursive: true });
-//     console.log('تم حذف مجلد الجلسة القديم');
-//   } catch (err) {
-//     console.error('خطأ في حذف الجلسة:', err);
-//   }
-  
-  
-//   setTimeout(() => {
-//     console.log('جاري إعادة تهيئة العميل...');
-//     client.initialize();
-//   }, 5000);
-// });
-
-// client.on('auth_failure', (message) => {
-//   console.error('فشل المصادقة:', message);
-// });
-
-// client.on('loading_screen', (percent, message) => {
-//   console.log(`جاري التحميل: ${percent}% - ${message}`);
-// });
-
-
-
-// app.post('/send-whatsapp', async (req, res) => {
-//   try {
-    
-//     if (!isClientReady) {
-//       return res.status(503).json({ 
-//         error: 'العميل غير جاهز. يرجى المحاولة لاحقًا.' 
-//       });
-//     }
-
-//     const { phoneNumber, message } = req.body;
-
-    
-//     if (!phoneNumber) {
-//       return res.status(400).json({ 
-//         error: 'رقم الهاتف مطلوب' 
-//       });
-//     }
-
-//         let formattedNumber = phoneNumber.replace(/^0+/, '');
-//     if (!formattedNumber.startsWith('962')) {
-//       formattedNumber = `962${formattedNumber}`;
-//     }
-
-//     const chatId = `${formattedNumber}@c.us`;
-
-    
-//     await client.sendMessage(chatId, message);
-
-//     res.status(200).json({ 
-//       success: true, 
-//       message: 'تم إرسال الرسالة بنجاح' 
-//     });
-
-//   } catch (error) {
-//     console.error('خطأ في إرسال رسالة الواتساب:', error);
-//     res.status(500).json({ 
-//       error: 'فشل في إرسال رسالة الواتساب',
-//       details: error.message 
-//     });
-//   }
-// });
 
 app.use((req, res, next) => {
   req.socketIoInstance = io;
@@ -252,13 +148,13 @@ app.use(express.json());
 
 app.use('/users', UsersRoutes);
 app.use('/logos', LogoRoutes);
-app.use('/header', HeaderRoutes);
-app.use('/heroes', HeroesRoutes);
+app.use('/header',translateMiddleware, HeaderRoutes);
+app.use('/heroes',translateMiddleware,HeroesRoutes);
 app.use('/services', ServicesRoutes);
 app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
-app.use('/chalets', ChaletsRoutes);
+app.use('/chalets',translateChaletMiddleWare,ChaletsRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
 app.use('/ContactUs', ContactUsRoutes);
@@ -269,9 +165,9 @@ app.use('/ReservationsChalets', ReservationsChaletsRoutes);
 app.use('/Wallet', WalletRoutes);
 app.use('/messages', MessagesRoutes);
 app.use('/payments', PaymentsRoutes); 
-app.use('/aboutUs',AboutRoutes)
-app.use('/Blogs',BlogRoutes)
-app.use('/Contacts',ContactsRoutes)
+app.use('/aboutUs',translateMiddleware,AboutRoutes)
+app.use('/Blogs',translateMiddleware,BlogRoutes)
+app.use('/Contacts',translateMiddleware,ContactsRoutes)
 app.use('/Tags',TagRoutes)
 app.use('/NOstars',number_Of_Stars)
 app.use('/DatesForRightTime',DateForRightTime)

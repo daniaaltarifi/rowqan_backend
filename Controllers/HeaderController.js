@@ -24,46 +24,43 @@ exports.createHeader = async (req, res) => {
   };
   
 
-  exports.getAllHeaders = async (req, res) => {
-    try {
-      const { lang } = req.params;
-      const { page = 1, limit = 20 } = req.query;
-      const offset = (page - 1) * limit;
-  
-      if (!lang) {
-        return res.status(400).json(ErrorResponse('Language parameter is required'));
-      }
-  client.del(`headers:lang:${lang}:page:${page}:limit:${limit}`)
-      const cacheKey = `headers:lang:${lang}:page:${page}:limit:${limit}`;
-      const cachedData = await client.get(cacheKey);
-  
-      if (cachedData) {
-        return res.status(200).json(
-        JSON.parse(cachedData),
-        );
-      }
-  
-      const headers = await Header.findAll({
-        where: { lang },
-        order: [['id']],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-      });
-  
-      if (headers.length === 0) {
-        return res.status(404).json(ErrorResponse('No headers found for the specified language'));
-      }
-  
-      await client.setEx(cacheKey, 3600, JSON.stringify(headers));
-  
-      res.status(200).json(
-        headers,
-      );
-    } catch (error) {
-      console.error('Error retrieving headers:', error);
-      res.status(500).json(ErrorResponse('Failed to retrieve headers'));
+exports.getAllHeaders = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const cacheKey = `headers:page:${page}:limit:${limit}`;
+    const cachedData = await client.get(cacheKey);
+
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
     }
-  };
+
+    const headers = await Header.findAll({
+      attributes: ["id", "header_name"],
+      order: [['id']],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
+    if (headers.length === 0) {
+      return res.status(404).json(ErrorResponse('No headers found'));
+    }
+
+  
+    const plainHeaders = headers.map(header => ({
+      id: header.id,
+      header_name: header.header_name
+    }));
+
+    await client.setEx(cacheKey, 3600, JSON.stringify(plainHeaders));
+
+    res.json(plainHeaders);
+  } catch (error) {
+    console.error('Error retrieving headers:', error);
+    res.status(500).json(ErrorResponse('Failed to retrieve headers'));
+  }
+};
   
 
 

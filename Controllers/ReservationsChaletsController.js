@@ -24,8 +24,12 @@ exports.createReservation = async (req, res) => {
       chalet_id,
       right_time_id,
       total_amount,
-      Status
+      status
     } = req.body || {};
+
+   
+
+    console.log(`The Seding data is :${req.body}`);
 
     if (!start_date || !lang || !chalet_id || !right_time_id || !total_amount) {
       return res.status(400).json(
@@ -432,7 +436,7 @@ if (existingFullDayMorningReservation) {
       user_id: user_id || null,
       chalet_id,
       right_time_id,
-      Status
+      status
     });
 
     let wallet = null;
@@ -466,7 +470,7 @@ if (existingFullDayMorningReservation) {
         user_id,
         chalet_id,
         right_time_id,
-        Status
+        status
       },
       wallet: user_id ? { total_balance: wallet?.total_balance || 0, cashback_balance: wallet?.cashback_balance || 0 } : null,
     });
@@ -1330,7 +1334,7 @@ exports.getReservationsByRightTimeName = async (req, res) => {
 
 exports.getChaletReservationsDate = async (req, res) => {
   try {
-    const { chalet_id, lang } = req.params;
+    const { chalet_id } = req.params;
     
     console.log(req.params)
 
@@ -1339,11 +1343,9 @@ exports.getChaletReservationsDate = async (req, res) => {
       return res.status(400).json({ message: "chalet_id is required" });
     }
 
-
     const reservations = await Reservations_Chalets.findAll({
       where: {
         chalet_id: chalet_id,
-        lang: lang,
         status: {  
           [Op.or]: ["Confirmed", "Pending"]
         }
@@ -1580,7 +1582,7 @@ exports.deleteReservation = async (req, res) => {
 
 exports.getChaletReservationsDate = async (req, res) => {
   try {
-    const { chalet_id, lang } = req.params;
+    const { chalet_id } = req.params;
 
     if (!chalet_id) {
       return res.status(400).json({ message: "chalet_id is required" });
@@ -1589,7 +1591,6 @@ exports.getChaletReservationsDate = async (req, res) => {
     const reservations = await Reservations_Chalets.findAll({
       where: {
         chalet_id: chalet_id,
-        lang: lang,
         status: {
           [Op.or]: ["Confirmed", "Pending"]
         }

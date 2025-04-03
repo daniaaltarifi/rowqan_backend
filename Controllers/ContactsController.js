@@ -70,10 +70,9 @@ exports.createContact = async (req, res) => {
 exports.getContacts = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const { lang } = req.params;
     const offset = (page - 1) * limit;
 
-    const cacheKey = `contacts:page:${page}:limit:${limit}:lang:${lang || 'all'}`;
+    const cacheKey = `contacts:page:${page}:limit:${limit}`;
 
 
     client.del(cacheKey);
@@ -84,20 +83,28 @@ exports.getContacts = async (req, res) => {
       return res.status(200).json(JSON.parse(cachedData));
     }
 
-    const whereCondition = lang ? { lang } : {};
 
     const contacts = await Contacts.findAll({
       attributes: ["id", "title", "action", "lang", "image"],
-      where: whereCondition,
+      
       order: [["id", "DESC"]],
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
 
 
-    await client.setEx(cacheKey, 3600, JSON.stringify(contacts));
+    const contactPlain = contacts.map(contact=>({
+      id:contact.id,
+      title:contact.title,
+      action:contact.action,
+      lang:contact.lang,
+      image:contact.image
+    }))
 
-    res.status(200).json(contacts);
+
+    await client.setEx(cacheKey, 3600, JSON.stringify(contactPlain));
+
+    res.status(200).json(contactPlain);
   } catch (error) {
     console.error("Error in getContacts:", error.message);
     res.status(500).json(

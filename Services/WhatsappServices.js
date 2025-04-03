@@ -168,7 +168,6 @@ const startReconnectProcess = async (reason) => {
 setInterval(() => {
     if (!isClientReady) {
         console.log('Performing connection check...');
-        checkConnection();
     }
 }, 60000); 
 

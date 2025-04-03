@@ -141,28 +141,21 @@ exports.createChalet = async (req, res) => {
 
 exports.getAllChalets = async (req, res) => {
   try {
-    const { page = 1, limit = 100 } = req.query;
-    const { lang } = req.params;
+    const { page = 1, limit = 100, lang = "ar" } = req.query;
     const offset = (page - 1) * limit;
 
+    
     const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang}`;
 
-    await client.del(cacheKey);
-
+    
     const cachedData = await client.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit");
-      return res.status(200).json(
-        JSON.parse(cachedData)
-      );
+      return res.json(JSON.parse(cachedData));
     }
 
-    const whereConditions = {
-      lang: lang  
-    };
-
+    
     const chalets = await Chalet.findAll({
-      where: whereConditions,
       attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"],
       include: [
         { model: Status, attributes: ["status"] },
@@ -183,23 +176,56 @@ exports.getAllChalets = async (req, res) => {
 
     if (chalets.length === 0) {
       return res.status(404).json({
-        error: "No chalets found",
+        error: lang === "en" ? "No chalets found" : "لم يتم العثور على شاليهات",
       });
     }
 
-    await client.setEx(cacheKey, 300, JSON.stringify(chalets));
+   
+    const plainChalets = chalets.map(chalet => ({
+      id: chalet.id,
+      title: chalet.title,
+      description: chalet.description,
+      image: chalet.image,
+      Rating: chalet.Rating,
+      city: chalet.city,
+      area: chalet.area,
+      intial_Amount: chalet.intial_Amount,
+      type: chalet.type ? JSON.parse(chalet.type) : {},
+      features: chalet.features ? chalet.features.replace(/"/g, '').split(',') : [],
+      Additional_features: chalet.Additional_features ? chalet.Additional_features.replace(/"/g, '').split(',') : [],
+      status: chalet.Status ? chalet.Status.status : null,
+      images: chalet.chaletsImages ? chalet.chaletsImages.map(img => ({
+        id: img.id,
+        image: img.image
+      })) : [],
+      rightTimes: chalet.RightTimeModels ? chalet.RightTimeModels.map(time => ({
+        id: time.id,
+        type_of_time: time.type_of_time,
+        from_time: time.from_time,
+        to_time: time.to_time,
+        price: time.price,
+        After_Offer: time.After_Offer,
+        date: time.date,
+        dates: time.DatesForRightTimes ? time.DatesForRightTimes.map(date => ({
+          id: date.id,
+          date: date.date,
+          price: date.price
+        })) : []
+      })) : []
+    }));
 
-    res.status(200).json(
-      chalets
-    );
+   
+    await client.setEx(cacheKey, 300, JSON.stringify(plainChalets));
+
+   
+    return res.json(plainChalets);
   } catch (error) {
     console.error("Error in getAllChalets:", error.message);
     res.status(500).json({
-      error: "Failed to fetch chalets",
+      error: req.query.lang === "en" ? "Failed to fetch chalets" : "فشل في جلب الشاليهات",
     });
   }
 };
-
 
 
 
@@ -241,7 +267,7 @@ exports.getChaletsWithOffer = async (req, res) => {
 
 
 exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
-  const { type_of_time, lang } = req.params; 
+  const { type_of_time } = req.params; 
 
   try {
     const chaletsWithOfferAndTime = await RightTimeModel.findAll({
@@ -252,7 +278,6 @@ exports.getChaletsByTypeOfTimeAndOffer = async (req, res) => {
       include: [
         {
           model: Chalet,
-          where: { lang: lang }, 
           attributes: [
             "id",
             "title",
@@ -414,22 +439,14 @@ client.del(`chaletProps:page:${page}:limit:${limit}:lang:${lang || "all"}`)
 
 
 
+
 exports.getChaletById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { lang } = req.query;
 
-    const whereClause = { id };
-    if (lang && ["ar", "en"].includes(lang)) {
-      whereClause.lang = lang;
-    } else if (lang) {
-      return res.status(400).json({
-        error: 'Invalid language. Supported languages are "ar" and "en".',
-      });
-    }
-
-    const chalet = await Chalet.findOne({
-      where: whereClause,
+   
+    const chalets = await Chalet.findAll({
+      where: { id },
       include: [
         { 
           model: Status, 
@@ -441,7 +458,7 @@ exports.getChaletById = async (req, res) => {
           include: [
             { 
               model: DatesForRightTime,
-              attributes: ["id", "date","price"], 
+              attributes: ["id", "date", "price"], 
             }
           ]
         },
@@ -456,13 +473,76 @@ exports.getChaletById = async (req, res) => {
       ],
     });
 
-    if (!chalet) {
+    if (!chalets || chalets.length === 0) {
       return res.status(404).json({
-        error: `Chalet with id ${id} and language ${lang} not found`
+        error: `Chalet with id ${id} not found`
       });
     }
 
-    res.json(chalet);
+  
+    const plainChalets = chalets.map(chalet => {
+      
+      const rightTimeModels = chalet.RightTimeModels ? chalet.RightTimeModels.map(rightTime => {
+        
+        const datesForRightTime = rightTime.DatesForRightTimes ? rightTime.DatesForRightTimes.map(date => ({
+          id: date.id,
+          date: date.date,
+          price: date.price
+        })) : [];
+
+        return {
+          id: rightTime.id,
+          type_of_time: rightTime.type_of_time,
+          from_time: rightTime.from_time,
+          to_time: rightTime.to_time,
+          price: rightTime.price,
+          After_Offer: rightTime.After_Offer,
+          date: rightTime.date,
+          DatesForRightTimes: datesForRightTime
+        };
+      }) : [];
+
+      
+      const chaletImages = chalet.ChaletsImages ? chalet.ChaletsImages.map(img => ({
+        id: img.id,
+        image: img.image
+      })) : [];
+
+      
+      return {
+        id: chalet.id,
+        title: chalet.title,
+        description: chalet.description,
+        image: chalet.image,
+        city: chalet.city,
+        area: chalet.area,
+        Rating: chalet.Rating,
+        type: chalet.type,
+        intial_Amount: chalet.intial_Amount,
+        features: chalet.features,
+        Additional_features: chalet.Additional_features,
+        near_me: chalet.near_me,
+        
+        
+        Status: chalet.Status ? {
+          id: chalet.Status.id,
+          status: chalet.Status.status
+        } : null,
+        
+        RightTimeModels: rightTimeModels,
+        ChaletsImages: chaletImages,
+        
+        
+        type_of_time: chalet.RightTimeModels && chalet.RightTimeModels.length > 0 
+          ? chalet.RightTimeModels[0].type_of_time 
+          : null,
+        after_offer: chalet.RightTimeModels && chalet.RightTimeModels.length > 0 
+          ? chalet.RightTimeModels[0].After_Offer 
+          : null,
+      };
+    });
+
+    res.json(plainChalets);
     
   } catch (error) {
     console.error("Error in getChaletById:", error);
