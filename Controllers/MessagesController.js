@@ -1,5 +1,6 @@
 const Chalet = require('../Models/ChaletsModel');
 const Messages = require('../Models/MessageModel');
+const User = require('../Models/UsersModel');
 const Users = require('../Models/UsersModel');
 const { Sequelize } = require('sequelize');
 const emitSocketEvent = (socketIoInstance, event, data) => {
@@ -11,16 +12,18 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 };
 
 
+
+
+
+
+
+
+const nodemailer = require('nodemailer');
+
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, status,receiverId, message, lang, chaletId } = req.body; 
-
-    if (!senderId || !status || !message || !lang || !chaletId) {
-      return res.status(400).json({ message: 'All fields are required: senderId, message, lang, status, and chaletId' });
-    }
-
+    const { senderId, status, receiverId, message, lang, chaletId } = req.body;
   
-
     const newMessage = await Messages.create({
       senderId,
       status,
@@ -30,8 +33,69 @@ exports.createMessage = async (req, res) => {
       chaletId, 
     });
 
+    
     emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
 
+  
+    try {
+      
+      const receiver = await User.findByPk(receiverId);
+      
+     
+      let senderInfo = 'End User';
+      if (senderId) {
+        try {
+          const sender = await User.findByPk(senderId);
+          if (sender) {
+            senderInfo = sender.name || sender.username || `User User #${senderId}`;
+          }
+        } catch (senderError) {
+          console.error('Error fetching sender info:', senderError);
+        }
+      }
+
+     
+      if (receiver && receiver.email) {
+        try {
+         
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            },
+            tls: { rejectUnauthorized: false }
+          });
+          
+          
+          const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: receiver.email,
+            subject: "New Message Notification",
+            html: `
+              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <h2 style="color: #6DA6BA;">لديك رسالة جديدة!</h2>
+                <p>لقد استلمت رسالة جديدة من ${senderInfo}:</p>
+                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                  <p style="margin: 0;">${message}</p>
+                </div>
+                <p>سجل دخولك للرد على الرسالة.</p>
+              </div>
+            `
+          };
+
+         
+          await transporter.sendMail(mailOptions);
+          console.log(`Email notification sent to ${receiver.email}`);
+        } catch (emailError) {
+          console.error('Failed to send email:', emailError);
+        }
+      }
+    } catch (notificationError) {
+      console.error('Error sending notification:', notificationError);
+    }
+
+    
     res.status(201).json(newMessage);
 
     if (req.socketIoInstance) {
@@ -45,7 +109,6 @@ exports.createMessage = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-
 
 
 

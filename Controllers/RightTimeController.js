@@ -171,21 +171,20 @@ exports.getRightTimeById = async (req, res) => {
   }
 };
 
+
 exports.getAllRightTimesByChaletId = async (req, res) => {
   try {
-      const { chalet_id, lang } = req.params;
-
+      const { chalet_id } = req.params;
       
       const chalet = await Chalet.findByPk(chalet_id);
       if (!chalet) {
           return res.status(404).json({
-              message: lang === 'en' ? 'Chalet not found' : 'الشاليه غير موجود'
+              message: 'الشاليه غير موجود'
           });
       }
-
       
       const rightTimes = await RightTimeModel.findAll({
-          where: { chalet_id, lang },
+          where: { chalet_id },
           include: [
               {
                   model: dateForRightTime,
@@ -196,7 +195,7 @@ exports.getAllRightTimesByChaletId = async (req, res) => {
 
       if (rightTimes.length === 0) {
           return res.status(404).json({
-              message: lang === 'en' ? 'No RightTimes found for this chalet in the specified language' : 'لم يتم العثور على أوقات مناسبة لهذا الشاليه باللغة المحددة'
+              message: 'لم يتم العثور على أوقات مناسبة لهذا الشاليه'
           });
       }
 
@@ -205,7 +204,7 @@ exports.getAllRightTimesByChaletId = async (req, res) => {
       console.error("Error in getAllRightTimesByChaletId:", error);
 
       return res.status(500).json({
-          message: 'Failed to fetch RightTimes'
+          message: 'فشل في جلب الأوقات المناسبة'
       });
   }
 };

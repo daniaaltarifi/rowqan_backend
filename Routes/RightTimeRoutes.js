@@ -14,7 +14,7 @@ router.post('/createrighttime', rateLimiter, rightTimeController.createRightTime
 router.get('/getallrighttimes/:lang', rightTimeController.get);
 
 
-router.get('/getallrighttimesbyChaletId/:chalet_id/:lang', rightTimeController.getAllRightTimesByChaletId);
+router.get('/getallrighttimesbyChaletId/:chalet_id', rightTimeController.getAllRightTimesByChaletId);
 
 
 router.get('/getrighttimebyid/:id/:lang', rightTimeController.getRightTimeById);

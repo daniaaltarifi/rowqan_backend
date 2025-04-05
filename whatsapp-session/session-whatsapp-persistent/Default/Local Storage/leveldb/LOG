@@ -1,3 +1,2 @@
-2025/04/03-16:22:23.098 9f0 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
-2025/04/03-16:22:23.098 9f0 Recovering log #48
-2025/04/03-16:22:23.099 9f0 Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/000048.log 
+2025/04/05-16:24:45.397 870 Creating DB C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb since it was missing.
+2025/04/05-16:24:45.415 870 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
