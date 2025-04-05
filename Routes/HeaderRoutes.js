@@ -11,7 +11,7 @@ router.post('/createHeader', rateLimiter, headerController.createHeader);
 router.get('/getAllHeaders', headerController.getAllHeaders);
 
 
-router.get('/getHeaderById/:id/:lang', headerController.getHeaderById);
+router.get('/getHeaderById/:id', headerController.getHeaderById);
 
 
 router.put('/updateHeader/:id', rateLimiter, headerController.updateHeader);

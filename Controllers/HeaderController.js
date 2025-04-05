@@ -66,13 +66,10 @@ exports.getAllHeaders = async (req, res) => {
 
   exports.getHeaderById = async (req, res) => {
     try {
-      const { id, lang } = req.params;
+      const { id } = req.params;
   
-      if (!id || !lang) {
-        return res.status(400).json(ErrorResponse('ID and language are required'));
-      }
-  client.del(`header:${id}:lang:${lang}`)
-      const cacheKey = `header:${id}:lang:${lang}`;
+  client.del(`header:${id}`)
+      const cacheKey = `header:${id}`;
   
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
@@ -85,7 +82,7 @@ exports.getAllHeaders = async (req, res) => {
   
 
       const header = await Header.findOne({
-        where: { id, lang },
+        where: { id },
       });
   
       if (!header) {
