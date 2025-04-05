@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Browse and filter listings with real-time availability across all categories.",
   "main": "server.js",
-  "scripts": {
+ "scripts": {
     "test": "jest",
-    "dev": "nodemon server.js",
-    "start": "pm2 start ecosystem.config.js",
+    "dev": "nodemon --max-old-space-size=8192 --expose-gc server.js",
+    "start": "node --max-old-space-size=8192 server.js",
     "stop": "pm2 stop whatsapp-service",
     "restart": "pm2 restart whatsapp-service",
     "logs": "pm2 logs whatsapp-service"

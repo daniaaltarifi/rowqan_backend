@@ -72,15 +72,9 @@ exports.createUser = async (req, res) => {
 
 
 exports.getAllUsers = async (req, res) => {
-  const { lang } = req.params;
+  
   try {
-    if (!['ar', 'en'].includes(lang)) {
-      return res.status(400).json({
-        error: 'Invalid language. Please use "ar" or "en".',
-      });
-    }
     const users = await User.findAll({
-      where: { lang },
       include: [
         {
           model: UserTypes,

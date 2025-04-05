@@ -19,30 +19,30 @@ const Messages = sequelize.define('Messages', {
   },
   senderId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: Users,
       key: 'id',
     },
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   },
   receiverId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: Users,
       key: 'id',
     },
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   },
   chaletId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: Chalets,
       key: 'id',
     },
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   },
   status:{
     type: DataTypes.STRING,

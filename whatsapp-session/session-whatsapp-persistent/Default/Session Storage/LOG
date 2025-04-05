@@ -1,3 +1,2 @@
-2025/04/03-16:22:23.627 50dc Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Session Storage/MANIFEST-000001
-2025/04/03-16:22:23.627 50dc Recovering log #4
-2025/04/03-16:22:23.628 50dc Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Session Storage/000004.log 
+2025/04/05-16:24:46.151 870 Creating DB C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Session Storage since it was missing.
+2025/04/05-16:24:46.160 870 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Session Storage/MANIFEST-000001

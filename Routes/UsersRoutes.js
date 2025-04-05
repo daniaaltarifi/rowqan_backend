@@ -33,7 +33,7 @@ router.post('/forgot-password', passwordResetLimiter,requestPasswordReset);
 router.post('/createUser', rateLimiter, register);
 
 
-router.get('/getAllUsers/:lang',rateLimiter, userController.getAllUsers);
+router.get('/getAllUsers',rateLimiter, userController.getAllUsers);
 
 router.get('/getUserById/:id/:lang', rateLimiter, userController.getUserById);
 
