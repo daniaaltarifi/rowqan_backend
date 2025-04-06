@@ -83,6 +83,7 @@ exports.getAllHeaders = async (req, res) => {
 
       const header = await Header.findOne({
         where: { id },
+        attributes: ['id', 'header_name', 'url']
       });
   
       if (!header) {

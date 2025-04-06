@@ -489,122 +489,234 @@ if (existingFullDayMorningReservation) {
 
 
 
+// exports.getAllReservations = async (req, res) => {
+//   try {
+//     const { lang } = req.params;
+//     const { page = 1, limit = 40 } = req.query;
+//     const offset = (page - 1) * limit;
+
+    
+//     if (!["ar", "en"].includes(lang)) {
+//       return res.status(400).json({
+//         error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
+//       });
+//     }
+
+    
+    
+//     const cacheKey = `reservations:page:${page}:limit:${limit}:lang:${lang}`;
+
+//     await client.del(cacheKey);
+    
+//     const cachedData = await client.get(cacheKey);
+//     if (cachedData) {
+//       console.log("Cache hit for reservations:", lang);
+//       return res.status(200).json(JSON.parse(cachedData));
+//     }
+//     console.log("Cache miss for reservations:", lang);
+
+    
+//     const reservations = await Reservations_Chalets.findAll({
+//       include: [
+//         {
+//           model: Chalet,
+//           attributes: [
+//             "id",
+//             "title",
+//             "description",
+//             "image",
+//             "Rating",
+//             "city",
+//             "area",
+//             "intial_Amount",
+//             "type",
+//           ],
+//         },
+//         {
+//           model: User,
+//           attributes: ["id", "name", "email","user_type_id"],
+//         },
+//         {
+//           model: RightTimeModel,
+//           attributes: [
+//             "id",
+//             "type_of_time",
+//             "from_time",
+//             "to_time",
+//             "price",
+//             "After_Offer",
+//             "date"
+//           ],
+//         },
+//       ],
+//       limit: parseInt(limit),
+//       offset: parseInt(offset),
+//       attributes: [
+//         "id",
+//         "cashback",
+//         "start_date",
+//         "end_date",
+//         "Time",
+//         "Status",
+//         "Reservation_Type",
+//         "starting_price",
+//         "Total_Amount",
+//         "additional_visitors",
+//         "number_of_days",
+//       ],
+//     });
+
+    
+//     if (!reservations || reservations.length === 0) {
+//       return res.status(404).json({
+//         message: lang === "en" ? "No reservations found" : "لا توجد حجوزات",
+//       });
+//     }
+
+    
+//     const formattedReservations = reservations.map((reservation) => ({
+//       id: reservation.id,
+//       cashback: reservation.cashback,
+//       start_date: reservation.start_date,
+//       end_date: reservation.end_date,
+//       time: reservation.Time,
+//       status: reservation.Status,
+//       reservation_type: reservation.Reservation_Type,
+//       starting_price: reservation.starting_price,
+//       total_amount: reservation.Total_Amount,
+//       additional_visitors: reservation.additional_visitors,
+//       number_of_days: reservation.number_of_days,
+//       chalet: reservation.Chalet, 
+//       user: reservation.User, 
+//       right_time: reservation.RightTimeModel, 
+//     }));
+
+    
+//     await client.setEx(cacheKey, 3600, JSON.stringify(formattedReservations));
+
+    
+//     return res.status(200).json(formattedReservations);
+//   } catch (error) {
+//     console.error("Error fetching reservations:", error);
+//     return res.status(500).json({
+//       error: lang === "en" ? "Failed to fetch reservations" : "فشل في جلب الحجوزات",
+//     });
+//   }
+// };
+
+const { cacheData, getCachedData } = require('../Utils/redisClient');
+
 exports.getAllReservations = async (req, res) => {
-  try {
-    const { lang } = req.params;
-    const { page = 1, limit = 40 } = req.query;
-    const offset = (page - 1) * limit;
+ try {
+   const { lang } = req.params;
+   const { page = 1, limit = 40 } = req.query;
+   const offset = (page - 1) * limit;
 
-    
-    if (!["ar", "en"].includes(lang)) {
-      return res.status(400).json({
-        error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
-      });
-    }
+   
+   if (!["ar", "en"].includes(lang)) {
+     return res.status(400).json({
+       error: lang === "en" ? "Invalid language" : "اللغة غير صالحة",
+     });
+   }
 
-    
-    
-    const cacheKey = `reservations:page:${page}:limit:${limit}:lang:${lang}`;
+   
+   const cacheKey = `reservations:${page}:${limit}:${lang}:v1`;
 
-    await client.del(cacheKey);
-    
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) {
-      console.log("Cache hit for reservations:", lang);
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log("Cache miss for reservations:", lang);
+   try {
+     
+     const cachedData = await getCachedData(cacheKey);
+     if (cachedData) {
+       console.log(`Cache hit for ${cacheKey}`);
+       return res.status(200).json(cachedData);
+     }
+   } catch (cacheError) {
+     console.error('Cache retrieval error:', cacheError);
+   }
 
-    
-    const reservations = await Reservations_Chalets.findAll({
-      include: [
-        {
-          model: Chalet,
-          attributes: [
-            "id",
-            "title",
-            "description",
-            "image",
-            "Rating",
-            "city",
-            "area",
-            "intial_Amount",
-            "type",
-          ],
-        },
-        {
-          model: User,
-          attributes: ["id", "name", "email","user_type_id"],
-        },
-        {
-          model: RightTimeModel,
-          attributes: [
-            "id",
-            "type_of_time",
-            "from_time",
-            "to_time",
-            "price",
-            "After_Offer",
-            "date"
-          ],
-        },
-      ],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      attributes: [
-        "id",
-        "cashback",
-        "start_date",
-        "end_date",
-        "Time",
-        "Status",
-        "Reservation_Type",
-        "starting_price",
-        "Total_Amount",
-        "additional_visitors",
-        "number_of_days",
-      ],
-    });
+   console.log(`Cache miss for ${cacheKey}, querying database`);
 
-    
-    if (!reservations || reservations.length === 0) {
-      return res.status(404).json({
-        message: lang === "en" ? "No reservations found" : "لا توجد حجوزات",
-      });
-    }
+   
+   const reservations = await Reservations_Chalets.findAll({
+     include: [
+       {
+         model: Chalet,
+         attributes: [
+           "id", "title", "description", "image",
+           "Rating", "city", "area", "intial_Amount", "type"
+         ],
+         required: false
+       },
+       {
+         model: User,
+         attributes: ["id", "name", "email", "user_type_id"],
+         required: false
+       },
+       {
+         model: RightTimeModel,
+         attributes: [
+           "id", "type_of_time", "from_time", "to_time",
+           "price", "After_Offer", "date"
+         ],
+         required: false
+       }
+     ],
+     limit: parseInt(limit),
+     offset: parseInt(offset),
+     attributes: [
+       "id", "cashback", "start_date", "end_date",
+       "Time", "Status", "Reservation_Type", "starting_price",
+       "Total_Amount", "additional_visitors", "number_of_days"
+     ],
+     subQuery: false,
+     distinct: true
+   });
 
-    
-    const formattedReservations = reservations.map((reservation) => ({
-      id: reservation.id,
-      cashback: reservation.cashback,
-      start_date: reservation.start_date,
-      end_date: reservation.end_date,
-      time: reservation.Time,
-      status: reservation.Status,
-      reservation_type: reservation.Reservation_Type,
-      starting_price: reservation.starting_price,
-      total_amount: reservation.Total_Amount,
-      additional_visitors: reservation.additional_visitors,
-      number_of_days: reservation.number_of_days,
-      chalet: reservation.Chalet, 
-      user: reservation.User, 
-      right_time: reservation.RightTimeModel, 
-    }));
+   if (!reservations || reservations.length === 0) {
+     return res.status(404).json({
+       message: lang === "en" ? "No reservations found" : "لا توجد حجوزات"
+     });
+   }
 
-    
-    await client.setEx(cacheKey, 3600, JSON.stringify(formattedReservations));
+   
+   const formattedReservations = reservations.map(reservation => {
+     const plainReservation = reservation.get({ plain: true });
+     
+     return {
+       id: plainReservation.id,
+       cashback: plainReservation.cashback,
+       start_date: plainReservation.start_date,
+       end_date: plainReservation.end_date,
+       time: plainReservation.Time,
+       status: plainReservation.Status,
+       reservation_type: plainReservation.Reservation_Type,
+       starting_price: plainReservation.starting_price,
+       total_amount: plainReservation.Total_Amount,
+       additional_visitors: plainReservation.additional_visitors,
+       number_of_days: plainReservation.number_of_days,
+       chalet: plainReservation.Chalet || null,
+       user: plainReservation.User || null,
+       right_time: plainReservation.RightTimeModel || null
+     };
+   });
 
-    
-    return res.status(200).json(formattedReservations);
-  } catch (error) {
-    console.error("Error fetching reservations:", error);
-    return res.status(500).json({
-      error: lang === "en" ? "Failed to fetch reservations" : "فشل في جلب الحجوزات",
-    });
-  }
+  
+   try {
+     await cacheData(cacheKey, formattedReservations, 3600); 
+     console.log(`Data cached for ${cacheKey}`);
+   } catch (cacheError) {
+     console.error('Cache storage error:', cacheError);
+   }
+
+   return res.status(200).json(formattedReservations);
+
+ } catch (error) {
+   console.error("Error in getAllReservations:", error);
+   return res.status(500).json({
+     error: lang === "en" ? "Failed to fetch reservations" : "فشل في جلب الحجوزات",
+     details: process.env.NODE_ENV === 'development' ? error.message : undefined
+   });
+ }
 };
-
-
 
 
 

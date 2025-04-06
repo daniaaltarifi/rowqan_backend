@@ -6,63 +6,81 @@ const socketIo = require("socket.io");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
+const cacheService  = require('./Services/cacheService')
+
+
+
+setInterval(() => {
+  const used = process.memoryUsage();
+  console.log('Memory usage:');
+  for (let key in used) {
+    console.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+  }
+  if (global.gc) {
+    global.gc();
+  }
+}, 30000);
+
+
+setInterval(() => {
+  cacheService.clear();
+  console.log('Cache cleared');
+}, 3600000);
+
+
+sequelize.options.pool = {
+  max: 5,
+  min: 0,
+  acquire: 30000,
+  idle: 10000
+};
+
+
+
 const app = express();
 const compression = require("compression");
 app.use(compression());
-const translateMiddleware  = require('./MiddleWares/translateMiddleware')
-app.use(translateMiddleware)
 
-const translateChaletMiddleWare = require('./MiddleWares/translateChaletMiddleware')
-app.use(translateChaletMiddleWare)
-
-
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
-
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  })
-);
-
-
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 
 app.use((req, res, next) => {
-  req.socketIoInstance = io;
+  res.on('finish', () => {
+    if (global.gc) global.gc();
+  });
+  next();
+});
+
+
+app.use((req, res, next) => {
+  req.cache = cacheService;
   next();
 });
 
 
 
+
+
+const translateMiddleware = require('./MiddleWares/translateMiddleware');
+const translateChaletMiddleWare = require('./MiddleWares/translateChaletMiddleware');
+app.use(translateMiddleware);
+app.use(translateChaletMiddleWare);
+
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+
+
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
 
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  })
-);
 
-
-
-
-app.use(express.json());
-
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const server = http.createServer(app);
+
+
 const io = socketIo(server, {
   cors: {
     origin: [
@@ -71,19 +89,24 @@ const io = socketIo(server, {
       "https://rowqan.com",
       "https://dashboard.rowqan.com",
       "https://rowqanbackend.rowqan.com",
-    ], 
+    ],
     methods: ["GET", "POST"],
   },
+  pingTimeout: 60000,
+  maxHttpBufferSize: 1e6
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-  });
+app.use((req, res, next) => {
+  req.socketIoInstance = io;
+  next();
 });
 
+// io.on("connection", (socket) => {
+//   console.log("A user connected");
+//   socket.on("disconnect", () => {
+//     console.log("A user disconnected");
+//   });
+// });
 
 
 const UsersRoutes = require('./Routes/UsersRoutes');
@@ -104,18 +127,18 @@ const UsersTypesRoutes = require('./Routes/UsersTypesRoutes');
 const ReservationsChaletsRoutes = require('./Routes/ReservationsChaletsRoutes');
 const WalletRoutes = require('./Routes/WalletRoutes');
 const MessagesRoutes = require('./Routes/MessagesRoutes');
-const PaymentsRoutes = require('./Routes/PaymentsRoutes')
-const AboutRoutes = require('./Routes/AboutusRoutes')
+const PaymentsRoutes = require('./Routes/PaymentsRoutes');
+const AboutRoutes = require('./Routes/AboutusRoutes');
 const BlogRoutes = require('./Routes/BlogRoutes');
+const ContactsRoutes = require('./Routes/ContactsRoutes');
+const TagRoutes = require('./Routes/TagRoutes');
+const number_Of_Stars = require('./Routes/numberOfStarsRoutes');
+const DateForRightTime = require('./Routes/RightTimeDateRoutes');
+const adminChaletsRoutes = require('./Routes/adminChaletsRoutes');
+const LetRowqanChooseRoutes = require('./Routes/LetRowqanChooseRoutes');
+
 const axios = require('axios');
 const geoip = require('geoip-lite');
-const ContactsRoutes = require('./Routes/ContactsRoutes')
-const TagRoutes = require('./Routes/TagRoutes')
-const number_Of_Stars = require('./Routes/numberOfStarsRoutes')
-const DateForRightTime = require('./Routes/RightTimeDateRoutes')
-const adminChaletsRoutes = require('./Routes/adminChaletsRoutes')
-const LetRowqanChooseRoutes = require('./Routes/LetRowqanChooseRoutes')
-
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -127,8 +150,6 @@ const allowedOrigins = [
   "https://kassel.icu/rowqan/chalets"
 ];
 
-
-
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -136,25 +157,23 @@ const corsOptions = {
     } else {
       callback(new Error("Not allowed by CORS"));
     }
-  },    
+  },
   credentials: true,
 };
 
-
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use(express.json());
 
 
 app.use('/users', UsersRoutes);
 app.use('/logos', LogoRoutes);
-app.use('/header',translateMiddleware, HeaderRoutes);
-app.use('/heroes',translateMiddleware,HeroesRoutes);
+app.use('/header', translateMiddleware, HeaderRoutes);
+app.use('/heroes', translateMiddleware, HeroesRoutes);
 app.use('/services', ServicesRoutes);
 app.use('/footer', FooterRoutes);
 app.use('/footericons', FooterIconRoutes);
 app.use('/heroChalets', HeroChaletsRoutes);
-app.use('/chalets',translateChaletMiddleWare,ChaletsRoutes);
+app.use('/chalets', translateChaletMiddleWare, ChaletsRoutes);
 app.use('/chaletsimages', ChaletImagesRoutes);
 app.use('/ReservationDates', ReservatioDatesRoutes);
 app.use('/ContactUs', ContactUsRoutes);
@@ -164,24 +183,19 @@ app.use('/userstypes', UsersTypesRoutes);
 app.use('/ReservationsChalets', ReservationsChaletsRoutes);
 app.use('/Wallet', WalletRoutes);
 app.use('/messages', MessagesRoutes);
-app.use('/payments', PaymentsRoutes); 
-app.use('/aboutUs',translateMiddleware,AboutRoutes)
-app.use('/Blogs',translateMiddleware,BlogRoutes)
-app.use('/Contacts',translateMiddleware,ContactsRoutes)
-app.use('/Tags',TagRoutes)
-app.use('/NOstars',number_Of_Stars)
-app.use('/DatesForRightTime',DateForRightTime)
-app.use('/adminChalets',adminChaletsRoutes)
-app.use('/RowqanChoose',LetRowqanChooseRoutes)
-
+app.use('/payments', PaymentsRoutes);
+app.use('/aboutUs', translateMiddleware, AboutRoutes);
+app.use('/Blogs', translateMiddleware, BlogRoutes);
+app.use('/Contacts', translateMiddleware, ContactsRoutes);
+app.use('/Tags', TagRoutes);
+app.use('/NOstars', number_Of_Stars);
+app.use('/DatesForRightTime', DateForRightTime);
+app.use('/adminChalets', adminChaletsRoutes);
+app.use('/RowqanChoose', LetRowqanChooseRoutes);
 
 const IP_LOOKUP_API = "https://ipqualityscore.com/api/json/ip/T0hMeOnMzeAnPVsmgH6AKMhguvmr1Yv9";
 
-
-
-
 async function checkVPN(userIP) {
-
   try {
     const response = await axios.get(`${IP_LOOKUP_API}?ip=${userIP}`);
     const { vpn, proxy, fraud_score, isp, city, asn, is_proxy } = response.data;
@@ -196,7 +210,6 @@ async function checkVPN(userIP) {
       return false;
     }
 
-    
     if ((isp && isp.toLowerCase().includes("vpn")) || city === "unknown") {
       console.log("Suspicious ISP or City.");
       return false;
@@ -237,16 +250,19 @@ function checkAuth(req, res, next) {
 
 app.use("/dashboard", async (req, res, next) => {
   const userIP = req.query.ip || requestIp.getClientIp(req);
-
   const isAllowed = await checkVPN(userIP);
 
   if (!isAllowed) {
-    return res
-      .status(403)
-      .json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
+    return res.status(403).json({ message: "Access denied due to VPN/Proxy or non-Jordan IP" });
   }
 
   res.status(200).json({ message: "Access granted to the dashboard" });
+});
+
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 sequelize.sync({ force: false }).then(() => {
@@ -255,6 +271,16 @@ sequelize.sync({ force: false }).then(() => {
 
 app.get("/", (req, res) => {
   res.send("Welcome to Rowqan!");
+});
+
+
+process.on('SIGTERM', () => {
+  console.info('SIGTERM signal received.');
+  server.close(() => {
+    console.log('Server closed.');
+    sequelize.close();
+    process.exit(0);
+  });
 });
 
 server.listen(process.env.PORT || 5000, () => {
