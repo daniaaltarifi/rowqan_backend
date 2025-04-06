@@ -33,6 +33,13 @@ router.get('/getMessagesByChalet/:receiverId/:lang', (req, res, next) => {
   MessagesController.getMessagesByChalets(req, res, next);
 });
 
+
+
+router.get('/getMessagesByReciever/:receiverId', (req, res, next) => {
+  MessagesController.getMessagesByReciever(req, res, next);
+});
+
+
 router.get('/getMessagesBySenderIdRecieverId/:senderId/:receiverId/:chaletId', (req, res, next) => {
   MessagesController.getMessagesBySenderIdRecieverIdChaletId(req, res, next);
 });

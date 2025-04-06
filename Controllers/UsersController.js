@@ -71,25 +71,67 @@ exports.createUser = async (req, res) => {
 
 
 
+const { cacheData, getCachedData } = require('../Utils/redisClient');
+
 exports.getAllUsers = async (req, res) => {
-  
   try {
+    
+    
+    const cacheKey = `users:all:v1`;
+
+    try {
+      
+      const cachedData = await getCachedData(cacheKey);
+      if (cachedData) {
+        console.log(`Cache hit for ${cacheKey}`);
+        return res.json(cachedData);
+      }
+    } catch (cacheError) {
+      console.error('Cache retrieval error:', cacheError);
+    }
+
+    console.log(`Cache miss for ${cacheKey}, querying database`);
+
+    
     const users = await User.findAll({
       include: [
         {
           model: UserTypes,
           attributes: ['id', 'type'],
-        },
+          required: false
+        }
       ],
+      attributes: {
+        exclude: ['password', 'resetToken', 'resetTokenExpiry'] 
+      },
+      subQuery: false,
+      distinct: true
     });
 
-    res.status(200).json(
-      users,
-    );
+    
+    const cleanUsers = users.map(user => {
+      const plainUser = user.get({ plain: true });
+      return {
+        ...plainUser,
+        UserType: plainUser.UserType || { id: null, type: null }
+      };
+    });
+
+  
+    try {
+      await cacheData(cacheKey, cleanUsers, 300); 
+      console.log(`Data cached for ${cacheKey}`);
+    } catch (cacheError) {
+      console.error('Cache storage error:', cacheError);
+    }
+
+    return res.status(200).json(cleanUsers);
+
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error in getAllUsers:', error);
     res.status(500).json({
       error: lang === 'en' ? 'Failed to fetch users' : 'فشل في جلب المستخدمين',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

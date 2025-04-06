@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Browse and filter listings with real-time availability across all categories.",
   "main": "server.js",
- "scripts": {
+  "scripts": {
     "test": "jest",
-    "dev": "nodemon --max-old-space-size=8192 --expose-gc server.js",
-    "start": "node --max-old-space-size=8192 server.js",
+    "dev": "pm2 start ecosystem.config.js --watch",
+    "start": "pm2 start ecosystem.config.js",
     "stop": "pm2 stop whatsapp-service",
     "restart": "pm2 restart whatsapp-service",
     "logs": "pm2 logs whatsapp-service"
@@ -22,6 +22,7 @@
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
+    "cache-manager": "^5.2.3",
     "cheerio": "^1.0.0",
     "cloudinary": "^1.41.3",
     "compression": "^1.7.5",

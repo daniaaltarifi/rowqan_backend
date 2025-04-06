@@ -20,9 +20,11 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 
 const nodemailer = require('nodemailer');
 
+
 exports.createMessage = async (req, res) => {
   try {
     const { senderId, status, receiverId, message, lang, chaletId } = req.body;
+    console.log('Creating message with receiverId:', receiverId);
   
     const newMessage = await Messages.create({
       senderId,
@@ -33,69 +35,101 @@ exports.createMessage = async (req, res) => {
       chaletId, 
     });
 
-    
     emitSocketEvent(req.socketIoInstance, 'receive_message', newMessage);
 
-  
     try {
-      
       const receiver = await User.findByPk(receiverId);
+      console.log('Receiver found:', receiver ? 'yes' : 'no'); 
+      console.log('Receiver email:', receiver?.email); 
       
-     
-      let senderInfo = 'End User';
-      if (senderId) {
-        try {
-          const sender = await User.findByPk(senderId);
-          if (sender) {
-            senderInfo = sender.name || sender.username || `User User #${senderId}`;
-          }
-        } catch (senderError) {
-          console.error('Error fetching sender info:', senderError);
+      let hasExistingMessages = false;
+      
+      if (receiverId) {
+        const query = {
+          where: {
+            receiverId
+          },
+          order: [['createdAt', 'DESC']],
+          offset: 1
+        };
+        
+        if (senderId) {
+          query.where.senderId = senderId;
         }
+
+        const previousMessage = await Messages.findOne(query);
+        hasExistingMessages = !!previousMessage;
+        console.log('Has existing messages:', hasExistingMessages); 
       }
 
-     
-      if (receiver && receiver.email) {
-        try {
-         
-          const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS
-            },
-            tls: { rejectUnauthorized: false }
-          });
-          
-          
-          const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: receiver.email,
-            subject: "New Message Notification",
-            html: `
-              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-                <h2 style="color: #6DA6BA;">لديك رسالة جديدة!</h2>
-                <p>لقد استلمت رسالة جديدة من ${senderInfo}:</p>
-                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                  <p style="margin: 0;">${message}</p>
-                </div>
-                <p>سجل دخولك للرد على الرسالة.</p>
-              </div>
-            `
-          };
-
-         
-          await transporter.sendMail(mailOptions);
-          console.log(`Email notification sent to ${receiver.email}`);
-        } catch (emailError) {
-          console.error('Failed to send email:', emailError);
+      if (!hasExistingMessages) {
+        console.log('Attempting to send first-time notification'); 
+        let senderInfo = 'End User';
+        if (senderId) {
+          try {
+            const sender = await User.findByPk(senderId);
+            if (sender) {
+              senderInfo = sender.name || sender.username || `User #${senderId}`;
+            }
+            console.log('Sender info:', senderInfo); 
+          } catch (senderError) {
+            console.error('Error fetching sender info:', senderError);
+          }
         }
+
+        if (receiver && receiver.email) {
+          try {
+            console.log('Email configuration:', {
+              user: process.env.EMAIL_USER,
+              service: "gmail"
+            }); 
+
+            const transporter = nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+              },
+              tls: { rejectUnauthorized: false }
+            });
+            
+            const mailOptions = {
+              from: process.env.EMAIL_USER,
+              to: receiver.email,
+              subject: "New Message Notification",
+              html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                  <h2 style="color: #6DA6BA;">لديك رسالة جديدة!</h2>
+                  <p>لقد استلمت رسالة جديدة من ${senderInfo}:</p>
+                  <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p style="margin: 0;">${message}</p>
+                  </div>
+                  <p>سجل دخولك للرد على الرسالة.</p>
+                </div>
+              `
+            };
+
+            console.log('Attempting to send email to:', receiver.email); 
+            await transporter.sendMail(mailOptions);
+            console.log(`Email notification successfully sent to ${receiver.email}`);
+          } catch (emailError) {
+            console.error('Failed to send email - Detailed error:', emailError);
+            console.error('Email error code:', emailError.code);
+            console.error('Email error message:', emailError.message);
+            if (emailError.response) {
+              console.error('SMTP Response:', emailError.response);
+            }
+          }
+        } else {
+          console.log('No email to send to - Receiver or email missing');
+        }
+      } else {
+        console.log('Skipping notification - Not first message');
       }
     } catch (notificationError) {
-      console.error('Error sending notification:', notificationError);
+      console.error('Error handling notification - Full error:', notificationError);
     }
 
-    
     res.status(201).json(newMessage);
 
     if (req.socketIoInstance) {
@@ -109,7 +143,6 @@ exports.createMessage = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-
 
 
 
@@ -242,6 +275,47 @@ exports.getMessagesByChalets = async (req, res) => {
 
     res.status(200).json(messages);
 
+    if (req.socketIoInstance) {
+      req.socketIoInstance.emit('received_messages', messages);
+      console.log('Messages retrieved successfully and emitted via Socket.IO');
+    } else {
+      console.error('Socket.IO instance is undefined');
+    }
+  } catch (error) {
+    console.error('Error retrieving messages:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+
+
+
+
+exports.getMessagesByReciever = async (req, res) => {
+  try {
+    const { receiverId } = req.params;
+    
+    const messages = await Messages.findAll({
+      where: {
+        receiverId,
+      },
+      include: [
+        {
+          model: Users,
+          as: 'Sender', 
+          attributes: ['id', 'name'], 
+          required: false,
+        }
+      ],
+      order: [['id', 'ASC']],
+    });
+
+    if (messages.length === 0) {
+      return res.status(404).json({ message: 'No messages found for this receiver' });
+    }
+    
+    res.status(200).json(messages);
+    
     if (req.socketIoInstance) {
       req.socketIoInstance.emit('received_messages', messages);
       console.log('Messages retrieved successfully and emitted via Socket.IO');

@@ -1,3 +1,6 @@
-2025/04/05-16:43:17.354 2948 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
-2025/04/05-16:43:17.355 2948 Recovering log #3
-2025/04/05-16:43:17.355 2948 Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/000003.log 
+2025/04/06-09:55:10.238 22e0 Reusing MANIFEST C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/MANIFEST-000001
+2025/04/06-09:55:10.239 22e0 Recovering log #7
+2025/04/06-09:55:10.239 22e0 Reusing old log C:\Users\hp\OneDrive\Desktop\rowqan_backend\whatsapp-session\session-whatsapp-persistent\Default\Local Storage\leveldb/000007.log 
+2025/04/06-09:57:10.646 4418 Level-0 table #10: started
+2025/04/06-09:57:10.664 4418 Level-0 table #10: 12618 bytes OK
+2025/04/06-09:57:10.668 4418 Delete type=0 #7

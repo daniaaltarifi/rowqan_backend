@@ -139,90 +139,139 @@ exports.createChalet = async (req, res) => {
 
 
 
+const { cacheData, getCachedData } = require('../Utils/redisClient');
+
 exports.getAllChalets = async (req, res) => {
   try {
     const { page = 1, limit = 100, lang = "ar" } = req.query;
     const offset = (page - 1) * limit;
 
-    
-    const cacheKey = `chalets5:page:${page}:limit:${limit}:lang:${lang}`;
 
-    
-    const cachedData = await client.get(cacheKey);
-    if (cachedData) {
-      console.log("Cache hit");
-      return res.json(JSON.parse(cachedData));
+    const cacheKey = `chalets:${page}:${limit}:${lang}:v1`;
+
+    try {
+     
+      const cachedData = await getCachedData(cacheKey);
+      if (cachedData) {
+        console.log(`Cache hit for ${cacheKey}`);
+        return res.json(cachedData);
+      }
+    } catch (cacheError) {
+      console.error('Cache retrieval error:', cacheError);
+      
     }
+
+    console.log(`Cache miss for ${cacheKey}, querying database`);
 
     
     const chalets = await Chalet.findAll({
-      attributes: ["id", "title", "description", "image", "Rating", "city", "area", "intial_Amount", "type", "features", "Additional_features"],
+      attributes: [
+        "id", "title", "description", "image", "Rating", 
+        "city", "area", "intial_Amount", "type", 
+        "features", "Additional_features"
+      ],
       include: [
-        { model: Status, attributes: ["status"] },
-        { model: chaletsImages, attributes: ["id", "image"] },
+        { 
+          model: Status,
+          attributes: ["status"],
+          required: false
+        },
+        { 
+          model: chaletsImages,
+          attributes: ["id", "image"],
+          required: false
+        },
         {
           model: RightTimeModel,
-          attributes: ["id", "type_of_time", "from_time", "to_time", "price", "After_Offer", "date"],
+          attributes: [
+            "id", "type_of_time", "from_time", "to_time",
+            "price", "After_Offer", "date"
+          ],
+          required: false,
           include: {
             model: DatesForRightTime,
             attributes: ["id", "date", "price"],
-          },
-        },
+            required: false
+          }
+        }
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [["id", "DESC"]],
+      
+      subQuery: false,
+      distinct: true
     });
 
     if (chalets.length === 0) {
       return res.status(404).json({
-        error: lang === "en" ? "No chalets found" : "لم يتم العثور على شاليهات",
+        error: lang === "en" ? "No chalets found" : "لم يتم العثور على شاليهات"
       });
     }
 
    
-    const plainChalets = chalets.map(chalet => ({
-      id: chalet.id,
-      title: chalet.title,
-      description: chalet.description,
-      image: chalet.image,
-      Rating: chalet.Rating,
-      city: chalet.city,
-      area: chalet.area,
-      intial_Amount: chalet.intial_Amount,
-      type: chalet.type ? JSON.parse(chalet.type) : {},
-      features: chalet.features ? chalet.features.replace(/"/g, '').split(',') : [],
-      Additional_features: chalet.Additional_features ? chalet.Additional_features.replace(/"/g, '').split(',') : [],
-      status: chalet.Status ? chalet.Status.status : null,
-      images: chalet.chaletsImages ? chalet.chaletsImages.map(img => ({
-        id: img.id,
-        image: img.image
-      })) : [],
-      rightTimes: chalet.RightTimeModels ? chalet.RightTimeModels.map(time => ({
-        id: time.id,
-        type_of_time: time.type_of_time,
-        from_time: time.from_time,
-        to_time: time.to_time,
-        price: time.price,
-        After_Offer: time.After_Offer,
-        date: time.date,
-        dates: time.DatesForRightTimes ? time.DatesForRightTimes.map(date => ({
-          id: date.id,
-          date: date.date,
-          price: date.price
-        })) : []
-      })) : []
-    }));
+    const plainChalets = chalets.map(chalet => {
+      let type;
+      try {
+        type = chalet.type ? JSON.parse(chalet.type) : {};
+      } catch (e) {
+        console.error('Error parsing type:', e);
+        type = {};
+      }
 
-   
-    await client.setEx(cacheKey, 300, JSON.stringify(plainChalets));
+      return {
+        id: chalet.id,
+        title: chalet.title,
+        description: chalet.description,
+        image: chalet.image,
+        Rating: chalet.Rating,
+        city: chalet.city,
+        area: chalet.area,
+        intial_Amount: chalet.intial_Amount,
+        type,
+        features: chalet.features ? chalet.features.replace(/"/g, '').split(',').filter(Boolean) : [],
+        Additional_features: chalet.Additional_features ? 
+          chalet.Additional_features.replace(/"/g, '').split(',').filter(Boolean) : [],
+        status: chalet.Status?.status || null,
+        images: chalet.chaletsImages?.map(img => ({
+          id: img.id,
+          image: img.image
+        })) || [],
+        rightTimes: chalet.RightTimeModels?.map(time => ({
+          id: time.id,
+          type_of_time: time.type_of_time,
+          from_time: time.from_time,
+          to_time: time.to_time,
+          price: time.price,
+          After_Offer: time.After_Offer,
+          date: time.date,
+          dates: time.DatesForRightTimes?.map(date => ({
+            id: date.id,
+            date: date.date,
+            price: date.price
+          })) || []
+        })) || []
+      };
+    });
 
-   
+    
+    try {
+      await cacheData(cacheKey, plainChalets, 300); 
+      console.log(`Data cached for ${cacheKey}`);
+    } catch (cacheError) {
+      console.error('Cache storage error:', cacheError);
+      
+    }
+
     return res.json(plainChalets);
+
   } catch (error) {
-    console.error("Error in getAllChalets:", error.message);
+    console.error("Error in getAllChalets:", error);
     res.status(500).json({
-      error: req.query.lang === "en" ? "Failed to fetch chalets" : "فشل في جلب الشاليهات",
+      error: req.query.lang === "en" ? 
+        "Failed to fetch chalets" : 
+        "فشل في جلب الشاليهات",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
