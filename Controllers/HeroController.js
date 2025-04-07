@@ -195,7 +195,7 @@ exports.getHeroesByLang = async (req, res) => {
   } catch (error) {
     console.error("Error in getHeroesByLang:", error.message);
     res.status(500).json(
-      new ErrorResponse("Failed to fetch Heroes", [
+       ErrorResponse("Failed to fetch Heroes", [
         "An internal server error occurred while retrieving the heroes",
       ])
     );

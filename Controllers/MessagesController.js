@@ -12,26 +12,20 @@ const emitSocketEvent = (socketIoInstance, event, data) => {
 };
 
 
-
-
-
-
-
-
 const nodemailer = require('nodemailer');
-
 
 exports.createMessage = async (req, res) => {
   try {
-    const { senderId, status, receiverId, message, lang, chaletId } = req.body;
+    const { senderId, status, receiverId, message, chaletId } = req.body;
     console.log('Creating message with receiverId:', receiverId);
   
+    
     const newMessage = await Messages.create({
       senderId,
       status,
       receiverId,
       message,
-      lang,
+      lang: "en", 
       chaletId, 
     });
 
