@@ -65,8 +65,6 @@ const translateChaletMiddleWare = require('./MiddleWares/translateChaletMiddlewa
 app.use(translateMiddleware);
 app.use(translateChaletMiddleWare);
 
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
 
 
 app.use(helmet({
