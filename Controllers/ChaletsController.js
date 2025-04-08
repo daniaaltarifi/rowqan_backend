@@ -141,29 +141,12 @@ exports.createChalet = async (req, res) => {
 
 const { cacheData, getCachedData } = require('../Utils/redisClient');
 
+
 exports.getAllChalets = async (req, res) => {
   try {
     const { page = 1, limit = 100, lang = "ar" } = req.query;
     const offset = (page - 1) * limit;
 
-
-    const cacheKey = `chalets:${page}:${limit}:${lang}:v1`;
-
-    try {
-     
-      const cachedData = await getCachedData(cacheKey);
-      if (cachedData) {
-        console.log(`Cache hit for ${cacheKey}`);
-        return res.json(cachedData);
-      }
-    } catch (cacheError) {
-      console.error('Cache retrieval error:', cacheError);
-      
-    }
-
-    console.log(`Cache miss for ${cacheKey}, querying database`);
-
-    
     const chalets = await Chalet.findAll({
       attributes: [
         "id", "title", "description", "image", "Rating", 
@@ -198,7 +181,6 @@ exports.getAllChalets = async (req, res) => {
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [["id", "DESC"]],
-      
       subQuery: false,
       distinct: true
     });
@@ -209,7 +191,6 @@ exports.getAllChalets = async (req, res) => {
       });
     }
 
-   
     const plainChalets = chalets.map(chalet => {
       let type;
       try {
@@ -253,15 +234,6 @@ exports.getAllChalets = async (req, res) => {
         })) || []
       };
     });
-
-    
-    try {
-      await cacheData(cacheKey, plainChalets, 300); 
-      console.log(`Data cached for ${cacheKey}`);
-    } catch (cacheError) {
-      console.error('Cache storage error:', cacheError);
-      
-    }
 
     return res.json(plainChalets);
 
